@@ -1,0 +1,148 @@
+package com.odysseusinc.arachne.executionengine.service.impl;
+
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
+import com.odysseusinc.arachne.executionengine.service.CallbackService;
+import com.odysseusinc.arachne.executionengine.service.SQLService;
+import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
+import com.odysseusinc.arachne.executionengine.util.SQLUtils;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.List;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.stereotype.Service;
+
+
+@Service
+public class SQLServiceImpl implements SQLService {
+    private static final String DELETE_DIR_ERROR = "Can't delete analysis directory: '{}'";
+    private static final PathMatcher SQL_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.sql");
+    private final Logger log = LoggerFactory.getLogger(SQLServiceImpl.class);
+    private final TaskExecutor taskExecutor;
+    private final CallbackService callbackService;
+
+    @Value("${csv.separator}")
+    private char csvSeparator;
+
+    @Autowired
+    public SQLServiceImpl(TaskExecutor taskExecutor, CallbackService callbackService) {
+
+        this.taskExecutor = taskExecutor;
+        this.callbackService = callbackService;
+    }
+
+    @Override
+    public void analyze(AnalysisRequestDTO analysis, File file, Boolean compressedResult, Long chunkSize) {
+
+        taskExecutor.execute(() -> {
+            AnalysisResultStatusDTO status = AnalysisResultStatusDTO.EXECUTED;
+            StringBuilder stdout = new StringBuilder();
+            DataSourceDTO dataSource = analysis.getDataSource();
+            Long id = analysis.getId();
+            String callbackPassword = analysis.getCallbackPassword();
+            try (Connection conn = SQLUtils.getConnection(dataSource)) {
+                List<File> files = AnalisysUtils.getDirectoryItemsFiltered(file, SQL_MATCHER);
+                for (File sqlFile : files) {
+                    Path resultFile = null;
+                    final String sqlFileName = sqlFile.getName();
+                    try (OutputStream outputStream = new ByteArrayOutputStream()) {
+                        Files.copy(sqlFile.toPath(), outputStream);
+                        Statement statement = conn.createStatement();
+                        if (statement.execute(outputStream.toString())) {
+                            ResultSet resultSet = statement.getResultSet();
+                            if (resultSet != null) {
+                                resultFile = Paths.get(sqlFile.getAbsolutePath() + ".result.csv");
+                                try (PrintWriter out = new PrintWriter(new BufferedWriter(
+                                        new FileWriter(resultFile.toFile(), true))
+                                )) {
+                                    ResultSetMetaData metaData = resultSet.getMetaData();
+                                    int columnCount = metaData.getColumnCount();
+                                    for (int column = 1; column <= columnCount; column++) {
+                                        String columnLabel = metaData.getColumnLabel(column);
+                                        out.append(columnLabel).append(csvSeparator);
+                                    }
+                                    out.append("\r\n");
+                                    while (resultSet.next()) {
+                                        for (int ii = 1; ii <= columnCount; ii++) {
+                                            Object object = resultSet.getObject(ii);
+                                            out.print(object);
+                                            out.print(csvSeparator);
+                                        }
+                                        out.print("\r\n");
+                                    }
+                                    resultSet.close();
+                                }
+                            }
+                        }
+                        stdout.append(sqlFileName).append("\r\n\r\n").append("has been executed correctly").append("\r\n");
+                        if (resultFile != null) {
+                            stdout.append("has result file: ").append(resultFile.getFileName().toString());
+                        } else {
+                            stdout.append("does not have a result file");
+                        }
+                    } catch (IOException ex) {
+                        String errorMessage = sqlFileName + "\r\n\r\nError reading file:";
+                        log.error(errorMessage, ex);
+                        status = AnalysisResultStatusDTO.FAILED;
+                        stdout.append(errorMessage).append("\r\n").append(ex);
+                    } catch (SQLException ex) {
+                        String errorMessage = sqlFileName + "\r\n\r\nError executing query:";
+                        log.error(errorMessage, ex);
+                        status = AnalysisResultStatusDTO.FAILED;
+                        stdout.append(errorMessage).append("\r\n").append(ex);
+                    }
+                    stdout.append("\r\n---\r\n\r\n");
+                    String updateURL = analysis.getUpdateStatusCallback();
+                    callbackService.updateAnalysisStatus(updateURL, id, stdout.toString(), callbackPassword);
+                }
+                conn.rollback();
+            } catch (SQLException ex) {
+                String errorMessage = "Error getting connection to CDM\r\nException:";
+                log.error(errorMessage, ex);
+                status = AnalysisResultStatusDTO.FAILED;
+                stdout.append(errorMessage).append(ex).append("\r\n");
+            }
+            AnalysisResultDTO result = new AnalysisResultDTO();
+            result.setId(id);
+            result.setRequested(analysis.getRequested());
+            result.setStdout(stdout.toString());
+
+            final File zipDir = com.google.common.io.Files.createTempDir();
+            final List<FileSystemResource> resultFSResources
+                    = AnalisysUtils.getFileSystemResources(analysis, file, compressedResult, chunkSize, zipDir);
+
+            result.setStatus(status);
+            callbackService.sendAnalysisResult(analysis.getResultCallback(), callbackPassword, result, resultFSResources);
+            try {
+                FileUtils.deleteDirectory(file);
+                FileUtils.deleteQuietly(zipDir);
+            } catch (IOException ex) {
+                log.warn(DELETE_DIR_ERROR, file.getAbsolutePath(), ex);
+            }
+        });
+    }
+
+}

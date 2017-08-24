@@ -1,0 +1,1 @@
+select * from death limit 10;
