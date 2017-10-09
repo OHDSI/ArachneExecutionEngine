@@ -16,7 +16,7 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: August 24, 2017
+ * Created: March 24, 2017
  *
  */
 
@@ -25,7 +25,6 @@ package com.odysseusinc.arachne.executionengine.util;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -89,7 +88,7 @@ public class AnalisysUtils {
     }
 
     public static File extractFiles(List<MultipartFile> files, boolean compressed)
-            throws FileNotFoundException, ZipException {
+            throws IOException, ZipException {
 
         File temporaryDir = com.google.common.io.Files.createTempDir();
 
@@ -112,7 +111,7 @@ public class AnalisysUtils {
         });
     }
 
-    private static void decompressToDir(File parent, List<MultipartFile> files) throws FileNotFoundException, ZipException {
+    private static void decompressToDir(File parent, List<MultipartFile> files) throws IOException, ZipException {
 
         File temporaryDir = com.google.common.io.Files.createTempDir();
         writeContentToDir(temporaryDir, files);
@@ -132,7 +131,7 @@ public class AnalisysUtils {
                                                                   File file,
                                                                   Boolean compressedResult,
                                                                   Long chunkSize,
-                                                                  File dir) {
+                                                                  File dir) throws IOException {
 
         List<File> resultFiles;
         if (compressedResult) {

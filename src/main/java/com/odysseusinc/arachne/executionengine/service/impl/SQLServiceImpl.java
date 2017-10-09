@@ -16,7 +16,7 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: August 24, 2017
+ * Created: March 24, 2017
  *
  */
 
@@ -85,7 +85,9 @@ public class SQLServiceImpl implements SQLService {
             DataSourceDTO dataSource = analysis.getDataSource();
             Long id = analysis.getId();
             String callbackPassword = analysis.getCallbackPassword();
-            try (Connection conn = SQLUtils.getConnection(dataSource)) {
+
+            try (Connection conn = SQLUtils.getConnectionWithAutoCommit(dataSource)) {
+
                 List<File> files = AnalisysUtils.getDirectoryItemsFiltered(file, SQL_MATCHER);
                 for (File sqlFile : files) {
                     Path resultFile = null;
@@ -104,14 +106,19 @@ public class SQLServiceImpl implements SQLService {
                                     int columnCount = metaData.getColumnCount();
                                     for (int column = 1; column <= columnCount; column++) {
                                         String columnLabel = metaData.getColumnLabel(column);
-                                        out.append(columnLabel).append(csvSeparator);
+                                        out.append(columnLabel);
+                                        if (column < columnCount) {
+                                            out.append(csvSeparator);
+                                        }
                                     }
                                     out.append("\r\n");
                                     while (resultSet.next()) {
                                         for (int ii = 1; ii <= columnCount; ii++) {
                                             Object object = resultSet.getObject(ii);
                                             out.print(object);
-                                            out.print(csvSeparator);
+                                            if (ii < columnCount) {
+                                                out.print(csvSeparator);
+                                            }
                                         }
                                         out.print("\r\n");
                                     }
@@ -140,29 +147,33 @@ public class SQLServiceImpl implements SQLService {
                     String updateURL = analysis.getUpdateStatusCallback();
                     callbackService.updateAnalysisStatus(updateURL, id, stdout.toString(), callbackPassword);
                 }
-                conn.rollback();
             } catch (SQLException ex) {
                 String errorMessage = "Error getting connection to CDM\r\nException:";
                 log.error(errorMessage, ex);
                 status = AnalysisResultStatusDTO.FAILED;
                 stdout.append(errorMessage).append(ex).append("\r\n");
             }
-            AnalysisResultDTO result = new AnalysisResultDTO();
-            result.setId(id);
-            result.setRequested(analysis.getRequested());
-            result.setStdout(stdout.toString());
-
             final File zipDir = com.google.common.io.Files.createTempDir();
-            final List<FileSystemResource> resultFSResources
-                    = AnalisysUtils.getFileSystemResources(analysis, file, compressedResult, chunkSize, zipDir);
-
-            result.setStatus(status);
-            callbackService.sendAnalysisResult(analysis.getResultCallback(), callbackPassword, result, resultFSResources);
             try {
-                FileUtils.deleteDirectory(file);
-                FileUtils.deleteQuietly(zipDir);
-            } catch (IOException ex) {
-                log.warn(DELETE_DIR_ERROR, file.getAbsolutePath(), ex);
+                AnalysisResultDTO result = new AnalysisResultDTO();
+                result.setId(id);
+                result.setRequested(analysis.getRequested());
+                result.setStdout(stdout.toString());
+
+                final List<FileSystemResource> resultFSResources
+                        = AnalisysUtils.getFileSystemResources(analysis, file, compressedResult, chunkSize, zipDir);
+
+                result.setStatus(status);
+                callbackService.sendAnalysisResult(analysis.getResultCallback(), callbackPassword, result, resultFSResources);
+            } catch (IOException ex){
+                log.error("", ex);
+            } finally {
+                try {
+                    FileUtils.deleteDirectory(file);
+                    FileUtils.deleteQuietly(zipDir);
+                } catch (IOException ex) {
+                    log.warn(DELETE_DIR_ERROR, file.getAbsolutePath(), ex);
+                }
             }
         });
     }

@@ -16,7 +16,7 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: August 24, 2017
+ * Created: March 24, 2017
  *
  */
 
@@ -38,6 +38,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +62,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String EXECUTION_COMMAND = "Rscript";
     private static final String ERROR_BUILDING_COMMAND_LOG = "Error building runtime command";
     private static final String EXECUTING_LOG = "Executing:{}";
-    private static final String DESTROYING_PROCESS_LOG = "timeout exceeded, destroying process, output:\n{}";
+    private static final String DESTROYING_PROCESS_LOG = "timeout exceeded, destroying process";
     private static final String EXECUTION_SUCCESS_LOG = "Execution success, ExitCode='{}'";
     private static final String EXECUTION_FAILURE_LOG = "Execution failure, ExitCode='{}'";
     private static final String STDOUT_LOG = "stdout:\n{}";
@@ -122,7 +129,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                 callbackService.sendAnalysisResult(analysis.getResultCallback(), callbackPassword, result, resultFSResources);
             } catch (FileNotFoundException ex) {
                 LOGGER.error(ERROR_BUILDING_COMMAND_LOG, ex);
-            } catch (InterruptedException | IOException ex) {
+            } catch (InterruptedException | IOException | ExecutionException | TimeoutException ex) {
                 LOGGER.error("", ex);
             } finally {
                 try {
@@ -156,7 +163,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         Map<String, String> environment = new HashMap<>();
         environment.put(RUNTIME_ENV_DBMS_USERNAME, dataSource.getUsername());
         environment.put(RUNTIME_ENV_DBMS_PASSWORD, dataSource.getPassword());
-        environment.put(RUNTIME_ENV_DBMS_TYPE, dataSource.getType().toString().toLowerCase());
+        environment.put(RUNTIME_ENV_DBMS_TYPE, dataSource.getType().getOhdsiDB());
         environment.put(RUNTIME_ENV_CONNECTION_STRING, dataSource.getConnectionString());
         environment.put(RUNTIME_ENV_DBMS_SCHEMA, dataSource.getCdmSchema());
         environment.put(RUNTIME_ENV_PATH_KEY, RUNTIME_ENV_PATH_VALUE);
@@ -174,40 +181,32 @@ public class RuntimeServiceImpl implements RuntimeService {
                                         int timeout,
                                         String updateUrl,
                                         Long submissionId,
-                                        String password) throws IOException, InterruptedException {
+                                        String password) throws IOException, InterruptedException, ExecutionException, TimeoutException {
 
         final ProcessBuilder processBuilder = new ProcessBuilder(command)
                 .directory(activeDir)
                 .redirectErrorStream(true);
         processBuilder.environment().putAll(envp);
         final Process process = processBuilder.start();
+        final ExecutorService executorService = Executors.newSingleThreadExecutor();
+        final StdoutHandler stdoutHandler = new StdoutHandler(process, updateUrl, submissionId, password);
+        final Future<String> future = executorService.submit(stdoutHandler);
         StringBuilder commandBuilder = new StringBuilder();
         Arrays.stream(command).forEach(c -> commandBuilder.append(" ").append(c));
         LOGGER.info(EXECUTING_LOG, commandBuilder.toString());
-        long startedAt = System.currentTimeMillis();
-        long thresholdAt = startedAt + (timeout * 1000);
-        StringBuffer stdout = new StringBuffer();
-        do {
-            Thread.sleep(submissionUpdateInterval);
-            InputStream inputStream = process.getInputStream();
-            final String stdoutDiff = getStdoutDiff(inputStream);
-            stdout.append(stdoutDiff);
-            callbackService.updateAnalysisStatus(updateUrl, submissionId, stdoutDiff, password);
-            if (!stdoutDiff.isEmpty()) {
-                LOGGER.debug(STDOUT_LOG_DIFF, stdoutDiff);
-            }
-        } while (process.isAlive() && System.currentTimeMillis() < thresholdAt);
+        process.waitFor(timeout, TimeUnit.SECONDS);
         if (process.isAlive()) {
             process.destroy();
-            LOGGER.warn(DESTROYING_PROCESS_LOG, stdout);
+            LOGGER.warn(DESTROYING_PROCESS_LOG);
         }
+        final String stdout = future.get(submissionUpdateInterval * 2, TimeUnit.MILLISECONDS);
         if (process.exitValue() == 0) {
             LOGGER.info(EXECUTION_SUCCESS_LOG, process.exitValue());
         } else {
             LOGGER.warn(EXECUTION_FAILURE_LOG, process.exitValue());
         }
-        LOGGER.debug(STDOUT_LOG, stdout.toString());
-        return new RuntimeFinishStatus(process.exitValue(), stdout.toString());
+        LOGGER.debug(STDOUT_LOG, stdout);
+        return new RuntimeFinishStatus(process.exitValue(), stdout);
     }
 
     private static String getStdoutDiff(InputStream stream) throws IOException {
@@ -230,6 +229,40 @@ public class RuntimeServiceImpl implements RuntimeService {
 
             this.exitCode = exitCode;
             this.stdout = stdout;
+        }
+    }
+
+    private class StdoutHandler implements Callable<String> {
+
+        private final Process process;
+        private final String updateUrl;
+        private final long submissionId;
+        private final String password;
+
+        private StdoutHandler(Process process, String updateUrl, long submissionId, String password) {
+
+            this.process = process;
+            this.updateUrl = updateUrl;
+            this.submissionId = submissionId;
+            this.password = password;
+        }
+
+        @Override
+        public String call() throws Exception {
+
+            StringBuilder stdout = new StringBuilder();
+            do {
+                Thread.sleep(submissionUpdateInterval);
+                InputStream inputStream = process.getInputStream();
+                final String stdoutDiff = getStdoutDiff(inputStream);
+                stdout.append(stdoutDiff);
+                callbackService.updateAnalysisStatus(updateUrl, submissionId, stdoutDiff, password);
+                if (!stdoutDiff.isEmpty()) {
+                    LOGGER.debug(STDOUT_LOG_DIFF, stdoutDiff);
+                }
+            } while (process.isAlive());
+
+            return stdout.toString();
         }
     }
 }

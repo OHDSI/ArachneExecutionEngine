@@ -16,7 +16,7 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: August 24, 2017
+ * Created: April 03, 2017
  *
  */
 
@@ -30,7 +30,7 @@ import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 import javax.validation.Valid;
 import net.lingala.zip4j.exception.ZipException;
@@ -76,7 +76,7 @@ public class AnalisysController {
             @RequestHeader(value = "arachne-compressed", defaultValue = "false") Boolean compressed,
             @RequestHeader(value = "arachne-waiting-compressed-result", defaultValue = "false") Boolean waitCompressedResult,
             @RequestHeader(value = "arachne-result-chunk-size-mb", defaultValue = "10485760") Long chunkSize
-    ) throws FileNotFoundException, ZipException {
+    ) throws IOException, ZipException {
 
         final File analysisDir = AnalisysUtils.extractFiles(files, compressed);
         return analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, chunkSize);

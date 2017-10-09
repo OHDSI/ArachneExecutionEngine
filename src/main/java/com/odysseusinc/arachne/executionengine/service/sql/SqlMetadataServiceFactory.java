@@ -16,7 +16,7 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: August 24, 2017
+ * Created: May 12, 2017
  *
  */
 
@@ -41,7 +41,7 @@ public class SqlMetadataServiceFactory {
                 result = new PostgreSqlMetadataService(dataSource);
                 break;
             case MS_SQL_SERVER:
-            case MS_SQL_SERVER_NATIVE:
+            case PDW:
                 result = new SqlServerMetadataService(dataSource);
                 break;
             case ORACLE:
