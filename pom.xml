@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.6.0</version>
+    <version>1.8.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -237,16 +237,47 @@
             </resource>
         </resources>
     </build>
+
+    <repositories>
+        <repository>
+            <id>odysseus.community.snapshots</id>
+            <name>Odysseus community snapshots</name>
+            <releases>
+                <enabled>false</enabled>
+                <updatePolicy>always</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+            <url>http://repo.odysseusinc.com/artifactory/community-libs-snapshot-local</url>
+        </repository>
+        <repository>
+            <id>odysseus.community.releases</id>
+            <name>Odysseus community releases</name>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+            <url>http://repo.odysseusinc.com/artifactory/community-libs-release-local</url>
+        </repository>
+    </repositories>
+
     <distributionManagement>
         <snapshotRepository>
             <id>artifactory</id>
-            <name>snapshots</name>
-            <url>http://odysseusovh04.odysseusinc.com:8081/artifactory/libs-snapshot-local</url>
+            <name>Odysseus community snapshots</name>
+            <url>http://repo.odysseusinc.com/artifactory/community-libs-snapshot-local</url>
         </snapshotRepository>
         <repository>
             <id>artifactory</id>
-            <name>releases</name>
-            <url>http://odysseusovh04.odysseusinc.com:8081/artifactory/libs-release-local</url>
+            <name>Odysseus community releases</name>
+            <url>http://repo.odysseusinc.com/artifactory/community-libs-release-local</url>
         </repository>
     </distributionManagement>
+
 </project>
