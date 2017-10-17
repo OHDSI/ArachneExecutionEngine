@@ -133,25 +133,34 @@ public class SQLServiceImpl implements SQLService {
                             stdout.append("does not have a result file");
                         }
                     } catch (IOException ex) {
-                        String errorMessage = sqlFileName + "\r\n\r\nError reading file:";
-                        log.error(errorMessage, ex);
+                        String errorMessage = sqlFileName + "\r\n\r\nError reading file: " + ex.getMessage();
+                        log.error(errorMessage);
+                        if (log.isDebugEnabled()) {
+                            log.debug("Stacktrace: ", ex);
+                        }
                         status = AnalysisResultStatusDTO.FAILED;
-                        stdout.append(errorMessage).append("\r\n").append(ex);
+                        stdout.append(errorMessage);
                     } catch (SQLException ex) {
-                        String errorMessage = sqlFileName + "\r\n\r\nError executing query:";
-                        log.error(errorMessage, ex);
+                        String errorMessage = sqlFileName + "\r\n\r\nError executing query: " + ex.getMessage();
+                        log.error(errorMessage);
+                        if (log.isDebugEnabled()) {
+                            log.debug("Stacktrace: ", ex);
+                        }
                         status = AnalysisResultStatusDTO.FAILED;
-                        stdout.append(errorMessage).append("\r\n").append(ex);
+                        stdout.append(errorMessage);
                     }
                     stdout.append("\r\n---\r\n\r\n");
                     String updateURL = analysis.getUpdateStatusCallback();
                     callbackService.updateAnalysisStatus(updateURL, id, stdout.toString(), callbackPassword);
                 }
             } catch (SQLException ex) {
-                String errorMessage = "Error getting connection to CDM\r\nException:";
-                log.error(errorMessage, ex);
+                String errorMessage = "Error getting connection to CDM: " + ex.getMessage();
+                log.error(errorMessage);
+                if (log.isDebugEnabled()) {
+                    log.debug("Stacktrace: ", ex);
+                }
                 status = AnalysisResultStatusDTO.FAILED;
-                stdout.append(errorMessage).append(ex).append("\r\n");
+                stdout.append(errorMessage).append("\r\n");
             }
             final File zipDir = com.google.common.io.Files.createTempDir();
             try {
@@ -165,8 +174,11 @@ public class SQLServiceImpl implements SQLService {
 
                 result.setStatus(status);
                 callbackService.sendAnalysisResult(analysis.getResultCallback(), callbackPassword, result, resultFSResources);
-            } catch (IOException ex){
-                log.error("", ex);
+            } catch (IOException ex) {
+                log.error(ex.getMessage());
+                if (log.isDebugEnabled()) {
+                    log.debug("Stacktrace: ", ex);
+                }
             } finally {
                 try {
                     FileUtils.deleteDirectory(file);
