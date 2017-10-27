@@ -265,6 +265,10 @@
             </snapshots>
             <url>http://repo.odysseusinc.com/artifactory/community-libs-release-local</url>
         </repository>
+        <repository>
+            <id>alfresco</id>
+            <url>https://artifacts.alfresco.com/nexus/content/repositories/public/</url>
+        </repository>
     </repositories>
 
     <distributionManagement>
