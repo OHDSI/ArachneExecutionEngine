@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -123,7 +123,8 @@ abstract class AbstractSqlMetadataService implements SqlMetadataService {
 
     public String getCdmVersion() throws SQLException {
 
-        return executeQuery(getCdmQuery(), resultSet -> {
+        String cdmQuery = String.format(getCdmQuery(), getSchema());
+        return executeQuery(cdmQuery, resultSet -> {
             if (resultSet.next()) {
                 return resultSet.getString("cdm_version");
             }

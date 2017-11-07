@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
 
 public class PostgreSqlMetadataService extends AbstractSqlMetadataService implements SqlMetadataService {
 
-    private static final String CDM_QUERY = "select cdm_version from cdm_source limit 1";
+    private static final String CDM_QUERY = "select cdm_version from %s.cdm_source limit 1";
     private static final String DEFAULT_SCHEMA = "public";
 
     PostgreSqlMetadataService(DataSourceDTO dataSource) {
