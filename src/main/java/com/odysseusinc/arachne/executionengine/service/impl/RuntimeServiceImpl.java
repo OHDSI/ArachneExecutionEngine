@@ -74,6 +74,9 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String RUNTIME_ENV_DBMS_TYPE = "DBMS_TYPE";
     private static final String RUNTIME_ENV_CONNECTION_STRING = "CONNECTION_STRING";
     private static final String RUNTIME_ENV_DBMS_SCHEMA = "DBMS_SCHEMA";
+    private static final String RUNTIME_ENV_TARGET_SCHEMA = "TARGET_SCHEMA";
+    private static final String RUNTIME_ENV_RESULT_SCHEMA = "RESULT_SCHEMA";
+    private static final String RUNTIME_ENV_COHORT_TARGET_TABLE = "COHORT_TARGET_TABLE";
     private static final String RUNTIME_ENV_PATH_KEY = "PATH";
     private static final String RUNTIME_ENV_PATH_VALUE = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
     private static final String RUNTIME_ENV_HOME_KEY = "HOME";
@@ -166,6 +169,9 @@ public class RuntimeServiceImpl implements RuntimeService {
         environment.put(RUNTIME_ENV_DBMS_TYPE, dataSource.getType().getOhdsiDB());
         environment.put(RUNTIME_ENV_CONNECTION_STRING, dataSource.getConnectionString());
         environment.put(RUNTIME_ENV_DBMS_SCHEMA, dataSource.getCdmSchema());
+        environment.put(RUNTIME_ENV_TARGET_SCHEMA, dataSource.getTargetSchema());
+        environment.put(RUNTIME_ENV_RESULT_SCHEMA, dataSource.getResultSchema());
+        environment.put(RUNTIME_ENV_COHORT_TARGET_TABLE, dataSource.getCohortTargetTable());
         environment.put(RUNTIME_ENV_PATH_KEY, RUNTIME_ENV_PATH_VALUE);
         environment.put(RUNTIME_ENV_HOME_KEY, RUNTIME_ENV_HOME_VALUE);
         environment.put(RUNTIME_ENV_HOSTNAME_KEY, RUNTIME_ENV_HOSTNAME_VALUE);
