@@ -26,7 +26,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
 
 public class OracleMetadataService extends AbstractSqlMetadataService implements SqlMetadataService {
 
-    private static final String CDM_QUERY = "select cdm_version from cdm_source where ROWNUM = 1";
+    private static final String CDM_QUERY = "select cdm_version from %s.cdm_source where ROWNUM = 1";
 
     OracleMetadataService(DataSourceDTO dataSource) {
 
