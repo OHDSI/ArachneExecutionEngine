@@ -48,10 +48,10 @@ import org.apache.commons.lang3.StringUtils;
 
 abstract class AbstractSqlMetadataService implements SqlMetadataService {
 
-    private static final String QUERY_VOCABULARY_V4 = "select vocabulary_name from vocabulary";
-    private static final String QUERY_VOCABULARY_V5 = "select vocabulary_name, vocabulary_version from vocabulary";
+    private static final String QUERY_VOCABULARY_V4 = "select vocabulary_name from %s.vocabulary";
+    private static final String QUERY_VOCABULARY_V5 = "select vocabulary_name, vocabulary_version from %s.vocabulary";
     private static final String REGEX_V4 = "^V4.*";
-    private static final String ALL_CMD_QUERY = "select * from cdm_source";
+    private static final String ALL_CMD_QUERY = "select * from %s.cdm_source";
     protected final DataSourceDTO dataSource;
     private RowMapper<Vocabulary> VocabularyVersionRowMapperV5 = (rs) -> {
         String name = rs.getString("vocabulary_name");
@@ -104,6 +104,7 @@ abstract class AbstractSqlMetadataService implements SqlMetadataService {
         } else {
             result = QUERY_VOCABULARY_V5;
         }
+        result = String.format(result, getSchema());
         return result;
     }
 
@@ -149,7 +150,8 @@ abstract class AbstractSqlMetadataService implements SqlMetadataService {
     @Override
     public List<CdmSource> getCdmSources() throws SQLException {
 
-        return executeQuery(ALL_CMD_QUERY, resultSet -> {
+        String query = String.format(ALL_CMD_QUERY, getSchema());
+        return executeQuery(query, resultSet -> {
             List<CdmSource> result = new LinkedList<>();
             while (resultSet.next()) {
                 CdmSource cdmSource = new CdmSource();
