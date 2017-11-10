@@ -1,0 +1,15 @@
+logging:
+  level: debug
+executor:
+  queueCapacity: 200
+submission:
+  update:
+    interval: 1000
+runtime:
+  timeOutSec: 3600
+swagger:
+  enable: true
+  title: Arachne Execution Engine
+  description: Arachne Execution Engine API
+  version: 1.0.0
+  basePackage: com.odysseusinc.arachne.executionengine.controller
