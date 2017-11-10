@@ -1,0 +1,36 @@
+# suppress inspection "SpringBootApplicationProperties" for whole file
+server:
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.jks
+    key-store-password: odysseus
+    key-password: odysseus
+    key-alias: arachne
+  port: 8888
+
+logging:
+  level: indo
+
+spring:
+  http:
+    multipart:
+      max-request-size: 128MB
+      max-file-size: 128MB
+
+executor:
+  corePoolSize: 4
+  maxPoolSize: 8
+  queueCapacity: 200
+
+submission:
+  update:
+    interval: 10000
+
+runtime:
+  timeOutSec: 259200
+
+swagger:
+  enable: false
+
+csv:
+  separator: ','
