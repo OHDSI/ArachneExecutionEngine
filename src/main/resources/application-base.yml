@@ -2,6 +2,7 @@
 server:
   ssl:
     enabled: true
+    strictMode: false
     key-store: classpath:keystore.jks
     key-store-password: odysseus
     key-password: odysseus
