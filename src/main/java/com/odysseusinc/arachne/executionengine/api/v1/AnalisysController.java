@@ -20,19 +20,21 @@
  *
  */
 
-
 package com.odysseusinc.arachne.executionengine.api.v1;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
+import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import javax.validation.Valid;
+
 import net.lingala.zip4j.exception.ZipException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -57,11 +59,13 @@ public class AnalisysController {
     public static final String REST_API_METRICS = "/metrics";
 
     private final AnalysisService analysisService;
+    private final CallbackService callbackService;
 
     @Autowired
-    public AnalisysController(AnalysisService analysisService) {
+    public AnalisysController(AnalysisService analysisService, CallbackService callbackService) {
 
         this.analysisService = analysisService;
+        this.callbackService = callbackService;
     }
 
     @ApiOperation(value = "Files for analysis")
@@ -78,8 +82,13 @@ public class AnalisysController {
             @RequestHeader(value = "arachne-result-chunk-size-mb", defaultValue = "10485760") Long chunkSize
     ) throws IOException, ZipException {
 
-        final File analysisDir = AnalisysUtils.extractFiles(files, compressed);
-        return analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, chunkSize);
+        try {
+            final File analysisDir = AnalisysUtils.extractFiles(files, compressed);
+            return analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, chunkSize);
+        } catch (IOException | ZipException e) {
+            callbackService.sendFailedResult(analysisRequest, e, null, waitCompressedResult, chunkSize);
+            throw e;
+        }
     }
 
     @ApiOperation(value = "Prometheus compatible metrics")
