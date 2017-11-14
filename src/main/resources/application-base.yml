@@ -35,3 +35,13 @@ swagger:
 
 csv:
   separator: ','
+
+endpoints:
+  jolokia:
+    enabled: true
+    path: /jolokia
+  jmx:
+    unique-names: true
+
+management:
+  port: 9999
