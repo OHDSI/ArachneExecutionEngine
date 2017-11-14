@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.executionengine.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jmx.export.annotation.AnnotationMBeanExporter;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -49,4 +50,15 @@ public class AnalisysConfig {
         return executor;
     }
 
+    @Bean
+    public ThreadPoolExecutorMonitor threadPoolExecutorMonitor(){
+
+        return new ThreadPoolExecutorMonitor(taskExecutor());
+    }
+
+    @Bean
+    public AnnotationMBeanExporter annotationMBeanExporter(){
+
+        return new AnnotationMBeanExporter();
+    }
 }
