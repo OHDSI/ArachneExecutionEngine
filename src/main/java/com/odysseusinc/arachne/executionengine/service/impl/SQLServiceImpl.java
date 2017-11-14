@@ -30,6 +30,7 @@ import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import com.odysseusinc.arachne.executionengine.util.SQLUtils;
+
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -48,6 +49,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -189,7 +191,7 @@ public class SQLServiceImpl implements SQLService {
                         log.warn(DELETE_DIR_ERROR, file.getAbsolutePath(), ex);
                     }
                 }
-            }catch (Throwable t){
+            } catch (Throwable t) {
                 callbackService.sendFailedResult(analysis, t, file, compressedResult, chunkSize);
             }
         });
