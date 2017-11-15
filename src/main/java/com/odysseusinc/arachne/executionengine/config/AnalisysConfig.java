@@ -59,14 +59,4 @@ public class AnalisysConfig {
 
         return new ThreadPoolExecutorMonitor(taskExecutor());
     }
-
-/*
-    @Bean
-    @Primary
-    public AnnotationMBeanExporter annotationMBeanExporter(){
-
-        return new AnnotationMBeanExporter();
-    }
-
-*/
 }
