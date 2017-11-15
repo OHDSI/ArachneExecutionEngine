@@ -1,3 +1,25 @@
+/*
+ *
+ * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Company: Odysseus Data Services, Inc.
+ * Product Owner/Architecture: Gregory Klebanov
+ * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
+ * Created: March 24, 2017
+ *
+ */
+
 package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
@@ -63,7 +85,9 @@ public class SQLServiceImpl implements SQLService {
             DataSourceDTO dataSource = analysis.getDataSource();
             Long id = analysis.getId();
             String callbackPassword = analysis.getCallbackPassword();
-            try (Connection conn = SQLUtils.getConnection(dataSource)) {
+
+            try (Connection conn = SQLUtils.getConnectionWithAutoCommit(dataSource)) {
+
                 List<File> files = AnalisysUtils.getDirectoryItemsFiltered(file, SQL_MATCHER);
                 for (File sqlFile : files) {
                     Path resultFile = null;
@@ -82,14 +106,19 @@ public class SQLServiceImpl implements SQLService {
                                     int columnCount = metaData.getColumnCount();
                                     for (int column = 1; column <= columnCount; column++) {
                                         String columnLabel = metaData.getColumnLabel(column);
-                                        out.append(columnLabel).append(csvSeparator);
+                                        out.append(columnLabel);
+                                        if (column < columnCount) {
+                                            out.append(csvSeparator);
+                                        }
                                     }
                                     out.append("\r\n");
                                     while (resultSet.next()) {
                                         for (int ii = 1; ii <= columnCount; ii++) {
                                             Object object = resultSet.getObject(ii);
                                             out.print(object);
-                                            out.print(csvSeparator);
+                                            if (ii < columnCount) {
+                                                out.print(csvSeparator);
+                                            }
                                         }
                                         out.print("\r\n");
                                     }
@@ -104,43 +133,59 @@ public class SQLServiceImpl implements SQLService {
                             stdout.append("does not have a result file");
                         }
                     } catch (IOException ex) {
-                        String errorMessage = sqlFileName + "\r\n\r\nError reading file:";
-                        log.error(errorMessage, ex);
+                        String errorMessage = sqlFileName + "\r\n\r\nError reading file: " + ex.getMessage();
+                        log.error(errorMessage);
+                        if (log.isDebugEnabled()) {
+                            log.debug("Stacktrace: ", ex);
+                        }
                         status = AnalysisResultStatusDTO.FAILED;
-                        stdout.append(errorMessage).append("\r\n").append(ex);
+                        stdout.append(errorMessage);
                     } catch (SQLException ex) {
-                        String errorMessage = sqlFileName + "\r\n\r\nError executing query:";
-                        log.error(errorMessage, ex);
+                        String errorMessage = sqlFileName + "\r\n\r\nError executing query: " + ex.getMessage();
+                        log.error(errorMessage);
+                        if (log.isDebugEnabled()) {
+                            log.debug("Stacktrace: ", ex);
+                        }
                         status = AnalysisResultStatusDTO.FAILED;
-                        stdout.append(errorMessage).append("\r\n").append(ex);
+                        stdout.append(errorMessage);
                     }
                     stdout.append("\r\n---\r\n\r\n");
                     String updateURL = analysis.getUpdateStatusCallback();
                     callbackService.updateAnalysisStatus(updateURL, id, stdout.toString(), callbackPassword);
                 }
-                conn.rollback();
             } catch (SQLException ex) {
-                String errorMessage = "Error getting connection to CDM\r\nException:";
-                log.error(errorMessage, ex);
+                String errorMessage = "Error getting connection to CDM: " + ex.getMessage();
+                log.error(errorMessage);
+                if (log.isDebugEnabled()) {
+                    log.debug("Stacktrace: ", ex);
+                }
                 status = AnalysisResultStatusDTO.FAILED;
-                stdout.append(errorMessage).append(ex).append("\r\n");
+                stdout.append(errorMessage).append("\r\n");
             }
-            AnalysisResultDTO result = new AnalysisResultDTO();
-            result.setId(id);
-            result.setRequested(analysis.getRequested());
-            result.setStdout(stdout.toString());
-
             final File zipDir = com.google.common.io.Files.createTempDir();
-            final List<FileSystemResource> resultFSResources
-                    = AnalisysUtils.getFileSystemResources(analysis, file, compressedResult, chunkSize, zipDir);
-
-            result.setStatus(status);
-            callbackService.sendAnalysisResult(analysis.getResultCallback(), callbackPassword, result, resultFSResources);
             try {
-                FileUtils.deleteDirectory(file);
-                FileUtils.deleteQuietly(zipDir);
+                AnalysisResultDTO result = new AnalysisResultDTO();
+                result.setId(id);
+                result.setRequested(analysis.getRequested());
+                result.setStdout(stdout.toString());
+
+                final List<FileSystemResource> resultFSResources
+                        = AnalisysUtils.getFileSystemResources(analysis, file, compressedResult, chunkSize, zipDir);
+
+                result.setStatus(status);
+                callbackService.sendAnalysisResult(analysis.getResultCallback(), callbackPassword, result, resultFSResources);
             } catch (IOException ex) {
-                log.warn(DELETE_DIR_ERROR, file.getAbsolutePath(), ex);
+                log.error(ex.getMessage());
+                if (log.isDebugEnabled()) {
+                    log.debug("Stacktrace: ", ex);
+                }
+            } finally {
+                try {
+                    FileUtils.deleteDirectory(file);
+                    FileUtils.deleteQuietly(zipDir);
+                } catch (IOException ex) {
+                    log.warn(DELETE_DIR_ERROR, file.getAbsolutePath(), ex);
+                }
             }
         });
     }

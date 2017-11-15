@@ -1,9 +1,30 @@
+/*
+ *
+ * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Company: Odysseus Data Services, Inc.
+ * Product Owner/Architecture: Gregory Klebanov
+ * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
+ * Created: March 24, 2017
+ *
+ */
+
 package com.odysseusinc.arachne.executionengine.util;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -67,7 +88,7 @@ public class AnalisysUtils {
     }
 
     public static File extractFiles(List<MultipartFile> files, boolean compressed)
-            throws FileNotFoundException, ZipException {
+            throws IOException, ZipException {
 
         File temporaryDir = com.google.common.io.Files.createTempDir();
 
@@ -90,7 +111,7 @@ public class AnalisysUtils {
         });
     }
 
-    private static void decompressToDir(File parent, List<MultipartFile> files) throws FileNotFoundException, ZipException {
+    private static void decompressToDir(File parent, List<MultipartFile> files) throws IOException, ZipException {
 
         File temporaryDir = com.google.common.io.Files.createTempDir();
         writeContentToDir(temporaryDir, files);
@@ -110,7 +131,7 @@ public class AnalisysUtils {
                                                                   File file,
                                                                   Boolean compressedResult,
                                                                   Long chunkSize,
-                                                                  File dir) {
+                                                                  File dir) throws IOException {
 
         List<File> resultFiles;
         if (compressedResult) {

@@ -1,3 +1,25 @@
+/*
+ *
+ * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Company: Odysseus Data Services, Inc.
+ * Product Owner/Architecture: Gregory Klebanov
+ * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
+ * Created: May 12, 2017
+ *
+ */
+
 package com.odysseusinc.arachne.executionengine.service.sql;
 
 import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.CDM_ETL_REFERENCE;
@@ -26,10 +48,10 @@ import org.apache.commons.lang3.StringUtils;
 
 abstract class AbstractSqlMetadataService implements SqlMetadataService {
 
-    private static final String QUERY_VOCABULARY_V4 = "select vocabulary_name from vocabulary";
-    private static final String QUERY_VOCABULARY_V5 = "select vocabulary_name, vocabulary_version from vocabulary";
+    private static final String QUERY_VOCABULARY_V4 = "select vocabulary_name from %s.vocabulary";
+    private static final String QUERY_VOCABULARY_V5 = "select vocabulary_name, vocabulary_version from %s.vocabulary";
     private static final String REGEX_V4 = "^V4.*";
-    private static final String ALL_CMD_QUERY = "select * from cdm_source";
+    private static final String ALL_CDM_QUERY = "select * from %s.cdm_source";
     protected final DataSourceDTO dataSource;
     private RowMapper<Vocabulary> VocabularyVersionRowMapperV5 = (rs) -> {
         String name = rs.getString("vocabulary_name");
@@ -82,6 +104,7 @@ abstract class AbstractSqlMetadataService implements SqlMetadataService {
         } else {
             result = QUERY_VOCABULARY_V5;
         }
+        result = String.format(result, getSchema());
         return result;
     }
 
@@ -100,7 +123,8 @@ abstract class AbstractSqlMetadataService implements SqlMetadataService {
 
     public String getCdmVersion() throws SQLException {
 
-        return executeQuery(getCdmQuery(), resultSet -> {
+        String cdmQuery = String.format(getCdmQuery(), getSchema());
+        return executeQuery(cdmQuery, resultSet -> {
             if (resultSet.next()) {
                 return resultSet.getString("cdm_version");
             }
@@ -127,7 +151,8 @@ abstract class AbstractSqlMetadataService implements SqlMetadataService {
     @Override
     public List<CdmSource> getCdmSources() throws SQLException {
 
-        return executeQuery(ALL_CMD_QUERY, resultSet -> {
+        String query = String.format(ALL_CDM_QUERY, getSchema());
+        return executeQuery(query, resultSet -> {
             List<CdmSource> result = new LinkedList<>();
             while (resultSet.next()) {
                 CdmSource cdmSource = new CdmSource();
