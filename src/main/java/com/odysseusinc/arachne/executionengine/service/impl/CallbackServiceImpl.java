@@ -22,13 +22,24 @@
 
 package com.odysseusinc.arachne.executionengine.service.impl;
 
+import com.google.common.io.Files;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisExecutionStatusDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,5 +132,33 @@ public class CallbackServiceImpl implements CallbackService {
         } catch (RestClientException ex) {
             log.info(SEND_RESULT_FAILED_LOG, submissionId, ex);
         }
+    }
+
+    @Override
+    public void sendFailedResult(AnalysisRequestDTO analysis, Throwable e, File analysisDir,
+                                 Boolean compressedResult, Long chunkSize) {
+
+        AnalysisResultDTO result = new AnalysisResultDTO();
+        result.setId(analysis.getId());
+        result.setStatus(AnalysisResultStatusDTO.FAILED);
+        result.setRequested(analysis.getRequested());
+        String stdout = "";
+        if (Objects.nonNull(e)) {
+            stdout = ExceptionUtils.getStackTrace(e);
+        }
+        List<FileSystemResource> resultFSResources = null;
+        try {
+            if (Objects.nonNull(analysisDir)) {
+                resultFSResources = AnalisysUtils.getFileSystemResources(analysis, analysisDir, compressedResult, chunkSize,
+                        Files.createTempDir());
+            }
+        } catch (IOException ioe) {
+            log.error("could not collect analysis results, id={}", analysis.getId());
+            stdout += "\n" + ExceptionUtils.getStackTrace(ioe);
+        }
+
+        result.setStdout(stdout);
+        sendAnalysisResult(analysis.getResultCallback(), analysis.getCallbackPassword(),
+                result, resultFSResources);
     }
 }

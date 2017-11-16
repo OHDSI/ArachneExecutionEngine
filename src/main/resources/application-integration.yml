@@ -1,0 +1,14 @@
+# suppress inspection "SpringBootApplicationProperties" for whole file
+submission:
+  update:
+    interval: 3000
+
+runtime:
+  timeOutSec: 86400
+
+swagger:
+  enable: true
+  title: Arachne Execution Engine
+  description: Arachne Execution Engine API
+  version: 1.0.0
+  basePackage: com.odysseusinc.arachne.executionengine.controller
