@@ -1,4 +1,4 @@
-FROM hub.arachnenetwork.com/r-env:1.0.1
+FROM hub.arachnenetwork.com/r-env:1.0.2
 MAINTAINER alexandr.ryabokon@odysseusinc.com
 VOLUME /tmp
 ADD execution-engine.jar /execution-engine.jar
