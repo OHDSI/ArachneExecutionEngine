@@ -21,7 +21,7 @@
 
         <javaDockerVersion>3.0.7</javaDockerVersion>
         <dockerImagePrefix>hub.arachnenetwork.com</dockerImagePrefix>
-        <postgresql.version>9.4.1208-jdbc42-atlassian-hosted</postgresql.version>
+        <postgresql.version>9.1-901-1.jdbc4</postgresql.version>
         <jtds.version>1.3.1</jtds.version>
         <mysql.version>5.1.30</mysql.version>
     </properties>
@@ -114,7 +114,7 @@
         <dependency>
             <groupId>com.amazon.redshift</groupId>
             <artifactId>redshift-jdbc42</artifactId>
-            <version>1.2.10.1009</version>
+            <version>1.2.1.1001</version>
         </dependency>
 
         <dependency>
