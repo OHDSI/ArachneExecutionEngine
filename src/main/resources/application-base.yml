@@ -1,7 +1,7 @@
 # suppress inspection "SpringBootApplicationProperties" for whole file
 server:
   ssl:
-    enabled: true
+    enabled: false
     strictMode: false
     key-store: classpath:keystore.jks
     key-store-password: odysseus

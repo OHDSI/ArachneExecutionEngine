@@ -71,6 +71,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String STDOUT_LOG = "stdout:\n{}";
     private static final String STDOUT_LOG_DIFF = "stdout update:\n{}";
     private static final String DELETE_DIR_ERROR_LOG = "Can't delete analysis directory: '{}'";
+    private static final String ANALYZE_EXECUTION_RESULT_LOG = "Analysis id={} execution is '{}'";
 
     private static final String RUNTIME_ENV_DBMS_USERNAME = "DBMS_USERNAME";
     private static final String RUNTIME_ENV_DBMS_PASSWORD = "DBMS_PASSWORD";
@@ -141,6 +142,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                         result.setStdout(finishStatus.stdout);
                         result.setStatus(finishStatus.exitCode == 0
                                 ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED);
+                        LOGGER.info(ANALYZE_EXECUTION_RESULT_LOG, id, result.getStatus().name());
                     }
 
                     List<FileSystemResource> resultFSResources
