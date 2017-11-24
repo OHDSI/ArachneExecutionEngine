@@ -66,8 +66,8 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String ERROR_BUILDING_COMMAND_LOG = "Error building runtime command";
     private static final String EXECUTING_LOG = "Executing:{}";
     private static final String DESTROYING_PROCESS_LOG = "timeout exceeded, destroying process";
-    private static final String EXECUTION_SUCCESS_LOG = "Execution success, ExitCode='{}'";
-    private static final String EXECUTION_FAILURE_LOG = "Execution failure, ExitCode='{}'";
+    private static final String EXECUTION_SUCCESS_LOG = "Execution id={} success, ExitCode='{}'";
+    private static final String EXECUTION_FAILURE_LOG = "Execution id={} failure, ExitCode='{}'";
     private static final String STDOUT_LOG = "stdout:\n{}";
     private static final String STDOUT_LOG_DIFF = "stdout update:\n{}";
     private static final String DELETE_DIR_ERROR_LOG = "Can't delete analysis directory: '{}'";
@@ -230,9 +230,9 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
         final String stdout = future.get(submissionUpdateInterval * 2, TimeUnit.MILLISECONDS);
         if (process.exitValue() == 0) {
-            LOGGER.info(EXECUTION_SUCCESS_LOG, process.exitValue());
+            LOGGER.info(EXECUTION_SUCCESS_LOG, submissionId, process.exitValue());
         } else {
-            LOGGER.warn(EXECUTION_FAILURE_LOG, process.exitValue());
+            LOGGER.warn(EXECUTION_FAILURE_LOG, submissionId, process.exitValue());
         }
         LOGGER.debug(STDOUT_LOG, stdout);
         return new RuntimeFinishStatus(process.exitValue(), stdout);
