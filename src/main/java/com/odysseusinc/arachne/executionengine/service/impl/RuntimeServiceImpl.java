@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -46,6 +47,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,8 +66,8 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String ERROR_BUILDING_COMMAND_LOG = "Error building runtime command";
     private static final String EXECUTING_LOG = "Executing:{}";
     private static final String DESTROYING_PROCESS_LOG = "timeout exceeded, destroying process";
-    private static final String EXECUTION_SUCCESS_LOG = "Execution success, ExitCode='{}'";
-    private static final String EXECUTION_FAILURE_LOG = "Execution failure, ExitCode='{}'";
+    private static final String EXECUTION_SUCCESS_LOG = "Execution id={} success, ExitCode='{}'";
+    private static final String EXECUTION_FAILURE_LOG = "Execution id={} failure, ExitCode='{}'";
     private static final String STDOUT_LOG = "stdout:\n{}";
     private static final String STDOUT_LOG_DIFF = "stdout update:\n{}";
     private static final String DELETE_DIR_ERROR_LOG = "Can't delete analysis directory: '{}'";
@@ -104,44 +106,63 @@ public class RuntimeServiceImpl implements RuntimeService {
         this.callbackService = callbackService;
     }
 
+    private static String getStdoutDiff(InputStream stream) throws IOException {
+
+        int available = stream.available();
+        if (available > 0) {
+            byte[] buffer = new byte[available];
+            //noinspection ResultOfMethodCallIgnored
+            stream.read(buffer);
+            return new String(buffer);
+        }
+        return "";
+    }
+
     @Override
     public void analyze(AnalysisRequestDTO analysis, File file, Boolean compressedResult, Long chunkSize) {
 
         taskExecutor.execute(() -> {
-            Long id = analysis.getId();
-            String callbackPassword = analysis.getCallbackPassword();
-            String executableFileName = analysis.getExecutableFileName();
-            String updateStatusCallback = analysis.getUpdateStatusCallback();
-            DataSourceDTO dataSource = analysis.getDataSource();
-            RuntimeFinishStatus finishStatus;
-            final File zipDir = com.google.common.io.Files.createTempDir();
             try {
-                String[] command = buildRuntimeCommand(file, executableFileName);
-                final Map<String, String> envp = buildRuntimeEnvVariables(dataSource);
-                finishStatus = runtime(command, envp, file, runtimeTimeOutSec, updateStatusCallback, id, callbackPassword);
-                AnalysisResultDTO result = new AnalysisResultDTO();
-                result.setId(id);
-                result.setRequested(analysis.getRequested());
-                if (finishStatus != null) {
-                    result.setStdout(finishStatus.stdout);
-                    result.setStatus(finishStatus.exitCode == 0
-                            ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED);
-                }
-
-                List<FileSystemResource> resultFSResources
-                        = AnalisysUtils.getFileSystemResources(analysis, file, compressedResult, chunkSize, zipDir);
-                callbackService.sendAnalysisResult(analysis.getResultCallback(), callbackPassword, result, resultFSResources);
-            } catch (FileNotFoundException ex) {
-                LOGGER.error(ERROR_BUILDING_COMMAND_LOG, ex);
-            } catch (InterruptedException | IOException | ExecutionException | TimeoutException ex) {
-                LOGGER.error("", ex);
-            } finally {
+                Long id = analysis.getId();
+                String callbackPassword = analysis.getCallbackPassword();
+                String executableFileName = analysis.getExecutableFileName();
+                String updateStatusCallback = analysis.getUpdateStatusCallback();
+                DataSourceDTO dataSource = analysis.getDataSource();
+                RuntimeFinishStatus finishStatus;
+                final File zipDir = com.google.common.io.Files.createTempDir();
                 try {
-                    FileUtils.deleteDirectory(file);
-                    FileUtils.deleteQuietly(zipDir);
-                } catch (IOException ex) {
-                    LOGGER.warn(DELETE_DIR_ERROR_LOG, file.getAbsolutePath());
+                    String[] command = buildRuntimeCommand(file, executableFileName);
+                    final Map<String, String> envp = buildRuntimeEnvVariables(dataSource);
+                    finishStatus = runtime(command, envp, file, runtimeTimeOutSec, updateStatusCallback, id, callbackPassword);
+                    AnalysisResultDTO result = new AnalysisResultDTO();
+                    result.setId(id);
+                    result.setRequested(analysis.getRequested());
+                    if (finishStatus != null) {
+                        result.setStdout(finishStatus.stdout);
+                        result.setStatus(finishStatus.exitCode == 0
+                                ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED);
+                    }
+
+                    List<FileSystemResource> resultFSResources
+                            = AnalisysUtils.getFileSystemResources(analysis, file, compressedResult, chunkSize, zipDir);
+                    callbackService.sendAnalysisResult(analysis.getResultCallback(), callbackPassword, result, resultFSResources);
+                } catch (FileNotFoundException ex) {
+                    LOGGER.error(ERROR_BUILDING_COMMAND_LOG, ex);
+                    throw ex;
+                } catch (InterruptedException | IOException | ExecutionException | TimeoutException ex) {
+                    LOGGER.error("", ex);
+                    throw ex;
+                } finally {
+                    try {
+                        FileUtils.deleteDirectory(file);
+                        FileUtils.deleteQuietly(zipDir);
+                    } catch (IOException ex) {
+                        LOGGER.warn(DELETE_DIR_ERROR_LOG, file != null ? file.getAbsolutePath() : "");
+                        throw ex;
+                    }
                 }
+            } catch (Throwable t) {
+                callbackService.sendFailedResult(analysis, t, file, compressedResult, chunkSize);
             }
         });
     }
@@ -209,24 +230,12 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
         final String stdout = future.get(submissionUpdateInterval * 2, TimeUnit.MILLISECONDS);
         if (process.exitValue() == 0) {
-            LOGGER.info(EXECUTION_SUCCESS_LOG, process.exitValue());
+            LOGGER.info(EXECUTION_SUCCESS_LOG, submissionId, process.exitValue());
         } else {
-            LOGGER.warn(EXECUTION_FAILURE_LOG, process.exitValue());
+            LOGGER.warn(EXECUTION_FAILURE_LOG, submissionId, process.exitValue());
         }
         LOGGER.debug(STDOUT_LOG, stdout);
         return new RuntimeFinishStatus(process.exitValue(), stdout);
-    }
-
-    private static String getStdoutDiff(InputStream stream) throws IOException {
-
-        int available = stream.available();
-        if (available > 0) {
-            byte[] buffer = new byte[available];
-            //noinspection ResultOfMethodCallIgnored
-            stream.read(buffer);
-            return new String(buffer);
-        }
-        return "";
     }
 
     private class RuntimeFinishStatus {
