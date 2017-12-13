@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.9.0</version>
+    <version>1.10.0</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -136,6 +136,15 @@
             <artifactId>ojdbc6</artifactId>
             <version>12.1.0.1-atlassian-hosted</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jolokia</groupId>
+            <artifactId>jolokia-core</artifactId>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -143,6 +152,7 @@
             <id>dev</id>
             <properties>
                 <env>dev</env>
+                <latestSuffix>-dev</latestSuffix>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -151,13 +161,22 @@
         <profile>
             <id>test</id>
             <properties>
-                <env>test</env>
+                <env>integration</env>
+                <latestSuffix>-snapshot</latestSuffix>
             </properties>
         </profile>
         <profile>
             <id>prod</id>
             <properties>
                 <env>prod</env>
+                <latestSuffix>-prod</latestSuffix>
+            </properties>
+        </profile>
+        <profile>
+            <id>qa</id>
+            <properties>
+                <env>qa</env>
+                <latestSuffix>-qa</latestSuffix>
             </properties>
         </profile>
     </profiles>
@@ -193,7 +212,7 @@
                 <configuration>
                     <imageName>${dockerImagePrefix}/${project.artifactId}</imageName>
                     <imageTags>
-                        <imageTag>latest</imageTag>
+                        <imageTag>latest${latestSuffix}</imageTag>
                         <imageTag>${project.version}</imageTag>
                     </imageTags>
                     <dockerDirectory>src/main/docker</dockerDirectory>
@@ -226,14 +245,23 @@
         </plugins>
         <resources>
             <resource>
-                <directory>properties/${env}</directory>
+                <filtering>false</filtering>
+                <directory>src/main/resources</directory>
                 <includes>
                     <include>**</include>
                 </includes>
-                <filtering>true</filtering>
+                <excludes>
+                    <exclude>application*.yml</exclude>
+                </excludes>
             </resource>
             <resource>
+                <filtering>true</filtering>
                 <directory>src/main/resources</directory>
+                <includes>
+                    <include>application.yml</include>
+                    <include>application-base.yml</include>
+                    <include>application-${env}.yml</include>
+                </includes>
             </resource>
         </resources>
     </build>

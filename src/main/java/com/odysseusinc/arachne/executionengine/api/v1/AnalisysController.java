@@ -20,28 +20,31 @@
  *
  */
 
-
 package com.odysseusinc.arachne.executionengine.api.v1;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
+import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import javax.validation.Valid;
 import net.lingala.zip4j.exception.ZipException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.validation.Valid;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 
 @RestController
@@ -56,12 +59,19 @@ public class AnalisysController {
     @SuppressWarnings("WeakerAccess")
     public static final String REST_API_METRICS = "/metrics";
 
+    public static final String REST_API_THREAD = "/thread";
+
     private final AnalysisService analysisService;
+    private final CallbackService callbackService;
+    private final ThreadPoolTaskExecutor threadPoolExecutor;
 
     @Autowired
-    public AnalisysController(AnalysisService analysisService) {
+    public AnalisysController(AnalysisService analysisService, CallbackService callbackService,
+                              ThreadPoolTaskExecutor threadPoolExecutor) {
 
         this.analysisService = analysisService;
+        this.callbackService = callbackService;
+        this.threadPoolExecutor = threadPoolExecutor;
     }
 
     @ApiOperation(value = "Files for analysis")
@@ -78,8 +88,13 @@ public class AnalisysController {
             @RequestHeader(value = "arachne-result-chunk-size-mb", defaultValue = "10485760") Long chunkSize
     ) throws IOException, ZipException {
 
-        final File analysisDir = AnalisysUtils.extractFiles(files, compressed);
-        return analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, chunkSize);
+        try {
+            final File analysisDir = AnalisysUtils.extractFiles(files, compressed);
+            return analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, chunkSize);
+        } catch (IOException | ZipException e) {
+            callbackService.sendFailedResult(analysisRequest, e, null, waitCompressedResult, chunkSize);
+            throw e;
+        }
     }
 
     @ApiOperation(value = "Prometheus compatible metrics")
@@ -91,6 +106,19 @@ public class AnalisysController {
 
         int busy = analysisService.activeTasks();
         return "busy " + busy;
+    }
+
+    @RequestMapping(value = REST_API_THREAD, method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+    public String thread() {
+
+        StringBuilder result = new StringBuilder();
+        result.append("Queue: ").append(threadPoolExecutor.getThreadPoolExecutor().getQueue().size()).append("\n");
+        result.append("Core pool size: ").append(threadPoolExecutor.getCorePoolSize()).append("\n");
+        result.append("Pool size: ").append(threadPoolExecutor.getPoolSize()).append("\n");
+        result.append("Max pool size: ").append(threadPoolExecutor.getMaxPoolSize()).append("\n");
+        result.append("Active: ").append(threadPoolExecutor.getActiveCount()).append("\n");
+        result.append("Task completed: ").append(threadPoolExecutor.getThreadPoolExecutor().getCompletedTaskCount()).append("\n");
+        return result.toString();
     }
 
 }

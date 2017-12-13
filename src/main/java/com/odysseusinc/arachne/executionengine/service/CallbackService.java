@@ -22,7 +22,10 @@
 
 package com.odysseusinc.arachne.executionengine.service;
 
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
+
+import java.io.File;
 import java.util.Collection;
 import org.springframework.core.io.FileSystemResource;
 
@@ -31,4 +34,7 @@ public interface CallbackService {
 
     void sendAnalysisResult(String resultURL, String password, AnalysisResultDTO analysisResult,
                             Collection<FileSystemResource> files);
+
+    void sendFailedResult(AnalysisRequestDTO analysis, Throwable e, File analysisDir,
+                          Boolean compressedResult, Long chunkSize);
 }

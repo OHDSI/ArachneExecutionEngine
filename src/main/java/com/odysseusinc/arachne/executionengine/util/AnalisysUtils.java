@@ -115,13 +115,12 @@ public class AnalisysUtils {
 
         File temporaryDir = com.google.common.io.Files.createTempDir();
         writeContentToDir(temporaryDir, files);
-        File zipArchive;
         try {
-            zipArchive = getDirectoryItemsFiltered(temporaryDir, FileSystems.getDefault().getPathMatcher("**.sql"))
-                    .stream()
-                    .findAny()
-                    .orElseThrow(() -> new IllegalArgumentException());
-            CommonFileUtils.unzipFiles(zipArchive, parent);
+            // TODO. Temp solution - this will not work correct with splitted archives
+            List<File> fileList = getDirectoryItems(temporaryDir);
+            for (File zippedFile: fileList) {
+                CommonFileUtils.unzipFiles(zippedFile, parent);
+            }
         } finally {
             org.apache.commons.io.FileUtils.deleteQuietly(temporaryDir);
         }
