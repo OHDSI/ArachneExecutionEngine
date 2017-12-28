@@ -23,8 +23,10 @@
 package com.odysseusinc.arachne.executionengine.service;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
+import com.odysseusinc.arachne.executionengine.util.FailedCallback;
+import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
 
 public interface SQLService {
-    void analyze(AnalysisRequestDTO analysis, File file, Boolean compressedResult, Long chunkSize);
+    void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback);
 }
