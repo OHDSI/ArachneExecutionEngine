@@ -50,6 +50,9 @@ public class SqlMetadataServiceFactory {
             case REDSHIFT:
                 result = new RedshiftMetadataService(dataSource);
                 break;
+            case IMPALA:
+                result = new ImpalaMetadataService(dataSource);
+                break;
             default:
                 throw new IllegalArgumentException("DBMS " + type + " is not supported");
         }
