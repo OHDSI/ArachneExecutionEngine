@@ -25,12 +25,23 @@ package com.odysseusinc.arachne.executionengine.service;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
 
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import org.springframework.core.io.FileSystemResource;
 
 public interface CallbackService {
     void updateAnalysisStatus(String updateURL, Long submissionId, String out, String password);
+
+    void processAnalysisResult(
+            AnalysisRequestDTO analysis,
+            AnalysisResultStatusDTO status,
+            String stdout,
+            File resultDir,
+            Boolean compressedResult,
+            Long chunkSize
+    ) throws IOException;
 
     void sendAnalysisResult(String resultURL, String password, AnalysisResultDTO analysisResult,
                             Collection<FileSystemResource> files);
