@@ -141,6 +141,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                     throw ex;
                 }
             } catch (Throwable t) {
+                LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
                 failedCallback.execute(analysis, t, file);
             }
         });
