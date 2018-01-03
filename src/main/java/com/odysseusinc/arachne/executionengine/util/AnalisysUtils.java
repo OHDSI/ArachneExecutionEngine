@@ -135,6 +135,7 @@ public class AnalisysUtils {
         List<File> resultFiles;
         if (compressedResult) {
             final File zipArchive = new File(dir, String.valueOf(analysis.getId()) + "_result.zip");
+            log.info("Adding folder \"" + file.getAbsolutePath() + "\" to zip \"" + zipArchive.getAbsolutePath() + "\" with chunck size = " + chunkSize);
             final File zipDir = CommonFileUtils.compressAndSplit(file, zipArchive, chunkSize);
             resultFiles = AnalisysUtils.getDirectoryItems(zipDir);
         } else {

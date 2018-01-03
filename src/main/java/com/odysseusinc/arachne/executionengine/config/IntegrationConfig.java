@@ -43,7 +43,11 @@ public class IntegrationConfig {
     @Bean(name = "nodeRestTemplate")
     public RestTemplate centralRestTemplate(HttpClient httpClient) {
 
-        return new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
+        HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient);
+        // https://jira.spring.io/browse/SPR-7909
+        // Not to put posted files into memory, which can cause Heap overflow in case of big files
+        requestFactory.setBufferRequestBody(false);
+        return new RestTemplate(requestFactory);
     }
 
     @Configuration
