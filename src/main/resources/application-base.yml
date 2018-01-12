@@ -15,8 +15,8 @@ logging:
 spring:
   http:
     multipart:
-      max-request-size: 128MB
-      max-file-size: 128MB
+      max-request-size: 256MB
+      max-file-size: 256MB
 
 executor:
   corePoolSize: 4
