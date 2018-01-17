@@ -37,7 +37,7 @@ else
 fi
 
 echo "Building docker image"
-if mvn clean package -P "$1"
+if mvn -Dmaven.test.skip clean package -P "$1"
 then
     echo "SUCCESS"
 else
