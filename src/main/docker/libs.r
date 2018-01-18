@@ -5,4 +5,3 @@ drat::addRepo(c("OHDSI","cloudyr"))
 
 install_github("odysseusinc/FeatureExtraction", ref="v1.2.3-develop") # v1.2.3-develop
 install_github("OHDSI/SqlRender", ref="#f1a029c") # 1.4.8-SNAPSHOT
-install_version("PatientLevelPrediction", version="1.2.2", type="source")
