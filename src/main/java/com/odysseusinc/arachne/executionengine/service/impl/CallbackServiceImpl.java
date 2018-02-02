@@ -39,6 +39,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +68,8 @@ public class CallbackServiceImpl implements CallbackService {
             "Sending stdout to callback for analysis with id='{}'";
     private static final String UPDATE_STATUS_FAILED_LOG = "Update analysis status id={} failed";
     private static final String SEND_RESULT_FAILED_LOG = "Send analysis result id={} failed";
+    private static final String EXECUTION_RESULT_FILES_COUNT_LOG = "Execution id={} produced {} result files";
+    private static final String DELETE_DIR_ERROR_LOG = "Can't delete analysis directory: '{}'";
 
     @Autowired
     public CallbackServiceImpl(@Qualifier("nodeRestTemplate") RestTemplate nodeRestTemplate) {
@@ -100,6 +103,48 @@ public class CallbackServiceImpl implements CallbackService {
                 log.info(UPDATE_STATUS_FAILED_LOG, submissionId, ex);
             }
             outSented.replace(submissionId, current);
+        }
+    }
+
+    @Override
+    public void processAnalysisResult(
+            AnalysisRequestDTO analysis,
+            AnalysisResultStatusDTO status,
+            String stdout,
+            File resultDir,
+            Boolean compressedResult,
+            Long chunkSize
+    ) throws IOException {
+
+        final File zipDir = com.google.common.io.Files.createTempDir();
+        try {
+            AnalysisResultDTO result = new AnalysisResultDTO();
+            result.setId(analysis.getId());
+            result.setRequested(analysis.getRequested());
+            result.setStdout(stdout);
+            result.setStatus(status);
+
+            int resultFilesCnt = AnalisysUtils.getDirectoryItems(resultDir).size();
+            log.info(EXECUTION_RESULT_FILES_COUNT_LOG, analysis.getId(), resultFilesCnt);
+
+            final List<FileSystemResource> resultFSResources
+                    = AnalisysUtils.getFileSystemResources(analysis, resultDir, compressedResult, chunkSize, zipDir);
+
+            sendAnalysisResult(analysis.getResultCallback(), analysis.getCallbackPassword(), result, resultFSResources);
+        } catch (IOException ex) {
+            log.error(ex.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("Stacktrace: ", ex);
+            }
+            throw ex;
+        } finally {
+            try {
+                FileUtils.deleteDirectory(resultDir);
+                FileUtils.deleteQuietly(zipDir);
+            } catch (IOException ex) {
+                log.warn(DELETE_DIR_ERROR_LOG, resultDir.getAbsolutePath(), ex);
+                throw ex;
+            }
         }
     }
 

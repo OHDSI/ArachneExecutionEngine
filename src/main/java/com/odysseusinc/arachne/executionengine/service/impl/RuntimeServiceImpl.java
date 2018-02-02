@@ -23,13 +23,13 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
-import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 
+import com.odysseusinc.arachne.executionengine.util.FailedCallback;
+import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -37,7 +37,6 @@ import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -48,12 +47,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -119,7 +116,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     }
 
     @Override
-    public void analyze(AnalysisRequestDTO analysis, File file, Boolean compressedResult, Long chunkSize) {
+    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback) {
 
         taskExecutor.execute(() -> {
             try {
@@ -129,40 +126,23 @@ public class RuntimeServiceImpl implements RuntimeService {
                 String updateStatusCallback = analysis.getUpdateStatusCallback();
                 DataSourceDTO dataSource = analysis.getDataSource();
                 RuntimeFinishStatus finishStatus;
-                final File zipDir = com.google.common.io.Files.createTempDir();
                 try {
                     String[] command = buildRuntimeCommand(file, executableFileName);
                     final Map<String, String> envp = buildRuntimeEnvVariables(dataSource);
                     finishStatus = runtime(command, envp, file, runtimeTimeOutSec, updateStatusCallback, id, callbackPassword);
-                    AnalysisResultDTO result = new AnalysisResultDTO();
-                    result.setId(id);
-                    result.setRequested(analysis.getRequested());
-                    if (finishStatus != null) {
-                        result.setStdout(finishStatus.stdout);
-                        result.setStatus(finishStatus.exitCode == 0
-                                ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED);
-                    }
-
-                    List<FileSystemResource> resultFSResources
-                            = AnalisysUtils.getFileSystemResources(analysis, file, compressedResult, chunkSize, zipDir);
-                    callbackService.sendAnalysisResult(analysis.getResultCallback(), callbackPassword, result, resultFSResources);
+                    AnalysisResultStatusDTO resultStatusDTO = finishStatus.exitCode == 0
+                            ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
+                    resultCallback.execute(analysis, resultStatusDTO, finishStatus.stdout, file);
                 } catch (FileNotFoundException ex) {
                     LOGGER.error(ERROR_BUILDING_COMMAND_LOG, ex);
                     throw ex;
                 } catch (InterruptedException | IOException | ExecutionException | TimeoutException ex) {
                     LOGGER.error("", ex);
                     throw ex;
-                } finally {
-                    try {
-                        FileUtils.deleteDirectory(file);
-                        FileUtils.deleteQuietly(zipDir);
-                    } catch (IOException ex) {
-                        LOGGER.warn(DELETE_DIR_ERROR_LOG, file != null ? file.getAbsolutePath() : "");
-                        throw ex;
-                    }
                 }
             } catch (Throwable t) {
-                callbackService.sendFailedResult(analysis, t, file, compressedResult, chunkSize);
+                LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
+                failedCallback.execute(analysis, t, file);
             }
         });
     }
