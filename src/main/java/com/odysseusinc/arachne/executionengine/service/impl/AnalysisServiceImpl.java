@@ -31,6 +31,8 @@ import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
+import com.odysseusinc.arachne.executionengine.util.FailedCallback;
+import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,16 +83,22 @@ public class AnalysisServiceImpl implements AnalysisService {
             }
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
+
+            ResultCallback resultCallback = (finishedAnalysis, resultStatus, stdout, resultDir) ->
+                    callbackService.processAnalysisResult(finishedAnalysis, resultStatus, stdout, resultDir, compressedResult, chunkSize);
+            FailedCallback failedCallback = (failedAnalysis, ex, resultDir) ->
+                    callbackService.sendFailedResult(failedAnalysis, ex, resultDir, compressedResult, chunkSize);
+
             switch (fileExtension) {
                 case "sql": {
-                    sqlService.analyze(analysis, analysisDir, compressedResult, chunkSize);
+                    sqlService.analyze(analysis, analysisDir, resultCallback, failedCallback);
                     logger.info("analysis with id={} started in SQL Service", analysis.getId());
                     status = AnalysisRequestTypeDTO.SQL;
                     break;
                 }
 
                 case "r": {
-                    runtimeService.analyze(analysis, analysisDir, compressedResult, chunkSize);
+                    runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback);
                     logger.info("analysis with id={} started in R Runtime Service", analysis.getId());
                     status = AnalysisRequestTypeDTO.R;
                     break;
