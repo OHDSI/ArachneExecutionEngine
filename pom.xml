@@ -46,6 +46,11 @@
             <artifactId>execution-engine-commons</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.odysseusinc.arachne</groupId>
+            <artifactId>arachne-commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!--Swagger-->
         <dependency>
