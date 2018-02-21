@@ -114,11 +114,16 @@ public class RuntimeServiceImpl implements RuntimeService {
     @PostConstruct
     public void init(){
 
-        if (StringUtils.isNotBlank(distArchive)) {
+        if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
             LOGGER.info("Runtime service running in ISOLATED environment mode");
         } else {
             LOGGER.info("Runtime service running in SINGLE mode");
         }
+    }
+
+    private RuntimeServiceMode getRuntimeServiceMode(){
+
+        return StringUtils.isNotBlank(distArchive) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
     }
 
     private static String getStdoutDiff(InputStream stream) throws IOException {
@@ -203,7 +208,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                     + fileName + "' is not exists in directory '" + workingDir.getAbsolutePath() + "'");
         }
         String[] command;
-        if (StringUtils.isNotBlank(distArchive)) {
+        if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
             command = new String[]{"bash", runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, distArchive};
         } else {
             command = new String[]{EXECUTION_COMMAND, fileName};
@@ -309,5 +314,9 @@ public class RuntimeServiceImpl implements RuntimeService {
 
             return stdout.toString();
         }
+    }
+
+    enum RuntimeServiceMode {
+        SINGLE, ISOLATED
     }
 }
