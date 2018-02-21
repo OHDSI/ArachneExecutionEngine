@@ -46,7 +46,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import javax.annotation.PostConstruct;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +62,7 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RuntimeServiceImpl.class);
 
-    private static final String EXECUTION_COMMAND = "%s %s %s";
+    private static final String EXECUTION_COMMAND = "Rscript";
     private static final String ERROR_BUILDING_COMMAND_LOG = "Error building runtime command";
     private static final String EXECUTING_LOG = "Executing:{}";
     private static final String DESTROYING_PROCESS_LOG = "timeout exceeded, destroying process";
@@ -97,8 +99,8 @@ public class RuntimeServiceImpl implements RuntimeService {
     private int runtimeTimeOutSec;
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
-
-    private String distArchive = "/home/vkoulakov/projects/odysseus/r/trusty-r-base.tar.gz";
+    @Value("${runtimeservice.dist.archive}")
+    private String distArchive;
 
 
     @Autowired
@@ -107,6 +109,16 @@ public class RuntimeServiceImpl implements RuntimeService {
         this.taskExecutor = taskExecutor;
         this.callbackService = callbackService;
         this.resourceLoader = resourceLoader;
+    }
+
+    @PostConstruct
+    public void init(){
+
+        if (StringUtils.isNotBlank(distArchive)) {
+            LOGGER.info("Runtime service running in ISOLATED environment mode");
+        } else {
+            LOGGER.info("Runtime service running in SINGLE mode");
+        }
     }
 
     private static String getStdoutDiff(InputStream stream) throws IOException {
@@ -190,7 +202,13 @@ public class RuntimeServiceImpl implements RuntimeService {
             throw new FileNotFoundException("file '"
                     + fileName + "' is not exists in directory '" + workingDir.getAbsolutePath() + "'");
         }
-        return new String[]{"bash", runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, distArchive};
+        String[] command;
+        if (StringUtils.isNotBlank(distArchive)) {
+            command = new String[]{"bash", runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, distArchive};
+        } else {
+            command = new String[]{EXECUTION_COMMAND, fileName};
+        }
+        return command;
     }
 
     private Map<String, String> buildRuntimeEnvVariables(DataSourceDTO dataSource) {

@@ -2,6 +2,9 @@ FROM hub.arachnenetwork.com/r-env:1.0.3
 MAINTAINER alexandr.ryabokon@odysseusinc.com
 VOLUME /tmp
 VOLUME /libs-r
+VOLUME /dist
+RUN apt-get update && apt-get install -y sudo
+RUN rm -f /usr/bin/java && update-alternatives --config java
 ENV R_INSTALL_SCRIPT=libs.r
 ADD execution-engine.jar /execution-engine.jar
 RUN mkdir /impala
