@@ -3,6 +3,7 @@
 DIST=trusty
 ARCH=amd64
 BUILD_PATH=./dist
+WS=`dirname $0`
 
 function print_help {
 	echo "Usage: run_build.sh [OPTIONS]"
@@ -66,8 +67,8 @@ echo ""
 debootstrap --arch amd64 trusty $BUILD_PATH http://ubuntu.cs.utah.edu/ubuntu/
 mount --bind /proc $BUILD_PATH/proc
 
-cp install_packages.sh $BUILD_PATH/root/
-cp libs.r $BUILD_PATH/root/
+cp $WS/install_packages.sh $BUILD_PATH/root/
+cp $WS/libs.r $BUILD_PATH/root/
 
 sudo chroot $BUILD_PATH /root/install_packages.sh $DIST
 
