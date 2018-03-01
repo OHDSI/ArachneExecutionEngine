@@ -36,7 +36,7 @@ import static com.odysseusinc.arachne.executionengine.util.DateUtil.defaultForma
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecureDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.model.CdmSource;
 import com.odysseusinc.arachne.executionengine.model.Vocabulary;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
@@ -79,7 +79,7 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
     @Override
     public void extractMetadata(AnalysisRequestDTO analysis, File dir) throws SQLException, IOException {
 
-        DataSourceUnsecureDTO dataSource = analysis.getDataSource();
+        DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
         try {
             SqlMetadataService metadataService = sqlMetadataServiceFactory.getMetadataService(dataSource);
             String cdmVersion = detectCdmVersion(metadataService);
@@ -137,7 +137,7 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
         }
     }
 
-    private String composeComment(DataSourceUnsecureDTO dataSource) {
+    private String composeComment(DataSourceUnsecuredDTO dataSource) {
 
         Map<String, String> values = new HashMap<>();
         values.put("database", dataSource.getConnectionString());
