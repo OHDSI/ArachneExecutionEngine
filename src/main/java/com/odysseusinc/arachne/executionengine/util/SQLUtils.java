@@ -22,7 +22,7 @@
 
 package com.odysseusinc.arachne.executionengine.util;
 
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecureDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 public class SQLUtils {
     private static final Logger logger = LoggerFactory.getLogger(SQLUtils.class);
 
-    public static Connection getConnection(DataSourceUnsecureDTO dataSource) throws SQLException {
+    public static Connection getConnection(DataSourceUnsecuredDTO dataSource) throws SQLException {
 
         Connection conn = getConnectionWithAutoCommit(dataSource);
         conn.setAutoCommit(Boolean.FALSE);
@@ -40,7 +40,7 @@ public class SQLUtils {
         return conn;
     }
 
-    public static Connection getConnectionWithAutoCommit(DataSourceUnsecureDTO dataSource) throws SQLException {
+    public static Connection getConnectionWithAutoCommit(DataSourceUnsecuredDTO dataSource) throws SQLException {
 
         String user = dataSource.getUsername();
         String password = dataSource.getPassword();
