@@ -175,7 +175,7 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
         return new StrSubstitutor(values).replace(COMMENT);
     }
 
-    private String detectCdmVersion(DataSourceDTO dataSource, SqlMetadataService metadataService) throws SQLException {
+    private String detectCdmVersion(DataSourceUnsecureDTO dataSource, SqlMetadataService metadataService) throws SQLException {
 
         CommonCDMVersionDTO version = null;
         try {
@@ -203,7 +203,7 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
         return Objects.isNull(version) ? null : version.name();
     }
 
-    private void checkCdmTables(DataSourceDTO dataSource, String pattern, String version) throws SQLException, IOException {
+    private void checkCdmTables(DataSourceUnsecureDTO dataSource, String pattern, String version) throws SQLException, IOException {
 
         Resource queryFile = resourceLoader.getResource(ResourceUtils.CLASSPATH_URL_PREFIX + String.format(pattern, version));
         try (Reader r = new InputStreamReader(queryFile.getInputStream())) {
