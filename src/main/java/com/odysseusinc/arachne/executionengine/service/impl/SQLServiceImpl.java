@@ -23,12 +23,13 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
+import com.odysseusinc.arachne.executionengine.util.FailedCallback;
+import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import com.odysseusinc.arachne.executionengine.util.SQLUtils;
 
 import java.io.BufferedWriter;
@@ -50,19 +51,16 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
 
 @Service
 public class SQLServiceImpl implements SQLService {
-    private static final String DELETE_DIR_ERROR = "Can't delete analysis directory: '{}'";
     private static final PathMatcher SQL_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.sql");
     private final Logger log = LoggerFactory.getLogger(SQLServiceImpl.class);
     private final TaskExecutor taskExecutor;
@@ -79,13 +77,13 @@ public class SQLServiceImpl implements SQLService {
     }
 
     @Override
-    public void analyze(AnalysisRequestDTO analysis, File file, Boolean compressedResult, Long chunkSize) {
+    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback) {
 
         taskExecutor.execute(() -> {
             try {
                 AnalysisResultStatusDTO status = AnalysisResultStatusDTO.EXECUTED;
                 StringBuilder stdout = new StringBuilder();
-                DataSourceDTO dataSource = analysis.getDataSource();
+                DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
                 Long id = analysis.getId();
                 String callbackPassword = analysis.getCallbackPassword();
 
@@ -165,34 +163,9 @@ public class SQLServiceImpl implements SQLService {
                     status = AnalysisResultStatusDTO.FAILED;
                     stdout.append(errorMessage).append("\r\n");
                 }
-                final File zipDir = com.google.common.io.Files.createTempDir();
-                try {
-                    AnalysisResultDTO result = new AnalysisResultDTO();
-                    result.setId(id);
-                    result.setRequested(analysis.getRequested());
-                    result.setStdout(stdout.toString());
-
-                    final List<FileSystemResource> resultFSResources
-                            = AnalisysUtils.getFileSystemResources(analysis, file, compressedResult, chunkSize, zipDir);
-
-                    result.setStatus(status);
-                    callbackService.sendAnalysisResult(analysis.getResultCallback(), callbackPassword, result, resultFSResources);
-                } catch (IOException ex) {
-                    log.error(ex.getMessage());
-                    if (log.isDebugEnabled()) {
-                        log.debug("Stacktrace: ", ex);
-                    }
-                    throw ex;
-                } finally {
-                    try {
-                        FileUtils.deleteDirectory(file);
-                        FileUtils.deleteQuietly(zipDir);
-                    } catch (IOException ex) {
-                        log.warn(DELETE_DIR_ERROR, file.getAbsolutePath(), ex);
-                    }
-                }
+                resultCallback.execute(analysis, status, stdout.toString(), file);
             } catch (Throwable t) {
-                callbackService.sendFailedResult(analysis, t, file, compressedResult, chunkSize);
+                failedCallback.execute(analysis, t, file);
             }
         });
     }
