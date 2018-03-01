@@ -24,7 +24,7 @@ package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecureDTO;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
@@ -147,7 +147,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                 String callbackPassword = analysis.getCallbackPassword();
                 String executableFileName = analysis.getExecutableFileName();
                 String updateStatusCallback = analysis.getUpdateStatusCallback();
-                DataSourceDTO dataSource = analysis.getDataSource();
+                DataSourceUnsecureDTO dataSource = analysis.getDataSource();
                 RuntimeFinishStatus finishStatus;
                 try {
                     File runFile = prepareEnvironment(file);
@@ -216,7 +216,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         return command;
     }
 
-    private Map<String, String> buildRuntimeEnvVariables(DataSourceDTO dataSource) {
+    private Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecureDTO dataSource) {
 
         Map<String, String> environment = new HashMap<>();
         environment.put(RUNTIME_ENV_DBMS_USERNAME, dataSource.getUsername());

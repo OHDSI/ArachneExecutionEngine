@@ -24,7 +24,7 @@ package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecureDTO;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
@@ -83,7 +83,7 @@ public class SQLServiceImpl implements SQLService {
             try {
                 AnalysisResultStatusDTO status = AnalysisResultStatusDTO.EXECUTED;
                 StringBuilder stdout = new StringBuilder();
-                DataSourceDTO dataSource = analysis.getDataSource();
+                DataSourceUnsecureDTO dataSource = analysis.getDataSource();
                 Long id = analysis.getId();
                 String callbackPassword = analysis.getCallbackPassword();
 

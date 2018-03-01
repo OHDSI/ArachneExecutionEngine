@@ -33,7 +33,7 @@ import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.SOURC
 import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.SOURCE_RELEASE_DATE;
 import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.VOCABULARY_VERSION;
 
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecureDTO;
 import com.odysseusinc.arachne.executionengine.model.CdmSource;
 import com.odysseusinc.arachne.executionengine.model.Vocabulary;
 import com.odysseusinc.arachne.executionengine.util.SQLUtils;
@@ -52,7 +52,7 @@ abstract class AbstractSqlMetadataService implements SqlMetadataService {
     private static final String QUERY_VOCABULARY_V5 = "select vocabulary_name, vocabulary_version from %s.vocabulary";
     private static final String REGEX_V4 = "^V4.*";
     private static final String ALL_CDM_QUERY = "select * from %s.cdm_source";
-    protected final DataSourceDTO dataSource;
+    protected final DataSourceUnsecureDTO dataSource;
     private RowMapper<Vocabulary> VocabularyVersionRowMapperV5 = (rs) -> {
         String name = rs.getString("vocabulary_name");
         String version = rs.getString("vocabulary_version");
@@ -61,7 +61,7 @@ abstract class AbstractSqlMetadataService implements SqlMetadataService {
     private RowMapper<Vocabulary> VocabularyVersionRowMapperV4 =
             (rs) -> new Vocabulary(rs.getString("vocabulary_name"), null);
 
-    AbstractSqlMetadataService(DataSourceDTO dataSource) {
+    AbstractSqlMetadataService(DataSourceUnsecureDTO dataSource) {
 
         this.dataSource = dataSource;
     }
