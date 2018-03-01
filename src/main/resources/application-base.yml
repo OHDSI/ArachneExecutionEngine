@@ -45,3 +45,7 @@ endpoints:
 
 management:
   port: 9999
+
+tmp:
+  holder:
+    cron: 0 * * ? * *
