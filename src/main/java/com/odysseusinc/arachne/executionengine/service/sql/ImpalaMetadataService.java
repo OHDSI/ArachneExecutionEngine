@@ -1,13 +1,13 @@
 package com.odysseusinc.arachne.executionengine.service.sql;
 
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecureDTO;
 
 public class ImpalaMetadataService extends AbstractSqlMetadataService {
 
     public static final String DEFAULT_SCHEMA = "default";
     public static final String CDM_QUERY = "select cdm_version from %s.cdm_source limit 1";
 
-    public ImpalaMetadataService(DataSourceDTO dataSource) {
+    public ImpalaMetadataService(DataSourceUnsecureDTO dataSource) {
 
         super(dataSource);
     }

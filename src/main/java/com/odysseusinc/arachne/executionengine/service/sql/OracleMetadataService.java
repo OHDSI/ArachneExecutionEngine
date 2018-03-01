@@ -22,13 +22,13 @@
 
 package com.odysseusinc.arachne.executionengine.service.sql;
 
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecureDTO;
 
 public class OracleMetadataService extends AbstractSqlMetadataService implements SqlMetadataService {
 
     private static final String CDM_QUERY = "select cdm_version from %s.cdm_source where ROWNUM = 1";
 
-    OracleMetadataService(DataSourceDTO dataSource) {
+    OracleMetadataService(DataSourceUnsecureDTO dataSource) {
 
         super(dataSource);
     }
