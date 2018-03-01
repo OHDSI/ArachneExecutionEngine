@@ -37,7 +37,7 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecureDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.model.CdmSource;
 import com.odysseusinc.arachne.executionengine.model.Vocabulary;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
@@ -110,7 +110,7 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
     @Override
     public void extractMetadata(AnalysisRequestDTO analysis, File dir) throws SQLException, IOException {
 
-        DataSourceUnsecureDTO dataSource = analysis.getDataSource();
+        DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
         try {
             SqlMetadataService metadataService = sqlMetadataServiceFactory.getMetadataService(dataSource);
             String cdmVersion = detectCdmVersion(dataSource, metadataService);
@@ -168,14 +168,14 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
         }
     }
 
-    private String composeComment(DataSourceUnsecureDTO dataSource) {
+    private String composeComment(DataSourceUnsecuredDTO dataSource) {
 
         Map<String, String> values = new HashMap<>();
         values.put("database", dataSource.getConnectionString());
         return new StrSubstitutor(values).replace(COMMENT);
     }
 
-    private String detectCdmVersion(DataSourceUnsecureDTO dataSource, SqlMetadataService metadataService) throws SQLException {
+    private String detectCdmVersion(DataSourceUnsecuredDTO dataSource, SqlMetadataService metadataService) throws SQLException {
 
         CommonCDMVersionDTO version = null;
         try {
@@ -203,7 +203,7 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
         return Objects.isNull(version) ? null : version.name();
     }
 
-    private void checkCdmTables(DataSourceUnsecureDTO dataSource, String pattern, String version) throws SQLException, IOException {
+    private void checkCdmTables(DataSourceUnsecuredDTO dataSource, String pattern, String version) throws SQLException, IOException {
 
         Resource queryFile = resourceLoader.getResource(ResourceUtils.CLASSPATH_URL_PREFIX + String.format(pattern, version));
         try (Reader r = new InputStreamReader(queryFile.getInputStream())) {
