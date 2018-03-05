@@ -27,8 +27,8 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
-
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
+import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -46,11 +46,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import javax.annotation.PostConstruct;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -90,17 +93,32 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     private final TaskExecutor taskExecutor;
     private final CallbackService callbackService;
+    private final ResourceLoader resourceLoader;
 
     @Value("${runtime.timeOutSec}")
     private int runtimeTimeOutSec;
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
+    @Value("${runtimeservice.dist.archive}")
+    private String distArchive;
+
 
     @Autowired
-    public RuntimeServiceImpl(TaskExecutor taskExecutor, CallbackService callbackService) {
+    public RuntimeServiceImpl(TaskExecutor taskExecutor, CallbackService callbackService, ResourceLoader resourceLoader) {
 
         this.taskExecutor = taskExecutor;
         this.callbackService = callbackService;
+        this.resourceLoader = resourceLoader;
+    }
+
+    @PostConstruct
+    public void init(){
+
+        if (StringUtils.isNotBlank(distArchive)) {
+            LOGGER.info("Runtime service running in ISOLATED environment mode");
+        } else {
+            LOGGER.info("Runtime service running in SINGLE mode");
+        }
     }
 
     private static String getStdoutDiff(InputStream stream) throws IOException {
@@ -127,12 +145,18 @@ public class RuntimeServiceImpl implements RuntimeService {
                 DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
                 RuntimeFinishStatus finishStatus;
                 try {
-                    String[] command = buildRuntimeCommand(file, executableFileName);
-                    final Map<String, String> envp = buildRuntimeEnvVariables(dataSource);
-                    finishStatus = runtime(command, envp, file, runtimeTimeOutSec, updateStatusCallback, id, callbackPassword);
-                    AnalysisResultStatusDTO resultStatusDTO = finishStatus.exitCode == 0
-                            ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
-                    resultCallback.execute(analysis, resultStatusDTO, finishStatus.stdout, file);
+                    File runFile = prepareEnvironment(file);
+                    try {
+                        String[] command = buildRuntimeCommand(runFile, file, executableFileName);
+                        final Map<String, String> envp = buildRuntimeEnvVariables(dataSource);
+                        finishStatus = runtime(command, envp, file, runtimeTimeOutSec, updateStatusCallback, id, callbackPassword);
+                        AnalysisResultStatusDTO resultStatusDTO = finishStatus.exitCode == 0
+                                ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
+                        cleanupEnvironment(file);
+                        resultCallback.execute(analysis, resultStatusDTO, finishStatus.stdout, file);
+                    }finally {
+                        FileUtils.deleteQuietly(runFile);
+                    }
                 } catch (FileNotFoundException ex) {
                     LOGGER.error(ERROR_BUILDING_COMMAND_LOG, ex);
                     throw ex;
@@ -141,13 +165,31 @@ public class RuntimeServiceImpl implements RuntimeService {
                     throw ex;
                 }
             } catch (Throwable t) {
-                LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
+                 LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
                 failedCallback.execute(analysis, t, file);
             }
         });
     }
 
-    private String[] buildRuntimeCommand(File workingDir, String fileName) throws FileNotFoundException {
+    private File prepareEnvironment(File directory) throws IOException {
+
+        return FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/jail.sh", "ee", ".sh");
+    }
+
+    private void cleanupEnvironment(File directory) throws IOException {
+
+        File cleanupScript = FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/cleanup.sh", "ee", ".sh");
+        try{
+            ProcessBuilder pb = new ProcessBuilder("bash", cleanupScript.getAbsolutePath(), directory.getAbsolutePath());
+            Process p = pb.start();
+            p.waitFor();
+        } catch (InterruptedException ignored) {
+        } finally {
+            FileUtils.deleteQuietly(cleanupScript);
+        }
+    }
+
+    private String[] buildRuntimeCommand(File runFile, File workingDir, String fileName) throws FileNotFoundException {
 
         if (!workingDir.exists()) {
             throw new FileNotFoundException("Working directory with name" + workingDir.getAbsolutePath() + "is not exists");
@@ -160,7 +202,13 @@ public class RuntimeServiceImpl implements RuntimeService {
             throw new FileNotFoundException("file '"
                     + fileName + "' is not exists in directory '" + workingDir.getAbsolutePath() + "'");
         }
-        return new String[]{EXECUTION_COMMAND, fileName};
+        String[] command;
+        if (StringUtils.isNotBlank(distArchive)) {
+            command = new String[]{"bash", runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, distArchive};
+        } else {
+            command = new String[]{EXECUTION_COMMAND, fileName};
+        }
+        return command;
     }
 
     private Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource) {
