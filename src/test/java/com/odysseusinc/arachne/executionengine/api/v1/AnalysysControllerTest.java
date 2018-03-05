@@ -27,7 +27,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -156,7 +156,7 @@ public class AnalysysControllerTest {
         analysis.setCallbackPassword("password");
         analysis.setUpdateStatusCallback(BASE_URL + ":" + serverPort + "/submissions/{id}/update/{password}");
         analysis.setResultCallback(BASE_URL + ":" + serverPort + "/submissions/{id}/result/{password}");
-        DataSourceDTO dataSource = new DataSourceDTO();
+        DataSourceUnsecuredDTO dataSource = new DataSourceUnsecuredDTO();
         dataSource.setType(DBMSType.POSTGRESQL);
         dataSource.setConnectionString("");
         dataSource.setUsername("postgres");
