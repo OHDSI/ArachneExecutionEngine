@@ -6,13 +6,13 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.11.0</version>
+    <version>1.11.2</version>
     <packaging>jar</packaging>
 
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring.boot.version>1.4.1.RELEASE</spring.boot.version>
+        <spring.boot.version>1.5.4.RELEASE</spring.boot.version>
 
         <start-class>com.odysseusinc.arachne.executionengine.ExecutionEngineStarter</start-class>
 
@@ -29,7 +29,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.4.1.RELEASE</version>
+        <version>1.5.4.RELEASE</version>
         <relativePath/>
     </parent>
 
@@ -187,6 +187,12 @@
             <artifactId>zookeeper</artifactId>
             <version>3.4.6</version>
             <type>pom</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- End of Impala driver -->

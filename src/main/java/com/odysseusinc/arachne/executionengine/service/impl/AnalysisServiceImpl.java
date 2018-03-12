@@ -78,7 +78,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         try {
             try {
                 cdmMetadataService.extractMetadata(analysis, analysisDir);
-            } catch (SQLException | IOException e) {
+            } catch (Exception e) {
                 logger.info("Failed to collect CDM metadata. " + e);
             }
             String executableFileName = analysis.getExecutableFileName();
