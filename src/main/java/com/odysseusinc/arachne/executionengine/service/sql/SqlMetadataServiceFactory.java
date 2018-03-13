@@ -22,7 +22,7 @@
 
 package com.odysseusinc.arachne.executionengine.service.sql;
 
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import org.springframework.stereotype.Component;
 
