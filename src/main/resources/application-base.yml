@@ -45,3 +45,10 @@ endpoints:
 
 management:
   port: 9999
+
+runtimeservice:
+  dist:
+    archive:
+tmp:
+  holder:
+    cron: 0 * * ? * *
