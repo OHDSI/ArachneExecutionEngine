@@ -12,7 +12,7 @@ apt-get update && apt-get install -y openjdk-8-jdk
 rm -f /usr/bin/java
 update-alternatives --config java
 
-apt-get install -y libpq-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https
+apt-get install -y libpq-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev
 #krb5-user
 
 wget http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip \
@@ -34,7 +34,7 @@ cat >> /etc/R/Rprofile.site <<_EOF_
 local({ 
   # add MASS to the default packages, set a CRAN mirror  
   old <- getOption("defaultPackages"); r <- getOption("repos") 
-  r["CRAN"] <- "http://ftp.gwdg.de/pub/misc/cran/" 
+  r["CRAN"] <- "https://cran.cnr.berkeley.edu/"
   options(defaultPackages = c(old, "MASS"), repos = r) 
 })
 _EOF_
