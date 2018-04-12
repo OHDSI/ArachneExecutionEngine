@@ -20,7 +20,7 @@
         <springfoxSwagger2Version>2.6.0</springfoxSwagger2Version>
 
         <javaDockerVersion>3.0.7</javaDockerVersion>
-        <dockerImagePrefix>hub.arachnenetwork.com</dockerImagePrefix>
+        <dockerImagePrefix>odysseusinc</dockerImagePrefix>
         <postgresql.version>9.1-901-1.jdbc4</postgresql.version>
         <jtds.version>1.3.1</jtds.version>
         <mysql.version>5.1.30</mysql.version>
@@ -280,8 +280,7 @@
                             <include>${project.build.finalName}.${project.packaging}</include>
                         </resource>
                     </resources>
-                    <serverId>arachne-hub</serverId>
-                    <registryUrl>https://hub.arachnenetwork.com/v2/</registryUrl>
+                    <serverId>docker-hub</serverId>
                 </configuration>
                 <executions>
                     <execution>
