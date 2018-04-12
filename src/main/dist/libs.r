@@ -7,7 +7,7 @@ drat::addRepo(c("OHDSI","cloudyr"))
 install_github("OHDSI/CohortMethod", ref="v2.4.4")
 install_github("OHDSI/DatabaseConnector", ref="#2ae287e") # v2.0.2
 install_github("OHDSI/EmpiricalCalibration", ref="#320f670") # v1.3.5
-install_github("OHDSI/FeatureExtraction")
+install_github("OHDSI/FeatureExtraction", ref="v2.1.1")
 install_github("OHDSI/OhdsiRTools", ref="#b938cf1") # v1.3.3
 install_github("OHDSI/SqlRender", ref="#558bbe0") # 1.4.7
 install_github("OHDSI/Cyclops", ref="#08e76d6") # v1.3.1
