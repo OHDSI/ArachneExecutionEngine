@@ -22,11 +22,11 @@
 
 package com.odysseusinc.arachne.executionengine.api.v1;
 
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.executionengine.ExecutionEngineStarter;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;

@@ -35,6 +35,7 @@ import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.VOCAB
 import static com.odysseusinc.arachne.executionengine.util.DateUtil.defaultFormat;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.model.CdmSource;
@@ -42,38 +43,68 @@ import com.odysseusinc.arachne.executionengine.model.Vocabulary;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.service.sql.SqlMetadataService;
 import com.odysseusinc.arachne.executionengine.service.sql.SqlMetadataServiceFactory;
+import com.odysseusinc.arachne.executionengine.util.SQLUtils;
+import com.odysseusinc.arachne.executionengine.util.exception.StatementSQLException;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeSet;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ResourceUtils;
 
 @Service
 public class CdmMetadataServiceImpl implements CdmMetadataService {
 
     private static final String COMMENT = "CDM database ${database}";
     private static final String PROPERTIES_FILE_NAME = "cdm_version.txt";
-    private final SqlMetadataServiceFactory sqlMetadataServiceFactory;
     private static final Logger LOGGER = LoggerFactory.getLogger(CdmMetadataService.class);
+    private final static String RES_TABLE_CHECK_V4 = "/cdm/v4/tableCheck.sql";
+    private final static String RES_TABLE_CHECK_V5 = "/cdm/v5/tableCheck_%s.sql";
+    private final static CommonCDMVersionDTO V_5_INIT = CommonCDMVersionDTO.V5_0;
+    private final static List<CommonCDMVersionDTO> V5_VERSIONS = new ArrayList<>();
+    public static final String VAR_CDM_SCHEMA = "@cdm_schema";
+
+    static {
+        V5_VERSIONS.add(CommonCDMVersionDTO.V5_3);
+        V5_VERSIONS.add(CommonCDMVersionDTO.V5_2);
+        V5_VERSIONS.add(CommonCDMVersionDTO.V5_1);
+        V5_VERSIONS.add(CommonCDMVersionDTO.V5_0_1);
+        V5_VERSIONS.add(V_5_INIT);
+    }
+
+    private final SqlMetadataServiceFactory sqlMetadataServiceFactory;
+    private final ResourceLoader resourceLoader;
     private final String REGEX_V5 = "^V5.*";
 
     @Autowired
-    public CdmMetadataServiceImpl(SqlMetadataServiceFactory sqlMetadataServiceFactory) {
+    public CdmMetadataServiceImpl(SqlMetadataServiceFactory sqlMetadataServiceFactory,
+                                  ResourceLoader resourceLoader) {
 
         this.sqlMetadataServiceFactory = sqlMetadataServiceFactory;
+        this.resourceLoader = resourceLoader;
     }
 
     @Override
@@ -82,7 +113,7 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
         DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
         try {
             SqlMetadataService metadataService = sqlMetadataServiceFactory.getMetadataService(dataSource);
-            String cdmVersion = detectCdmVersion(metadataService);
+            String cdmVersion = detectCdmVersion(dataSource, metadataService);
             List<Vocabulary> vocabularies = metadataService.getVocabularyVersions(cdmVersion);
 
             Properties properties = new Properties() {
@@ -144,15 +175,54 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
         return new StrSubstitutor(values).replace(COMMENT);
     }
 
-    private String detectCdmVersion(SqlMetadataService metadataService) throws SQLException {
+    private String detectCdmVersion(DataSourceUnsecuredDTO dataSource, SqlMetadataService metadataService) throws SQLException {
 
-        String version;
-        if (metadataService.tableExists("cdm_source")) {
-            version = "V5.0";
-        } else {
-            version = "V4.5";
+        CommonCDMVersionDTO version = null;
+        try {
+            for(CommonCDMVersionDTO v : V5_VERSIONS){
+                try {
+                    checkCdmTables(dataSource, RES_TABLE_CHECK_V5, v.name());
+                    version = v;
+                    if (LOGGER.isDebugEnabled()){
+                        LOGGER.debug("Detected CDM version for {} is {}", dataSource.getConnectionString(), version);
+                    }
+                    break;
+                }catch (StatementSQLException e){
+                    LOGGER.debug("Failed CDM version check for {} as {} with message: {},\nstatement: {}", dataSource.getConnectionString(), v, e.getMessage(), e.getStatement());
+                }catch (SQLException e){
+                    LOGGER.debug("Failed CDM version check for {} as {} with message: {}", dataSource.getConnectionString(), v, e.getMessage());
+                }
+            }
+            if (Objects.isNull(version)){
+                checkCdmTables(dataSource, RES_TABLE_CHECK_V4, "");
+            }
+        } catch (IOException e) {
+            LOGGER.error("Failed to determine CDM version", e);
+            version = null;
         }
-        return version;
+        return Objects.isNull(version) ? null : version.name();
+    }
+
+    private void checkCdmTables(DataSourceUnsecuredDTO dataSource, String pattern, String version) throws SQLException, IOException {
+
+        Resource queryFile = resourceLoader.getResource(ResourceUtils.CLASSPATH_URL_PREFIX + String.format(pattern, version));
+        try (Reader r = new InputStreamReader(queryFile.getInputStream())) {
+            String sql = IOUtils.toString(r);
+            String[] statements = sql.split(";");
+            try (Connection c = SQLUtils.getConnection(dataSource)) {
+                for(String query : statements){
+                    if (StringUtils.isNotBlank(query)) {
+                        PreparedStatement stmt = c.prepareStatement(query.replaceAll(VAR_CDM_SCHEMA, dataSource.getCdmSchema()));
+                        stmt.setMaxRows(1);
+                        try {
+                            stmt.executeQuery();
+                        }catch (SQLException e){
+                            throw new StatementSQLException(e.getMessage(), e, query);
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }
