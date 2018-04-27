@@ -202,6 +202,11 @@
 
         <!-- End of Impala driver -->
 
+        <dependency>
+            <groupId>org.ohdsi.sql</groupId>
+            <artifactId>SqlRender</artifactId>
+            <version>1.4.10</version>
+        </dependency>
     </dependencies>
 
     <profiles>

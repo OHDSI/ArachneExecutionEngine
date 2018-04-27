@@ -52,6 +52,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UncheckedIOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -64,9 +65,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.ohdsi.sql.SqlRender;
+import org.ohdsi.sql.SqlSplit;
+import org.ohdsi.sql.SqlTranslate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,7 +90,8 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
     private final static String RES_TABLE_CHECK_V5 = "/cdm/v5/tableCheck_%s.sql";
     private final static CommonCDMVersionDTO V_5_INIT = CommonCDMVersionDTO.V5_0;
     private final static List<CommonCDMVersionDTO> V5_VERSIONS = new ArrayList<>();
-    public static final String VAR_CDM_SCHEMA = "@cdm_schema";
+    public static final String VAR_CDM_SCHEMA = "cdm_schema";
+    public final static ConcurrentHashMap<Integer, String> detectorSqlMap = new ConcurrentHashMap<>();
 
     static {
         V5_VERSIONS.add(CommonCDMVersionDTO.V5_3);
@@ -179,21 +185,21 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
 
         CommonCDMVersionDTO version = null;
         try {
-            for(CommonCDMVersionDTO v : V5_VERSIONS){
+            for (CommonCDMVersionDTO v : V5_VERSIONS) {
                 try {
                     checkCdmTables(dataSource, RES_TABLE_CHECK_V5, v.name());
                     version = v;
-                    if (LOGGER.isDebugEnabled()){
+                    if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug("Detected CDM version for {} is {}", dataSource.getConnectionString(), version);
                     }
                     break;
-                }catch (StatementSQLException e){
+                } catch (StatementSQLException e) {
                     LOGGER.debug("Failed CDM version check for {} as {} with message: {},\nstatement: {}", dataSource.getConnectionString(), v, e.getMessage(), e.getStatement());
-                }catch (SQLException e){
+                } catch (SQLException e) {
                     LOGGER.debug("Failed CDM version check for {} as {} with message: {}", dataSource.getConnectionString(), v, e.getMessage());
                 }
             }
-            if (Objects.isNull(version)){
+            if (Objects.isNull(version)) {
                 checkCdmTables(dataSource, RES_TABLE_CHECK_V4, "");
             }
         } catch (IOException e) {
@@ -205,24 +211,38 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
 
     private void checkCdmTables(DataSourceUnsecuredDTO dataSource, String pattern, String version) throws SQLException, IOException {
 
-        Resource queryFile = resourceLoader.getResource(ResourceUtils.CLASSPATH_URL_PREFIX + String.format(pattern, version));
-        try (Reader r = new InputStreamReader(queryFile.getInputStream())) {
-            String sql = IOUtils.toString(r);
-            String[] statements = sql.split(";");
-            try (Connection c = SQLUtils.getConnection(dataSource)) {
-                for(String query : statements){
-                    if (StringUtils.isNotBlank(query)) {
-                        PreparedStatement stmt = c.prepareStatement(query.replaceAll(VAR_CDM_SCHEMA, dataSource.getCdmSchema()));
-                        stmt.setMaxRows(1);
-                        try {
-                            stmt.executeQuery();
-                        }catch (SQLException e){
-                            throw new StatementSQLException(e.getMessage(), e, query);
-                        }
+        String sql = detectorSqlMap.computeIfAbsent(
+                Objects.hash(dataSource.getType().getOhdsiDB(), pattern, version),
+                (key) -> {
+                    Resource queryFile = resourceLoader.getResource(ResourceUtils.CLASSPATH_URL_PREFIX + String.format(pattern, version));
+                    try (Reader r = new InputStreamReader(queryFile.getInputStream())) {
+                        return SqlTranslate.translateSql(IOUtils.toString(r), dataSource.getType().getOhdsiDB());
+                    } catch (IOException ex) {
+                        throw new UncheckedIOException(ex);
+                    }
+                }
+        );
+
+        String[] params = new String[]{VAR_CDM_SCHEMA};
+        String[] values = new String[]{dataSource.getCdmSchema()};
+        sql = SqlRender.renderSql(sql, params, values);
+
+        String[] statements = SqlSplit.splitSql(sql);
+
+        try (Connection c = SQLUtils.getConnection(dataSource)) {
+            for (String query : statements) {
+                if (StringUtils.isNotBlank(query)) {
+                    PreparedStatement stmt = c.prepareStatement(query);
+                    stmt.setMaxRows(1);
+                    try {
+                        stmt.executeQuery();
+                    } catch (SQLException e) {
+                        throw new StatementSQLException(e.getMessage(), e, query);
                     }
                 }
             }
         }
+
     }
 
 }
