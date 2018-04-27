@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.11.3</version>
+    <version>1.12.0</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -44,6 +44,11 @@
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>execution-engine-commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.odysseusinc.arachne</groupId>
+            <artifactId>arachne-commons</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -197,6 +202,11 @@
 
         <!-- End of Impala driver -->
 
+        <dependency>
+            <groupId>org.ohdsi.sql</groupId>
+            <artifactId>SqlRender</artifactId>
+            <version>1.4.10</version>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -424,6 +434,22 @@
     </build>
 
     <repositories>
+        <repository>
+            <id>ohdsi</id>
+            <name>repo.ohdsi.org</name>
+            <url>http://repo.ohdsi.org:8085/nexus/content/repositories/releases</url>
+        </repository>
+        <repository>
+            <id>ohdsi.snapshots</id>
+            <name>repo.ohdsi.org-snapshots</name>
+            <url>http://repo.ohdsi.org:8085/nexus/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
         <repository>
             <id>odysseus.community.snapshots</id>
             <name>Odysseus community snapshots</name>
