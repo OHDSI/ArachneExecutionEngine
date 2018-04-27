@@ -64,9 +64,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.ohdsi.sql.SqlRender;
+import org.ohdsi.sql.SqlSplit;
+import org.ohdsi.sql.SqlTranslate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,7 +89,8 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
     private final static String RES_TABLE_CHECK_V5 = "/cdm/v5/tableCheck_%s.sql";
     private final static CommonCDMVersionDTO V_5_INIT = CommonCDMVersionDTO.V5_0;
     private final static List<CommonCDMVersionDTO> V5_VERSIONS = new ArrayList<>();
-    public static final String VAR_CDM_SCHEMA = "@cdm_schema";
+    public static final String VAR_CDM_SCHEMA = "cdm_schema";
+    public final static ConcurrentHashMap<Integer, String> detectorSqlMap = new ConcurrentHashMap<>();
 
     static {
         V5_VERSIONS.add(CommonCDMVersionDTO.V5_3);
@@ -206,13 +211,25 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
     private void checkCdmTables(DataSourceUnsecuredDTO dataSource, String pattern, String version) throws SQLException, IOException {
 
         Resource queryFile = resourceLoader.getResource(ResourceUtils.CLASSPATH_URL_PREFIX + String.format(pattern, version));
+
         try (Reader r = new InputStreamReader(queryFile.getInputStream())) {
-            String sql = IOUtils.toString(r);
-            String[] statements = sql.split(";");
+            String templateSql = IOUtils.toString(r);
+
+            String sql = detectorSqlMap.computeIfAbsent(
+                    Objects.hash(dataSource.getType().getOhdsiDB(), pattern, version),
+                    (key) -> SqlTranslate.translateSql(templateSql, dataSource.getType().getOhdsiDB())
+            );
+
+            String[] params = new String[]{VAR_CDM_SCHEMA};
+            String[] values = new String[]{dataSource.getCdmSchema()};
+            sql = SqlRender.renderSql(sql, params, values);
+
+            String[] statements = SqlSplit.splitSql(sql);
+
             try (Connection c = SQLUtils.getConnection(dataSource)) {
                 for(String query : statements){
                     if (StringUtils.isNotBlank(query)) {
-                        PreparedStatement stmt = c.prepareStatement(query.replaceAll(VAR_CDM_SCHEMA, dataSource.getCdmSchema()));
+                        PreparedStatement stmt = c.prepareStatement(query);
                         stmt.setMaxRows(1);
                         try {
                             stmt.executeQuery();
