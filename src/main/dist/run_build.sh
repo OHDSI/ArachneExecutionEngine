@@ -68,7 +68,7 @@ debootstrap --arch amd64 trusty $BUILD_PATH http://ubuntu.cs.utah.edu/ubuntu/
 mount --bind /proc $BUILD_PATH/proc
 
 cp $WS/install_packages.sh $BUILD_PATH/root/
-cp $WS/libs.r $BUILD_PATH/root/
+cp $WS/../docker/libs.r $BUILD_PATH/root/
 
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $DIST
