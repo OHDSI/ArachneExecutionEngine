@@ -8,7 +8,8 @@ SELECT TOP 1 cohort_definition_id, subject_id, cohort_start_date, cohort_end_dat
 FROM @cdm_schema.cohort;
 SELECT TOP 1 cohort_definition_id, cohort_start_date, cohort_end_date, subject_id, attribute_definition_id, value_as_number, value_as_concept_id
 FROM @cdm_schema.cohort_attribute;
-SELECT TOP 1 cohort_definition_id, cohort_definition_name, cohort_definition_description, definition_type_concept_id, cohort_definition_syntax, subject_concept_id, cohort_initiation_date
+SELECT TOP 1 cohort_definition_id, cohort_definition_name, cohort_definition_description, definition_type_concept_id, cohort_definition_syntax, subject_concept_id
+-- , cohort_initiation_date -- due to unclarity in https://github.com/OHDSI/CommonDataModel/issues/178
 FROM @cdm_schema.cohort_definition;
 SELECT TOP 1 concept_id, concept_name, domain_id, vocabulary_id, concept_class_id, standard_concept, concept_code, valid_start_date, valid_end_date, invalid_reason
 FROM @cdm_schema.concept;
