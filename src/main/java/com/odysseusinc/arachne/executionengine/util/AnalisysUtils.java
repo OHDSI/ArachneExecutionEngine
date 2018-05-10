@@ -130,7 +130,7 @@ public class AnalisysUtils {
                                                                   File file,
                                                                   Boolean compressedResult,
                                                                   Long chunkSize,
-                                                                  File dir) throws IOException {
+                                                                  File dir) throws ZipException {
 
         List<File> resultFiles;
         if (compressedResult) {
