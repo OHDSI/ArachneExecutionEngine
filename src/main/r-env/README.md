@@ -50,5 +50,5 @@ Changes:
 
 ```sh
 docker build -t odysseusinc/r-env:1.0.4 .
-docвker push odysseusinc/r-env:1.0.4
+docker push odysseusinc/r-env:1.0.4
 ```
