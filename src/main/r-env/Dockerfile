@@ -1,4 +1,4 @@
-FROM hub.arachnenetwork.com/r-java:3.4.2
+FROM odysseusinc/r-java:3.5.0
 
 RUN apt-get update && apt-get install -y r-cran-rodbc
 RUN apt-get install -y libpq-dev 
