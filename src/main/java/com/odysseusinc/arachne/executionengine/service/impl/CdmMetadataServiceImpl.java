@@ -43,11 +43,11 @@ import com.odysseusinc.arachne.executionengine.model.Vocabulary;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.service.sql.SqlMetadataService;
 import com.odysseusinc.arachne.executionengine.service.sql.SqlMetadataServiceFactory;
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.util.SQLUtils;
 import com.odysseusinc.arachne.executionengine.util.exception.StatementSQLException;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -114,6 +114,7 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
     }
 
     @Override
+    @FileDescriptorCount
     public void extractMetadata(AnalysisRequestDTO analysis, File dir) throws SQLException, IOException {
 
         DataSourceUnsecuredDTO dataSource = analysis.getDataSource();

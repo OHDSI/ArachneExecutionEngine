@@ -10,8 +10,10 @@ server:
   port: 8888
 
 logging:
-  level: indo
-
+  level: info
+  descriptor:
+    count:
+      enabled: true
 spring:
   http:
     multipart:
