@@ -13,7 +13,7 @@ logging:
   level: info
   descriptor:
     count:
-      enabled: true
+      enabled: false
 spring:
   http:
     multipart:
