@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import net.lingala.zip4j.exception.ZipException;
 import org.springframework.core.io.FileSystemResource;
 
 public interface CallbackService {
@@ -41,7 +42,7 @@ public interface CallbackService {
             File resultDir,
             Boolean compressedResult,
             Long chunkSize
-    ) throws IOException;
+    ) throws IOException, ZipException;
 
     void sendAnalysisResult(String resultURL, String password, AnalysisResultDTO analysisResult,
                             Collection<FileSystemResource> files);

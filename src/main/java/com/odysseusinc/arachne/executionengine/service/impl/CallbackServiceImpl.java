@@ -39,6 +39,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
+import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -114,7 +115,7 @@ public class CallbackServiceImpl implements CallbackService {
             File resultDir,
             Boolean compressedResult,
             Long chunkSize
-    ) throws IOException {
+    ) throws IOException, ZipException {
 
         final File zipDir = com.google.common.io.Files.createTempDir();
         try {
@@ -131,7 +132,7 @@ public class CallbackServiceImpl implements CallbackService {
                     = AnalisysUtils.getFileSystemResources(analysis, resultDir, compressedResult, chunkSize, zipDir);
 
             sendAnalysisResult(analysis.getResultCallback(), analysis.getCallbackPassword(), result, resultFSResources);
-        } catch (IOException ex) {
+        } catch (ZipException ex) {
             log.error(ex.getMessage());
             if (log.isDebugEnabled()) {
                 log.debug("Stacktrace: ", ex);
@@ -197,9 +198,9 @@ public class CallbackServiceImpl implements CallbackService {
                 resultFSResources = AnalisysUtils.getFileSystemResources(analysis, analysisDir, compressedResult, chunkSize,
                         Files.createTempDir());
             }
-        } catch (IOException ioe) {
+        } catch (ZipException ex) {
             log.error("could not collect analysis results, id={}", analysis.getId());
-            stdout += "\n" + ExceptionUtils.getStackTrace(ioe);
+            stdout += "\n" + ExceptionUtils.getStackTrace(ex);
         }
 
         result.setStdout(stdout);
