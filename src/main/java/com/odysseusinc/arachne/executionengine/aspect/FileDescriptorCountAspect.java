@@ -48,11 +48,12 @@ public class FileDescriptorCountAspect {
         if (!enabled) {
             return;
         }
-        log("Open file descriptor count: before " + proceedingJoinPoint.getSignature().toString());
+        String signature = proceedingJoinPoint.getSignature().toString();
+        log("Before " + signature);
         try {
             proceedingJoinPoint.proceed();
         } finally {
-            log("Open file descriptor count: after " + proceedingJoinPoint.getSignature().toString());
+            log("After " + signature);
         }
     }
 
@@ -62,7 +63,7 @@ public class FileDescriptorCountAspect {
         try {
             if (operatingSystemMXBean instanceof UnixOperatingSystemMXBean) {
                 UnixOperatingSystemMXBean osMxBean = (UnixOperatingSystemMXBean) operatingSystemMXBean;
-                LOGGER.info("{}: count [{}] from max [{}]", message, osMxBean.getOpenFileDescriptorCount(),
+                LOGGER.info("{}: open file descriptor count [{}] from max [{}]", message, osMxBean.getOpenFileDescriptorCount(),
                         osMxBean.getMaxFileDescriptorCount());
             } else {
                 LOGGER.info("Descriptor count is not supported");
