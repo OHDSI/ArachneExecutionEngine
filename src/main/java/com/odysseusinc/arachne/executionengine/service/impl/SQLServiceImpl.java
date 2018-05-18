@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import com.odysseusinc.arachne.executionengine.util.SQLUtils;
 
@@ -77,6 +78,7 @@ public class SQLServiceImpl implements SQLService {
     }
 
     @Override
+    @FileDescriptorCount
     public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback) {
 
         taskExecutor.execute(() -> {
