@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.executionengine.service.impl;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
@@ -48,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.PostConstruct;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,16 +101,17 @@ public class RuntimeServiceImpl implements RuntimeService {
     private int runtimeTimeOutSec;
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
-    @Value("${runtimeservice.dist.archive}")
-    private String distArchive;
+
+    private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
 
 
     @Autowired
-    public RuntimeServiceImpl(TaskExecutor taskExecutor, CallbackService callbackService, ResourceLoader resourceLoader) {
+    public RuntimeServiceImpl(TaskExecutor taskExecutor, CallbackService callbackService, ResourceLoader resourceLoader, RIsolatedRuntimeProperties rIsolatedRuntimeProps) {
 
         this.taskExecutor = taskExecutor;
         this.callbackService = callbackService;
         this.resourceLoader = resourceLoader;
+        this.rIsolatedRuntimeProps = rIsolatedRuntimeProps;
     }
 
     @PostConstruct
@@ -123,7 +126,7 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     private RuntimeServiceMode getRuntimeServiceMode(){
 
-        return StringUtils.isNotBlank(distArchive) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
+        return StringUtils.isNotBlank(rIsolatedRuntimeProps.getDistArchive()) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
     }
 
     private static String getStdoutDiff(InputStream stream) throws IOException {
@@ -178,14 +181,22 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     private File prepareEnvironment(File directory) throws IOException {
 
-        return FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/jail.sh", "ee", ".sh");
+        File jailScript = new File(rIsolatedRuntimeProps.getJailSh());
+        if (!jailScript.exists()) {
+            jailScript = FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/jail.sh", "ee", ".sh");
+        }
+        return jailScript;
     }
 
     private void cleanupEnvironment(File directory) throws IOException {
 
-        File cleanupScript = FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/cleanup.sh", "ee", ".sh");
+        File cleanupScript = new File(rIsolatedRuntimeProps.getCleanupSh());
+        if (!cleanupScript.exists()) {
+            cleanupScript = FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/cleanup.sh", "ee", ".sh");
+        }
+
         try{
-            ProcessBuilder pb = new ProcessBuilder("bash", cleanupScript.getAbsolutePath(), directory.getAbsolutePath());
+            ProcessBuilder pb = new ProcessBuilder((String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[] {cleanupScript.getAbsolutePath(), directory.getAbsolutePath()}));
             Process p = pb.start();
             p.waitFor();
         } catch (InterruptedException ignored) {
@@ -209,7 +220,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
         String[] command;
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
-            command = new String[]{"bash", runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, distArchive};
+            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, rIsolatedRuntimeProps.getDistArchive()});
         } else {
             command = new String[]{EXECUTION_COMMAND, fileName};
         }

@@ -48,6 +48,9 @@ management:
 
 runtimeservice:
   dist:
+    runCmd: bash
+    jailSh:
+    cleanupSh:
     archive:
 tmp:
   holder:
