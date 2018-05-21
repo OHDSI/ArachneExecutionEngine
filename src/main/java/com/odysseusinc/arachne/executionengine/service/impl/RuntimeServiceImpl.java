@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRu
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
@@ -142,6 +143,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     }
 
     @Override
+    @FileDescriptorCount
     public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback) {
 
         taskExecutor.execute(() -> {
