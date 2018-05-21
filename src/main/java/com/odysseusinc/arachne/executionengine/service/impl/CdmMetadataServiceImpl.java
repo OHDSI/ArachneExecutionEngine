@@ -190,13 +190,13 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
                     checkCdmTables(dataSource, RES_TABLE_CHECK_V5, v.name());
                     version = v;
                     if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Detected CDM version for {} is {}", dataSource.getConnectionString(), version);
+                        LOGGER.debug("Detected CDM version for {} is {}", dataSource.getConnectionStringForLogging(), version);
                     }
                     break;
                 } catch (StatementSQLException e) {
-                    LOGGER.debug("Failed CDM version check for {} as {} with message: {},\nstatement: {}", dataSource.getConnectionString(), v, e.getMessage(), e.getStatement());
+                    LOGGER.debug("Failed CDM version check for {} as {} with message: {},\nstatement: {}", dataSource.getConnectionStringForLogging(), v, e.getMessage(), e.getStatement());
                 } catch (SQLException e) {
-                    LOGGER.debug("Failed CDM version check for {} as {} with message: {}", dataSource.getConnectionString(), v, e.getMessage());
+                    LOGGER.debug("Failed CDM version check for {} as {} with message: {}", dataSource.getConnectionStringForLogging(), v, e.getMessage());
                 }
             }
             if (Objects.isNull(version)) {
