@@ -64,7 +64,7 @@ echo "Build dir: $BUILD_PATH"
 echo "Output file: $ARCHIVE"
 echo ""
 
-debootstrap --arch amd64 trusty $BUILD_PATH http://ubuntu.cs.utah.edu/ubuntu/
+debootstrap --arch amd64 $DIST $BUILD_PATH http://ubuntu.cs.utah.edu/ubuntu/
 mount --bind /proc $BUILD_PATH/proc
 
 cp $WS/install_packages.sh $BUILD_PATH/root/
