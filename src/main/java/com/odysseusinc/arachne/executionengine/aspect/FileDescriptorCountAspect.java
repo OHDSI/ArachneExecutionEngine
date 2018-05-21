@@ -45,15 +45,15 @@ public class FileDescriptorCountAspect {
     @Around("@annotation(com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount)")
     public void log(final ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
 
-        if (!enabled) {
-            return;
+        if (enabled) {
+            log("Before " + proceedingJoinPoint.getSignature().toString());
         }
-        String signature = proceedingJoinPoint.getSignature().toString();
-        log("Before " + signature);
         try {
             proceedingJoinPoint.proceed();
         } finally {
-            log("After " + signature);
+            if (enabled) {
+                log("After " + proceedingJoinPoint.getSignature().toString());
+            }
         }
     }
 
