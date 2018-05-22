@@ -14,7 +14,7 @@ if ("EmpiricalCalibration" %in% installed.packages() == FALSE){
   install_github("OHDSI/EmpiricalCalibration", ref="#320f670") # v1.3.5
 }
 if ("FeatureExtraction" %in% installed.packages() == FALSE){
-  install_github("OHDSI/FeatureExtraction", ref="v2.1.1")
+  install_github("OHDSI/FeatureExtraction") # ref="v2.1.1"
 }
 if ("OhdsiRTools" %in% installed.packages() == FALSE){
   install_github("OHDSI/OhdsiRTools", ref="#b938cf1") # v1.3.3
@@ -26,7 +26,8 @@ if ("Cyclops" %in% installed.packages() == FALSE){
   install_github("OHDSI/Cyclops", ref="#08e76d6") # v1.3.1
 }
 if ("PatientLevelPrediction" %in% installed.packages() == FALSE){
-  install_github("OHDSI/PatientLevelPrediction", ref="#ef9eed3") #v1.2.2
+#  install_github("OHDSI/PatientLevelPrediction", ref="#ef9eed3") #v1.2.2
+  install_github("odysseusinc/PatientLevelPrediction", ref="cast_fixes") #v1.2.2
 }
 
 if ("assertthat" %in% installed.packages() == FALSE){
@@ -296,14 +297,30 @@ if ("tidyselect" %in% installed.packages() == FALSE){
 if ("uuid" %in% installed.packages() == FALSE){
   install_version("uuid", version="0.1-2", type="source")
 }
-if ("officer" %in% installed.packages() == FALSE){
-install_version("viridisLite", version="0.2.0", type="source")
-
-install_version("whisker", version="0.3-2", type="source")
-install_version("withr", version="2.0.0", type="source")
-install_version("xgboost", version="0.6-4", type="source")
-install_version("XML", version="3.98-1.9", type="source")
-install_version("xml2", version="1.1.1", type="source")
-install_version("xtable", version="1.8-2", type="source")
-install_version("yaml", version="2.1.14", type="source")
-install_version("zip", version="1.0.0", type="source")
+if ("viridisLite" %in% installed.packages() == FALSE){
+  install_version("viridisLite", version="0.2.0", type="source")
+}
+if ("whisker" %in% installed.packages() == FALSE){
+  install_version("whisker", version="0.3-2", type="source")
+}
+if ("withr" %in% installed.packages() == FALSE){
+  install_version("withr", version="2.0.0", type="source")
+}
+if ("xgboost" %in% installed.packages() == FALSE){
+  install_version("xgboost", version="0.6-4", type="source")
+}
+if ("XML" %in% installed.packages() == FALSE){
+  install_version("XML", version="3.98-1.9", type="source")
+}
+if ("xml2" %in% installed.packages() == FALSE){
+  install_version("xml2", version="1.1.1", type="source")
+}
+if ("xtable" %in% installed.packages() == FALSE){
+  install_version("xtable", version="1.8-2", type="source")
+}
+if ("yaml" %in% installed.packages() == FALSE){
+  install_version("yaml", version="2.1.14", type="source")
+}
+if ("zip" %in% installed.packages() == FALSE){
+  install_version("zip", version="1.0.0", type="source")
+}
