@@ -207,6 +207,12 @@
             <artifactId>SqlRender</artifactId>
             <version>1.4.10</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
     </dependencies>
 
     <profiles>
