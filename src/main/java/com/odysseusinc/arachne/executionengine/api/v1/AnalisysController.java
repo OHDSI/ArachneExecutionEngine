@@ -85,12 +85,13 @@ public class AnalisysController {
             @RequestPart("file") List<MultipartFile> files,
             @RequestHeader(value = "arachne-compressed", defaultValue = "false") Boolean compressed,
             @RequestHeader(value = "arachne-waiting-compressed-result", defaultValue = "false") Boolean waitCompressedResult,
+            @RequestHeader(value = "arachne-datasource-check", defaultValue = "false") Boolean healthCheck,
             @RequestHeader(value = "arachne-result-chunk-size-mb", defaultValue = "10485760") Long chunkSize
     ) throws IOException, ZipException {
 
         try {
             final File analysisDir = AnalisysUtils.extractFiles(files, compressed);
-            return analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, chunkSize);
+            return analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, healthCheck, chunkSize);
         } catch (IOException | ZipException e) {
             callbackService.sendFailedResult(analysisRequest, e, null, waitCompressedResult, chunkSize);
             throw e;

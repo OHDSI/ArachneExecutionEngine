@@ -69,16 +69,19 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     @Override
     @FileDescriptorCount
-    public AnalysisRequestStatusDTO analyze(AnalysisRequestDTO analysis, File analysisDir, Boolean compressedResult, Long chunkSize) {
+    public AnalysisRequestStatusDTO analyze(AnalysisRequestDTO analysis, File analysisDir, Boolean compressedResult,
+                                            Boolean healthCheck, Long chunkSize) {
 
         Validate.notNull(analysis, "analysis can't be null");
 
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         try {
-            try {
-                cdmMetadataService.extractMetadata(analysis, analysisDir);
-            } catch (Exception e) {
-                logger.info("Failed to collect CDM metadata. " + e);
+            if (!healthCheck) {
+                try {
+                    cdmMetadataService.extractMetadata(analysis, analysisDir);
+                } catch (Exception e) {
+                    logger.info("Failed to collect CDM metadata. " + e);
+                }
             }
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();

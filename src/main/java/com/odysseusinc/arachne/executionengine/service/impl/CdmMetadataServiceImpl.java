@@ -38,12 +38,12 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.model.CdmSource;
 import com.odysseusinc.arachne.executionengine.model.Vocabulary;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.service.sql.SqlMetadataService;
 import com.odysseusinc.arachne.executionengine.service.sql.SqlMetadataServiceFactory;
-import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.util.SQLUtils;
 import com.odysseusinc.arachne.executionengine.util.exception.StatementSQLException;
 import java.io.BufferedWriter;
@@ -55,6 +55,7 @@ import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -233,17 +234,16 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
         try (Connection c = SQLUtils.getConnection(dataSource)) {
             for (String query : statements) {
                 if (StringUtils.isNotBlank(query)) {
-                    PreparedStatement stmt = c.prepareStatement(query);
-                    stmt.setMaxRows(1);
-                    try {
-                        stmt.executeQuery();
+                    try (PreparedStatement stmt = c.prepareStatement(query)) {
+                        stmt.setMaxRows(1);
+                        try (final ResultSet resultSet = stmt.executeQuery()) {
+                        }
                     } catch (SQLException e) {
                         throw new StatementSQLException(e.getMessage(), e, query);
                     }
                 }
             }
         }
-
     }
 
 }
