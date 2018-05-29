@@ -34,6 +34,7 @@ import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.SOURC
 import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.VOCABULARY_VERSION;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.model.CdmSource;
 import com.odysseusinc.arachne.executionengine.model.Vocabulary;
 import com.odysseusinc.arachne.executionengine.util.SQLUtils;
@@ -69,11 +70,10 @@ abstract class AbstractSqlMetadataService implements SqlMetadataService {
     <T> T executeQuery(String query, SqlFunction<ResultSet, T> consumer) throws SQLException {
 
         Objects.requireNonNull(query);
-        try (final Connection c = SQLUtils.getConnection(dataSource)) {
-            PreparedStatement q = c.prepareStatement(query);
-            try (ResultSet rs = q.executeQuery()) {
-                return consumer.apply(rs);
-            }
+        try (final Connection c = SQLUtils.getConnection(dataSource);
+             final PreparedStatement q = c.prepareStatement(query);
+             final ResultSet rs = q.executeQuery()) {
+            return consumer.apply(rs);
         }
     }
 
@@ -133,12 +133,14 @@ abstract class AbstractSqlMetadataService implements SqlMetadataService {
     }
 
     @Override
+    @FileDescriptorCount
     public boolean tableExists(String tableName) throws SQLException {
 
         Objects.requireNonNull(tableName);
         String schema = getSchema();
-        try (final Connection c = SQLUtils.getConnection(dataSource)) {
-            ResultSet rs = c.getMetaData().getTables(null, schema, tableName, null);
+        try (final Connection c = SQLUtils.getConnection(dataSource);
+             ResultSet rs = c.getMetaData().getTables(null, schema, tableName, null)) {
+
             while (rs.next()) {
                 if (tableName.equals(rs.getString("TABLE_NAME"))) {
                     return true;
@@ -149,6 +151,7 @@ abstract class AbstractSqlMetadataService implements SqlMetadataService {
     }
 
     @Override
+    @FileDescriptorCount
     public List<CdmSource> getCdmSources() throws SQLException {
 
         String query = String.format(ALL_CDM_QUERY, getSchema());

@@ -13,8 +13,9 @@ public class FileResourceUtils {
     public static File extractResourceToTempFile(ResourceLoader loader, String resourceName, String prefix, String suffix) throws IOException {
 
         File runFile = Files.createTempFile(prefix, suffix).toFile();
-        try (final InputStream in = loader.getResource(resourceName).getInputStream()) {
-            IOUtils.copy(in, new FileOutputStream(runFile));
+        try (final InputStream in = loader.getResource(resourceName).getInputStream();
+             final FileOutputStream fos = new FileOutputStream(runFile)) {
+            IOUtils.copy(in, fos);
         }
         return runFile;
     }
