@@ -76,7 +76,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         try {
-            if (!attachCdmMetadata) {
+            if (attachCdmMetadata) {
                 try {
                     cdmMetadataService.extractMetadata(analysis, analysisDir);
                 } catch (Exception e) {
