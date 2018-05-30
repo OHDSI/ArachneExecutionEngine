@@ -147,7 +147,8 @@ public class CallbackServiceImpl implements CallbackService {
                 FileUtils.deleteQuietly(zipDir);
             } catch (IOException ex) {
                 log.warn(DELETE_DIR_ERROR_LOG, resultDir.getAbsolutePath(), ex);
-                throw ex;
+                // rethrow of exception cause to results overriden
+//                throw ex;
             }
         }
     }
