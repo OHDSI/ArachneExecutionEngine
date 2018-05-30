@@ -85,7 +85,7 @@ public class AnalisysController {
             @RequestPart("file") List<MultipartFile> files,
             @RequestHeader(value = "arachne-compressed", defaultValue = "false") Boolean compressed,
             @RequestHeader(value = "arachne-waiting-compressed-result", defaultValue = "false") Boolean waitCompressedResult,
-            @RequestHeader(value = "arachne-datasource-check", defaultValue = "false") Boolean attachCdmMetadata,
+            @RequestHeader(value = "arachne-attach-cdm-metadata", defaultValue = "true") Boolean attachCdmMetadata,
             @RequestHeader(value = "arachne-result-chunk-size-mb", defaultValue = "10485760") Long chunkSize
     ) throws IOException, ZipException {
 
