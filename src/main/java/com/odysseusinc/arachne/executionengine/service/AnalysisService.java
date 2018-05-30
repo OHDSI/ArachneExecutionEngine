@@ -27,7 +27,8 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import java.io.File;
 
 public interface AnalysisService {
-    AnalysisRequestStatusDTO analyze(AnalysisRequestDTO analysis, File analysisDir, Boolean compressedResult, Long chunkSize);
+
+    AnalysisRequestStatusDTO analyze(AnalysisRequestDTO analysis, File analysisDir, Boolean compressedResult, Boolean attachCdmMetadata, Long chunkSize);
 
     int activeTasks();
 }

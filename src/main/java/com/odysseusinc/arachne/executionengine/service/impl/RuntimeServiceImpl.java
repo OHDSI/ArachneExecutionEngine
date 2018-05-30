@@ -22,14 +22,16 @@
 
 package com.odysseusinc.arachne.executionengine.service.impl;
 
+import static org.apache.commons.io.IOUtils.closeQuietly;
+
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
-import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
@@ -116,7 +118,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     }
 
     @PostConstruct
-    public void init(){
+    public void init() {
 
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
             LOGGER.info("Runtime service running in ISOLATED environment mode");
@@ -125,7 +127,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
     }
 
-    private RuntimeServiceMode getRuntimeServiceMode(){
+    private RuntimeServiceMode getRuntimeServiceMode() {
 
         return StringUtils.isNotBlank(rIsolatedRuntimeProps.getDistArchive()) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
     }
@@ -164,7 +166,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                                 ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
                         cleanupEnvironment(file);
                         resultCallback.execute(analysis, resultStatusDTO, finishStatus.stdout, file);
-                    }finally {
+                    } finally {
                         FileUtils.deleteQuietly(runFile);
                     }
                 } catch (FileNotFoundException ex) {
@@ -175,7 +177,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                     throw ex;
                 }
             } catch (Throwable t) {
-                 LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
+                LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
                 failedCallback.execute(analysis, t, file);
             }
         });
@@ -196,14 +198,19 @@ public class RuntimeServiceImpl implements RuntimeService {
         if (!cleanupScript.exists()) {
             cleanupScript = FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/cleanup.sh", "ee", ".sh");
         }
-
-        try{
-            ProcessBuilder pb = new ProcessBuilder((String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[] {cleanupScript.getAbsolutePath(), directory.getAbsolutePath()}));
-            Process p = pb.start();
+        Process p = null;
+        try {
+            ProcessBuilder pb = new ProcessBuilder((String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{cleanupScript.getAbsolutePath(), directory.getAbsolutePath()}));
+            p = pb.start();
             p.waitFor();
         } catch (InterruptedException ignored) {
         } finally {
             FileUtils.deleteQuietly(cleanupScript);
+            if (Objects.nonNull(p)) {
+                closeQuietly(p.getOutputStream());
+                closeQuietly(p.getInputStream());
+                closeQuietly(p.getErrorStream());
+            }
         }
     }
 
@@ -262,26 +269,35 @@ public class RuntimeServiceImpl implements RuntimeService {
                 .directory(activeDir)
                 .redirectErrorStream(true);
         processBuilder.environment().putAll(envp);
-        final Process process = processBuilder.start();
-        final ExecutorService executorService = Executors.newSingleThreadExecutor();
-        final StdoutHandler stdoutHandler = new StdoutHandler(process, updateUrl, submissionId, password);
-        final Future<String> future = executorService.submit(stdoutHandler);
-        StringBuilder commandBuilder = new StringBuilder();
-        Arrays.stream(command).forEach(c -> commandBuilder.append(" ").append(c));
-        LOGGER.info(EXECUTING_LOG, commandBuilder.toString());
-        process.waitFor(timeout, TimeUnit.SECONDS);
-        if (process.isAlive()) {
-            process.destroy();
-            LOGGER.warn(DESTROYING_PROCESS_LOG);
+        Process process = null;
+        try {
+            process = processBuilder.start();
+            final ExecutorService executorService = Executors.newSingleThreadExecutor();
+            final StdoutHandler stdoutHandler = new StdoutHandler(process, updateUrl, submissionId, password);
+            final Future<String> future = executorService.submit(stdoutHandler);
+            StringBuilder commandBuilder = new StringBuilder();
+            Arrays.stream(command).forEach(c -> commandBuilder.append(" ").append(c));
+            LOGGER.info(EXECUTING_LOG, commandBuilder.toString());
+            process.waitFor(timeout, TimeUnit.SECONDS);
+            if (process.isAlive()) {
+                process.destroy();
+                LOGGER.warn(DESTROYING_PROCESS_LOG);
+            }
+            final String stdout = future.get(submissionUpdateInterval * 2, TimeUnit.MILLISECONDS);
+            if (process.exitValue() == 0) {
+                LOGGER.info(EXECUTION_SUCCESS_LOG, submissionId, process.exitValue());
+            } else {
+                LOGGER.warn(EXECUTION_FAILURE_LOG, submissionId, process.exitValue());
+            }
+            LOGGER.debug(STDOUT_LOG, stdout);
+            return new RuntimeFinishStatus(process.exitValue(), stdout);
+        } finally {
+            if (Objects.nonNull(process)) {
+                closeQuietly(process.getOutputStream());
+                closeQuietly(process.getInputStream());
+                closeQuietly(process.getErrorStream());
+            }
         }
-        final String stdout = future.get(submissionUpdateInterval * 2, TimeUnit.MILLISECONDS);
-        if (process.exitValue() == 0) {
-            LOGGER.info(EXECUTION_SUCCESS_LOG, submissionId, process.exitValue());
-        } else {
-            LOGGER.warn(EXECUTION_FAILURE_LOG, submissionId, process.exitValue());
-        }
-        LOGGER.debug(STDOUT_LOG, stdout);
-        return new RuntimeFinishStatus(process.exitValue(), stdout);
     }
 
     private class RuntimeFinishStatus {
@@ -323,6 +339,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                 if (!stdoutDiff.isEmpty()) {
                     LOGGER.debug(STDOUT_LOG_DIFF, stdoutDiff);
                 }
+
             } while (process.isAlive());
 
             return stdout.toString();
