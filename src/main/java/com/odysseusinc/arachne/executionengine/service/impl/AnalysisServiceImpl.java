@@ -70,13 +70,13 @@ public class AnalysisServiceImpl implements AnalysisService {
     @Override
     @FileDescriptorCount
     public AnalysisRequestStatusDTO analyze(AnalysisRequestDTO analysis, File analysisDir, Boolean compressedResult,
-                                            Boolean healthCheck, Long chunkSize) {
+                                            Boolean attachCdmMetadata, Long chunkSize) {
 
         Validate.notNull(analysis, "analysis can't be null");
 
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         try {
-            if (!healthCheck) {
+            if (!attachCdmMetadata) {
                 try {
                     cdmMetadataService.extractMetadata(analysis, analysisDir);
                 } catch (Exception e) {
