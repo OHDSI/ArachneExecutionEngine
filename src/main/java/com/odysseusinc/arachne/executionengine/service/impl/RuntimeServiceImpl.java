@@ -129,7 +129,7 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     private RuntimeServiceMode getRuntimeServiceMode() {
 
-        return StringUtils.isNotBlank(rIsolatedRuntimeProps.getDistArchive()) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
+        return StringUtils.isNotBlank(rIsolatedRuntimeProps.getArchive()) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
     }
 
     private static String getStdoutDiff(InputStream stream) throws IOException {
@@ -229,7 +229,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
         String[] command;
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
-            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, rIsolatedRuntimeProps.getDistArchive()});
+            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, rIsolatedRuntimeProps.getArchive()});
         } else {
             command = new String[]{EXECUTION_COMMAND, fileName};
         }
