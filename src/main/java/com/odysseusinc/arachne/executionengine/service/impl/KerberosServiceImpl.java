@@ -35,23 +35,32 @@ public class KerberosServiceImpl implements KerberosService {
             Path keytab = null;
             try {
                 CommandBuilder builder = CommandBuilder.newCommand();
-                if (StringUtils.isNotEmpty(dataSource.getKrbPassword())) {
-                    builder.statement("bash")
-                            .withParam("-c")
-                            .statement("echo " + dataSource.getKrbPassword() + " | kinit " +
-                                    dataSource.getKrbUser());
-                } else if (dataSource.getKrbKeytab() != null) {
-                    keytab = Files.createTempFile("", ".keytab");
-                    try (OutputStream out = new FileOutputStream(keytab.toFile())) {
-                        IOUtils.write(dataSource.getKrbKeytab(), out);
-                    }
-                    builder.statement("kinit")
-                            .withParam("-k")
-                            .withParam("-t")
-                            .withParam(keytab.toString())
-                            .withParam(dataSource.getKrbUser());
-                } else {
-                    throw new IllegalArgumentException("Either kerberos password or keytab should not be empty");
+                switch (dataSource.getKrbAuthMethod()) {
+                    case PASSWORD:
+                        if (StringUtils.isBlank(dataSource.getKrbPassword())) {
+                            throw new IllegalArgumentException("Kerberos password is required for PASSWORD authentication");
+                        }
+                        builder.statement("bash")
+                                .withParam("-c")
+                                .statement("echo " + dataSource.getKrbPassword() + " | kinit " +
+                                        dataSource.getKrbUser());
+                        break;
+                    case KEYTAB:
+                        if (Objects.isNull(dataSource.getKrbKeytab())) {
+                            throw new IllegalArgumentException("Kerberos keytab file is required for KEYTAB authentication");
+                        }
+                        keytab = Files.createTempFile("", ".keytab");
+                        try (OutputStream out = new FileOutputStream(keytab.toFile())) {
+                            IOUtils.write(dataSource.getKrbKeytab(), out);
+                        }
+                        builder.statement("kinit")
+                                .withParam("-k")
+                                .withParam("-t")
+                                .withParam(keytab.toString())
+                                .withParam(dataSource.getKrbUser());
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unsupported authentication type");
                 }
                 command = builder.build();
                 if (log.isDebugEnabled()) {
