@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -36,6 +37,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import net.lingala.zip4j.exception.ZipException;
@@ -47,6 +49,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class AnalisysUtils {
     private static final Logger log = LoggerFactory.getLogger(AnalisysUtils.class);
     private static final String VISITOR_ACCESS_ERROR = "Access error when access to file '{}'. Skipped";
+    private static final PathMatcher EXCLUDE_JARS_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.jar");
 
     public static List<File> getDirectoryItems(File parentDir, Function<Path, Optional<File>> func) {
 
@@ -85,6 +88,11 @@ public class AnalisysUtils {
     public static List<File> getDirectoryItemsFiltered(File parentDir, PathMatcher matcher) {
 
         return getDirectoryItems(parentDir, p -> matcher.matches(p) ? Optional.of(p.toFile()) : Optional.empty());
+    }
+
+    public static List<File> getDirectoryItemsExclude(File parentDir, PathMatcher exclude) {
+
+        return getDirectoryItems(parentDir, p -> exclude.matches(p) ? Optional.empty() : Optional.of(p.toFile()));
     }
 
     public static File extractFiles(List<MultipartFile> files, boolean compressed)
@@ -137,9 +145,9 @@ public class AnalisysUtils {
             final File zipArchive = new File(dir, String.valueOf(analysis.getId()) + "_result.zip");
             log.info("Adding folder \"" + file.getAbsolutePath() + "\" to zip \"" + zipArchive.getAbsolutePath() + "\" with chunck size = " + chunkSize);
             final File zipDir = CommonFileUtils.compressAndSplit(file, zipArchive, chunkSize);
-            resultFiles = AnalisysUtils.getDirectoryItems(zipDir);
+            resultFiles = AnalisysUtils.getDirectoryItemsExclude(zipDir, EXCLUDE_JARS_MATCHER);
         } else {
-            resultFiles = AnalisysUtils.getDirectoryItems(file);
+            resultFiles = AnalisysUtils.getDirectoryItemsExclude(file, EXCLUDE_JARS_MATCHER);
         }
         return CommonFileUtils.getFSResources(resultFiles);
     }

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
+import com.odysseusinc.arachne.executionengine.service.KerberosService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
@@ -52,19 +53,22 @@ public class AnalysisServiceImpl implements AnalysisService {
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
     private final CdmMetadataService cdmMetadataService;
     private final CallbackService callbackService;
+    private final KerberosService kerberosService;
 
     @Autowired
     public AnalysisServiceImpl(SQLService sqlService,
                                RuntimeService runtimeService,
                                @Qualifier("analysisTaskExecutor") ThreadPoolTaskExecutor threadPoolTaskExecutor,
                                CdmMetadataService cdmMetadataService,
-                               CallbackService callbackService) {
+                               CallbackService callbackService,
+                               KerberosService kerberosService) {
 
         this.sqlService = sqlService;
         this.runtimeService = runtimeService;
         this.threadPoolTaskExecutor = threadPoolTaskExecutor;
         this.cdmMetadataService = cdmMetadataService;
         this.callbackService = callbackService;
+        this.kerberosService = kerberosService;
     }
 
     @Override
@@ -76,6 +80,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         try {
+            kerberosService.kinit(analysis.getDataSource(), analysisDir);
             if (attachCdmMetadata) {
                 try {
                     cdmMetadataService.extractMetadata(analysis, analysisDir);

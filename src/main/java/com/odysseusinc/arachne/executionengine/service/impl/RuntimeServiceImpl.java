@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -95,6 +95,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String RUNTIME_ENV_LANG_VALUE = "en_US.UTF-8";
     private static final String RUNTIME_ENV_LC_ALL_KEY = "LC_ALL";
     private static final String RUNTIME_ENV_LC_ALL_VALUE = "en_US.UTF-8";
+    private static final String RUNTIME_ENV_IMPALA_DRIVER_PATH = "IMPALA_DRIVER_PATH";
 
     private final TaskExecutor taskExecutor;
     private final CallbackService callbackService;
@@ -104,6 +105,8 @@ public class RuntimeServiceImpl implements RuntimeService {
     private int runtimeTimeOutSec;
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
+    @Value("${impala.drivers.location}")
+    private String impalaDriversLocation;
 
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
 
@@ -257,6 +260,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         environment.put(RUNTIME_ENV_TARGET_SCHEMA, dataSource.getTargetSchema());
         environment.put(RUNTIME_ENV_RESULT_SCHEMA, dataSource.getResultSchema());
         environment.put(RUNTIME_ENV_COHORT_TARGET_TABLE, dataSource.getCohortTargetTable());
+        environment.put(RUNTIME_ENV_IMPALA_DRIVER_PATH, impalaDriversLocation);
         environment.put(RUNTIME_ENV_PATH_KEY, RUNTIME_ENV_PATH_VALUE);
         environment.put(RUNTIME_ENV_HOME_KEY, RUNTIME_ENV_HOME_VALUE);
         environment.put(RUNTIME_ENV_HOSTNAME_KEY, RUNTIME_ENV_HOSTNAME_VALUE);
