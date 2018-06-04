@@ -170,7 +170,9 @@ public class RuntimeServiceImpl implements RuntimeService {
                         cleanupEnvironment(file);
                         resultCallback.execute(analysis, resultStatusDTO, finishStatus.stdout, file);
                     } finally {
-                        FileUtils.deleteQuietly(runFile);
+                        if (!isExternalJail()) {
+                            FileUtils.deleteQuietly(runFile);
+                        }
                     }
                 } catch (FileNotFoundException ex) {
                     LOGGER.error(ERROR_BUILDING_COMMAND_LOG, ex);
@@ -188,18 +190,24 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     private File prepareEnvironment(File directory) throws IOException {
 
-        File jailScript = new File(rIsolatedRuntimeProps.getJailSh());
-        if (!jailScript.exists()) {
-            jailScript = FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/jail.sh", "ee", ".sh");
-        }
-        return jailScript;
+        return isExternalJail()
+                ? new File(rIsolatedRuntimeProps.getJailSh())
+                : FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/jail.sh", "ee", ".sh");
+    }
+
+    private boolean isExternalJail() {
+
+        return new File(rIsolatedRuntimeProps.getJailSh()).isFile();
     }
 
     private void cleanupEnvironment(File directory) throws IOException {
 
         File cleanupScript = new File(rIsolatedRuntimeProps.getCleanupSh());
+        boolean isExternal = true;
+
         if (!cleanupScript.exists()) {
             cleanupScript = FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/cleanup.sh", "ee", ".sh");
+            isExternal = false;
         }
         Process p = null;
         try {
@@ -208,7 +216,9 @@ public class RuntimeServiceImpl implements RuntimeService {
             p.waitFor();
         } catch (InterruptedException ignored) {
         } finally {
-            FileUtils.deleteQuietly(cleanupScript);
+            if (!isExternal) {
+                FileUtils.deleteQuietly(cleanupScript);
+            }
             if (Objects.nonNull(p)) {
                 closeQuietly(p.getOutputStream());
                 closeQuietly(p.getInputStream());
