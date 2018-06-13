@@ -143,8 +143,9 @@ public class AnalisysUtils {
         List<File> resultFiles;
         if (compressedResult) {
             final File zipArchive = new File(dir, String.valueOf(analysis.getId()) + "_result.zip");
-            log.info("Adding folder \"" + file.getAbsolutePath() + "\" to zip \"" + zipArchive.getAbsolutePath() + "\" with chunck size = " + chunkSize);
-            final File zipDir = CommonFileUtils.compressAndSplit(file, zipArchive, chunkSize);
+            log.info("Adding folder \"" + file.getAbsolutePath() + "\" to zip \"" + zipArchive.getAbsolutePath() +
+                    "\" with chunck size = " + chunkSize);
+            final File zipDir = CommonFileUtils.compressAndSplit(file, zipArchive, chunkSize, analysis.getExclusions());
             resultFiles = AnalisysUtils.getDirectoryItemsExclude(zipDir, EXCLUDE_JARS_MATCHER);
         } else {
             resultFiles = AnalisysUtils.getDirectoryItemsExclude(file, EXCLUDE_JARS_MATCHER);
