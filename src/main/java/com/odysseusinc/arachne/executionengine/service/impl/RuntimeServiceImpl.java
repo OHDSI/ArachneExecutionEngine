@@ -95,6 +95,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String RUNTIME_ENV_LANG_VALUE = "en_US.UTF-8";
     private static final String RUNTIME_ENV_LC_ALL_KEY = "LC_ALL";
     private static final String RUNTIME_ENV_LC_ALL_VALUE = "en_US.UTF-8";
+    private static final String RUNTIME_ENV_IMPALA_DRIVER_PATH = "IMPALA_DRIVER_PATH";
 
     private final TaskExecutor taskExecutor;
     private final CallbackService callbackService;
@@ -104,6 +105,8 @@ public class RuntimeServiceImpl implements RuntimeService {
     private int runtimeTimeOutSec;
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
+    @Value("${impala.drivers.location}")
+    private String impalaDriversLocation;
 
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
 
@@ -129,7 +132,7 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     private RuntimeServiceMode getRuntimeServiceMode() {
 
-        return StringUtils.isNotBlank(rIsolatedRuntimeProps.getDistArchive()) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
+        return StringUtils.isNotBlank(rIsolatedRuntimeProps.getArchive()) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
     }
 
     private static String getStdoutDiff(InputStream stream) throws IOException {
@@ -167,7 +170,9 @@ public class RuntimeServiceImpl implements RuntimeService {
                         cleanupEnvironment(file);
                         resultCallback.execute(analysis, resultStatusDTO, finishStatus.stdout, file);
                     } finally {
-                        FileUtils.deleteQuietly(runFile);
+                        if (!isExternalJail()) {
+                            FileUtils.deleteQuietly(runFile);
+                        }
                     }
                 } catch (FileNotFoundException ex) {
                     LOGGER.error(ERROR_BUILDING_COMMAND_LOG, ex);
@@ -185,18 +190,24 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     private File prepareEnvironment(File directory) throws IOException {
 
-        File jailScript = new File(rIsolatedRuntimeProps.getJailSh());
-        if (!jailScript.exists()) {
-            jailScript = FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/jail.sh", "ee", ".sh");
-        }
-        return jailScript;
+        return isExternalJail()
+                ? new File(rIsolatedRuntimeProps.getJailSh())
+                : FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/jail.sh", "ee", ".sh");
+    }
+
+    private boolean isExternalJail() {
+
+        return new File(rIsolatedRuntimeProps.getJailSh()).isFile();
     }
 
     private void cleanupEnvironment(File directory) throws IOException {
 
         File cleanupScript = new File(rIsolatedRuntimeProps.getCleanupSh());
+        boolean isExternal = true;
+
         if (!cleanupScript.exists()) {
             cleanupScript = FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/cleanup.sh", "ee", ".sh");
+            isExternal = false;
         }
         Process p = null;
         try {
@@ -205,7 +216,9 @@ public class RuntimeServiceImpl implements RuntimeService {
             p.waitFor();
         } catch (InterruptedException ignored) {
         } finally {
-            FileUtils.deleteQuietly(cleanupScript);
+            if (!isExternal) {
+                FileUtils.deleteQuietly(cleanupScript);
+            }
             if (Objects.nonNull(p)) {
                 closeQuietly(p.getOutputStream());
                 closeQuietly(p.getInputStream());
@@ -229,7 +242,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
         String[] command;
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
-            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, rIsolatedRuntimeProps.getDistArchive()});
+            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, rIsolatedRuntimeProps.getArchive()});
         } else {
             command = new String[]{EXECUTION_COMMAND, fileName};
         }
@@ -247,6 +260,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         environment.put(RUNTIME_ENV_TARGET_SCHEMA, dataSource.getTargetSchema());
         environment.put(RUNTIME_ENV_RESULT_SCHEMA, dataSource.getResultSchema());
         environment.put(RUNTIME_ENV_COHORT_TARGET_TABLE, dataSource.getCohortTargetTable());
+        environment.put(RUNTIME_ENV_IMPALA_DRIVER_PATH, impalaDriversLocation);
         environment.put(RUNTIME_ENV_PATH_KEY, RUNTIME_ENV_PATH_VALUE);
         environment.put(RUNTIME_ENV_HOME_KEY, RUNTIME_ENV_HOME_VALUE);
         environment.put(RUNTIME_ENV_HOSTNAME_KEY, RUNTIME_ENV_HOSTNAME_VALUE);

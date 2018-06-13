@@ -10,7 +10,7 @@ public class RIsolatedRuntimeProperties {
     private String[] runCmd;
     private String jailSh;
     private String cleanupSh;
-    private String distArchive;
+    private String archive;
 
     public String[] getRunCmd() {
         return runCmd;
@@ -36,11 +36,11 @@ public class RIsolatedRuntimeProperties {
         this.cleanupSh = cleanupSh;
     }
 
-    public String getDistArchive() {
-        return distArchive;
+    public String getArchive() {
+        return archive;
     }
 
-    public void setDistArchive(String distArchive) {
-        this.distArchive = distArchive;
+    public void setArchive(String distArchive) {
+        this.archive = distArchive;
     }
 }
