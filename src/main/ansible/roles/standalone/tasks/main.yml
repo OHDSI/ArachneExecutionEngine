@@ -1,0 +1,16 @@
+---
+- name: Creating and Starting EE Container
+  docker_container:
+    name: "{{ container_name }}"
+    image: "{{ image_name }}"
+    state: started
+    recreate: yes
+    pull: yes
+    ports:
+      - "443:8888"
+    volumes:
+      - "/tmp:/tmp"
+      - "/var/local/dist:/dist"
+    restart: yes
+    restart_policy: always
+    privileged: yes

@@ -1,0 +1,4 @@
+---
+
+image_name: "odysseusinc/execution_engine:latest"
+container_name: "execution_engine"

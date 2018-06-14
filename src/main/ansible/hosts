@@ -1,0 +1,9 @@
+[local]
+localhost
+
+[target]
+
+[target:vars]
+ansible_user=centos
+ansible_ssh_pass=
+ansible_become_pass=

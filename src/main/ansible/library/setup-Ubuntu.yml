@@ -1,0 +1,7 @@
+---
+- name: install python 2
+  become: true
+  raw: sudo bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qy python-minimal)"
+- name: install pip
+  become: true
+  raw: sudo bash -c "test -e /usr/bin/pip || (apt -qqy update && apt install -qy python-pip)"

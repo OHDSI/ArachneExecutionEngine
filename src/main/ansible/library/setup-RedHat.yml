@@ -1,0 +1,7 @@
+---
+- name: install python 2
+  become: true
+  raw: sudo bash -c "test -e /usr/bin/python || yum install -q -y python"
+- name: install pip
+  become: true
+  raw: sudo bash -c "test -e /usr/bin/pip || (yum -q -y install epel-release && yum install -q -y python-pip)"
