@@ -26,8 +26,8 @@ if ("Cyclops" %in% installed.packages() == FALSE){
   install_github("OHDSI/Cyclops", ref="08e76d6") # v1.3.1
 }
 if ("PatientLevelPrediction" %in% installed.packages() == FALSE){
-#  install_github("OHDSI/PatientLevelPrediction", ref="#ef9eed3") #v1.2.2
-  install_github("odysseusinc/PatientLevelPrediction")
+  install_github("OHDSI/PatientLevelPrediction", ref="474ed88") #v2.0.4+
+#  install_github("odysseusinc/PatientLevelPrediction")
 }
 
 if ("assertthat" %in% installed.packages() == FALSE){
