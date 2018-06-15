@@ -98,13 +98,14 @@ public class SQLServiceImpl implements SQLService {
                         final String sqlFileName = sqlFile.getName();
                         try (OutputStream outputStream = new ByteArrayOutputStream()) {
                             Files.copy(sqlFile.toPath(), outputStream);
-                            List<String> sqlStatementsList = Arrays.asList(SqlSplit.splitSql(outputStream.toString()));
-                            for (int statementIdx = 0; statementIdx < sqlStatementsList.size(); statementIdx++) {
-                                try (Statement statement = conn.createStatement();) {
-                                    if (statement.execute(sqlStatementsList.get(statementIdx))) {
+                            try (Statement statement = conn.createStatement();) {
+                                boolean hasMoreResultSets = statement.execute(outputStream.toString());
+                                int resultIdx = 0;
+                                while (hasMoreResultSets || statement.getUpdateCount() != -1) {
+                                    if (hasMoreResultSets) {
                                         try (ResultSet resultSet = statement.getResultSet()) {
                                             if (resultSet != null) {
-                                                resultFile = Paths.get(sqlFile.getAbsolutePath() + ".result_" + statementIdx + ".csv");
+                                                resultFile = Paths.get(sqlFile.getAbsolutePath() + ".result_" + resultIdx + ".csv");
                                                 try (PrintWriter out = new PrintWriter(new BufferedWriter(
                                                         new FileWriter(resultFile.toFile(), true))
                                                 )) {
@@ -132,6 +133,8 @@ public class SQLServiceImpl implements SQLService {
                                             }
                                         }
                                     }
+                                    hasMoreResultSets = statement.getMoreResults();
+                                    resultIdx++;
                                 }
                             }
                             stdout.append(sqlFileName).append("\r\n\r\n").append("has been executed correctly").append("\r\n");
