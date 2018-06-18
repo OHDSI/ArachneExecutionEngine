@@ -1,0 +1,61 @@
+---
+- name: Provision an EC2 instance
+  hosts: local
+  connection: local
+  gather_facts: false
+  tags: provisioning
+  tasks:
+    - pip:
+        name: boto3
+    - name: Create a security group
+      local_action:
+        module: ec2_group
+        name: "{{ security_group }}"
+        description: "Security group for Execution Engine instances"
+        region: "{{ region }}"
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+      register: basic_firewall
+    - name: Launch ExecutionEngine EC2 instance
+      local_action:
+        module: ec2
+        group: "{{ security_group }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ image }}"
+        wait: true
+        region: "{{ region }}"
+        keypair: "{{ keypair }}"
+        vpc_subnet_id: "{{ subnet_id }}"
+        assign_public_ip: yes
+        instance_tags:
+          name: execution_engine
+        count: 1
+        state: present
+      register: ec2
+    - name: Debug EC2
+      debug:
+        msg: "instance: {{ item }}"
+      with_items: "{{ ec2.instances }}"
+    - name: Add EC2 instance to target group
+      add_host:
+        hostname: "{{ item.public_ip }}"
+        groups: target
+      with_items: "{{ ec2.instances }}"
+    - name: Wait for SSH to come up
+      local_action:
+        module: wait_for
+        host: "{{ item.public_ip }}"
+        port: 22
+        state: started
+      with_items: "{{ ec2.instances }}"
+

@@ -1,0 +1,22 @@
+- hosts: target
+  gather_facts: true
+
+  tasks:
+  - include_tasks: library/setup-Ubuntu.yml
+    when: ansible_os_family == 'Debian'
+  - include_tasks: library/setup-RedHat.yml
+    when: ansible_os_family == 'RedHat'
+  - name: install docker-py
+    become: true
+    raw: sudo pip install six==1.10.0 docker-py==1.10.6
+
+- hosts: target
+
+  vars:
+    docker_install_compose: False
+    pip_install_packages:
+      - name: docker
+
+  roles:
+    - { role: ansible-role-docker, become: yes }
+    - { role: standalone, become: yes, become_method: sudo }

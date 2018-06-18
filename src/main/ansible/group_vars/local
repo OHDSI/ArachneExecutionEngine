@@ -1,0 +1,9 @@
+---
+
+instance_type: t2.micro
+security_group:
+# CentOS 7, region: us-west-2
+image: ami-0ebdd976
+keypair:
+region: us-west-2
+subnet_id:
