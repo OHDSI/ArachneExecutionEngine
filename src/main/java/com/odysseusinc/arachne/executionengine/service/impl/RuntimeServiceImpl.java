@@ -22,9 +22,13 @@
 
 package com.odysseusinc.arachne.executionengine.service.impl;
 
+import static org.apache.commons.io.IOUtils.closeQuietly;
+
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
+import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
@@ -48,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.PostConstruct;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,20 +104,21 @@ public class RuntimeServiceImpl implements RuntimeService {
     private int runtimeTimeOutSec;
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
-    @Value("${runtimeservice.dist.archive}")
-    private String distArchive;
+
+    private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
 
 
     @Autowired
-    public RuntimeServiceImpl(TaskExecutor taskExecutor, CallbackService callbackService, ResourceLoader resourceLoader) {
+    public RuntimeServiceImpl(TaskExecutor taskExecutor, CallbackService callbackService, ResourceLoader resourceLoader, RIsolatedRuntimeProperties rIsolatedRuntimeProps) {
 
         this.taskExecutor = taskExecutor;
         this.callbackService = callbackService;
         this.resourceLoader = resourceLoader;
+        this.rIsolatedRuntimeProps = rIsolatedRuntimeProps;
     }
 
     @PostConstruct
-    public void init(){
+    public void init() {
 
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
             LOGGER.info("Runtime service running in ISOLATED environment mode");
@@ -121,9 +127,9 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
     }
 
-    private RuntimeServiceMode getRuntimeServiceMode(){
+    private RuntimeServiceMode getRuntimeServiceMode() {
 
-        return StringUtils.isNotBlank(distArchive) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
+        return StringUtils.isNotBlank(rIsolatedRuntimeProps.getArchive()) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
     }
 
     private static String getStdoutDiff(InputStream stream) throws IOException {
@@ -139,6 +145,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     }
 
     @Override
+    @FileDescriptorCount
     public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback) {
 
         taskExecutor.execute(() -> {
@@ -159,8 +166,10 @@ public class RuntimeServiceImpl implements RuntimeService {
                                 ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
                         cleanupEnvironment(file);
                         resultCallback.execute(analysis, resultStatusDTO, finishStatus.stdout, file);
-                    }finally {
-                        FileUtils.deleteQuietly(runFile);
+                    } finally {
+                        if (!isExternalJail()) {
+                            FileUtils.deleteQuietly(runFile);
+                        }
                     }
                 } catch (FileNotFoundException ex) {
                     LOGGER.error(ERROR_BUILDING_COMMAND_LOG, ex);
@@ -170,7 +179,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                     throw ex;
                 }
             } catch (Throwable t) {
-                 LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
+                LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
                 failedCallback.execute(analysis, t, file);
             }
         });
@@ -178,19 +187,40 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     private File prepareEnvironment(File directory) throws IOException {
 
-        return FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/jail.sh", "ee", ".sh");
+        return isExternalJail()
+                ? new File(rIsolatedRuntimeProps.getJailSh())
+                : FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/jail.sh", "ee", ".sh");
+    }
+
+    private boolean isExternalJail() {
+
+        return new File(rIsolatedRuntimeProps.getJailSh()).isFile();
     }
 
     private void cleanupEnvironment(File directory) throws IOException {
 
-        File cleanupScript = FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/cleanup.sh", "ee", ".sh");
-        try{
-            ProcessBuilder pb = new ProcessBuilder("bash", cleanupScript.getAbsolutePath(), directory.getAbsolutePath());
-            Process p = pb.start();
+        File cleanupScript = new File(rIsolatedRuntimeProps.getCleanupSh());
+        boolean isExternal = true;
+
+        if (!cleanupScript.exists()) {
+            cleanupScript = FileResourceUtils.extractResourceToTempFile(resourceLoader, "classpath:/cleanup.sh", "ee", ".sh");
+            isExternal = false;
+        }
+        Process p = null;
+        try {
+            ProcessBuilder pb = new ProcessBuilder((String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{cleanupScript.getAbsolutePath(), directory.getAbsolutePath()}));
+            p = pb.start();
             p.waitFor();
         } catch (InterruptedException ignored) {
         } finally {
-            FileUtils.deleteQuietly(cleanupScript);
+            if (!isExternal) {
+                FileUtils.deleteQuietly(cleanupScript);
+            }
+            if (Objects.nonNull(p)) {
+                closeQuietly(p.getOutputStream());
+                closeQuietly(p.getInputStream());
+                closeQuietly(p.getErrorStream());
+            }
         }
     }
 
@@ -209,7 +239,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
         String[] command;
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
-            command = new String[]{"bash", runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, distArchive};
+            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, rIsolatedRuntimeProps.getArchive()});
         } else {
             command = new String[]{EXECUTION_COMMAND, fileName};
         }
@@ -249,26 +279,35 @@ public class RuntimeServiceImpl implements RuntimeService {
                 .directory(activeDir)
                 .redirectErrorStream(true);
         processBuilder.environment().putAll(envp);
-        final Process process = processBuilder.start();
-        final ExecutorService executorService = Executors.newSingleThreadExecutor();
-        final StdoutHandler stdoutHandler = new StdoutHandler(process, updateUrl, submissionId, password);
-        final Future<String> future = executorService.submit(stdoutHandler);
-        StringBuilder commandBuilder = new StringBuilder();
-        Arrays.stream(command).forEach(c -> commandBuilder.append(" ").append(c));
-        LOGGER.info(EXECUTING_LOG, commandBuilder.toString());
-        process.waitFor(timeout, TimeUnit.SECONDS);
-        if (process.isAlive()) {
-            process.destroy();
-            LOGGER.warn(DESTROYING_PROCESS_LOG);
+        Process process = null;
+        try {
+            process = processBuilder.start();
+            final ExecutorService executorService = Executors.newSingleThreadExecutor();
+            final StdoutHandler stdoutHandler = new StdoutHandler(process, updateUrl, submissionId, password);
+            final Future<String> future = executorService.submit(stdoutHandler);
+            StringBuilder commandBuilder = new StringBuilder();
+            Arrays.stream(command).forEach(c -> commandBuilder.append(" ").append(c));
+            LOGGER.info(EXECUTING_LOG, commandBuilder.toString());
+            process.waitFor(timeout, TimeUnit.SECONDS);
+            if (process.isAlive()) {
+                process.destroy();
+                LOGGER.warn(DESTROYING_PROCESS_LOG);
+            }
+            final String stdout = future.get(submissionUpdateInterval * 2, TimeUnit.MILLISECONDS);
+            if (process.exitValue() == 0) {
+                LOGGER.info(EXECUTION_SUCCESS_LOG, submissionId, process.exitValue());
+            } else {
+                LOGGER.warn(EXECUTION_FAILURE_LOG, submissionId, process.exitValue());
+            }
+            LOGGER.debug(STDOUT_LOG, stdout);
+            return new RuntimeFinishStatus(process.exitValue(), stdout);
+        } finally {
+            if (Objects.nonNull(process)) {
+                closeQuietly(process.getOutputStream());
+                closeQuietly(process.getInputStream());
+                closeQuietly(process.getErrorStream());
+            }
         }
-        final String stdout = future.get(submissionUpdateInterval * 2, TimeUnit.MILLISECONDS);
-        if (process.exitValue() == 0) {
-            LOGGER.info(EXECUTION_SUCCESS_LOG, submissionId, process.exitValue());
-        } else {
-            LOGGER.warn(EXECUTION_FAILURE_LOG, submissionId, process.exitValue());
-        }
-        LOGGER.debug(STDOUT_LOG, stdout);
-        return new RuntimeFinishStatus(process.exitValue(), stdout);
     }
 
     private class RuntimeFinishStatus {
@@ -310,6 +349,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                 if (!stdoutDiff.isEmpty()) {
                     LOGGER.debug(STDOUT_LOG_DIFF, stdoutDiff);
                 }
+
             } while (process.isAlive());
 
             return stdout.toString();

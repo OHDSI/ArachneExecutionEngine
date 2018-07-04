@@ -32,7 +32,9 @@ import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
+import java.io.File;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,10 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
 
 @Service
 public class AnalysisServiceImpl implements AnalysisService {
@@ -70,16 +68,20 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     @Override
-    public AnalysisRequestStatusDTO analyze(AnalysisRequestDTO analysis, File analysisDir, Boolean compressedResult, Long chunkSize) {
+    @FileDescriptorCount
+    public AnalysisRequestStatusDTO analyze(AnalysisRequestDTO analysis, File analysisDir, Boolean compressedResult,
+                                            Boolean attachCdmMetadata, Long chunkSize) {
 
         Validate.notNull(analysis, "analysis can't be null");
 
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         try {
-            try {
-                cdmMetadataService.extractMetadata(analysis, analysisDir);
-            } catch (Exception e) {
-                logger.info("Failed to collect CDM metadata. " + e);
+            if (attachCdmMetadata) {
+                try {
+                    cdmMetadataService.extractMetadata(analysis, analysisDir);
+                } catch (Exception e) {
+                    logger.info("Failed to collect CDM metadata. " + e);
+                }
             }
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();

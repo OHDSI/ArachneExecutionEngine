@@ -38,6 +38,7 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.model.CdmSource;
 import com.odysseusinc.arachne.executionengine.model.Vocabulary;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
@@ -47,7 +48,6 @@ import com.odysseusinc.arachne.executionengine.util.SQLUtils;
 import com.odysseusinc.arachne.executionengine.util.exception.StatementSQLException;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -55,6 +55,7 @@ import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -114,6 +115,7 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
     }
 
     @Override
+    @FileDescriptorCount
     public void extractMetadata(AnalysisRequestDTO analysis, File dir) throws SQLException, IOException {
 
         DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
@@ -190,13 +192,13 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
                     checkCdmTables(dataSource, RES_TABLE_CHECK_V5, v.name());
                     version = v;
                     if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Detected CDM version for {} is {}", dataSource.getConnectionString(), version);
+                        LOGGER.debug("Detected CDM version for {} is {}", dataSource.getConnectionStringForLogging(), version);
                     }
                     break;
                 } catch (StatementSQLException e) {
-                    LOGGER.debug("Failed CDM version check for {} as {} with message: {},\nstatement: {}", dataSource.getConnectionString(), v, e.getMessage(), e.getStatement());
+                    LOGGER.debug("Failed CDM version check for {} as {} with message: {},\nstatement: {}", dataSource.getConnectionStringForLogging(), v, e.getMessage(), e.getStatement());
                 } catch (SQLException e) {
-                    LOGGER.debug("Failed CDM version check for {} as {} with message: {}", dataSource.getConnectionString(), v, e.getMessage());
+                    LOGGER.debug("Failed CDM version check for {} as {} with message: {}", dataSource.getConnectionStringForLogging(), v, e.getMessage());
                 }
             }
             if (Objects.isNull(version)) {
@@ -232,17 +234,16 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
         try (Connection c = SQLUtils.getConnection(dataSource)) {
             for (String query : statements) {
                 if (StringUtils.isNotBlank(query)) {
-                    PreparedStatement stmt = c.prepareStatement(query);
-                    stmt.setMaxRows(1);
-                    try {
-                        stmt.executeQuery();
+                    try (PreparedStatement stmt = c.prepareStatement(query)) {
+                        stmt.setMaxRows(1);
+                        try (final ResultSet resultSet = stmt.executeQuery()) {
+                        }
                     } catch (SQLException e) {
                         throw new StatementSQLException(e.getMessage(), e, query);
                     }
                 }
             }
         }
-
     }
 
 }

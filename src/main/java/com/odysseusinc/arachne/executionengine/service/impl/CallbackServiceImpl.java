@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -80,6 +81,7 @@ public class CallbackServiceImpl implements CallbackService {
 
     @Override
     @Async
+    @FileDescriptorCount
     public void updateAnalysisStatus(String updateURL, Long submissionId, String out, String password) {
 
         Date current = new Date();
@@ -108,6 +110,7 @@ public class CallbackServiceImpl implements CallbackService {
     }
 
     @Override
+    @FileDescriptorCount
     public void processAnalysisResult(
             AnalysisRequestDTO analysis,
             AnalysisResultStatusDTO status,
@@ -150,6 +153,7 @@ public class CallbackServiceImpl implements CallbackService {
     }
 
     @Override
+    @FileDescriptorCount
     public void sendAnalysisResult(String resultURL,
                                    String password,
                                    AnalysisResultDTO analysisResult,
@@ -181,6 +185,7 @@ public class CallbackServiceImpl implements CallbackService {
     }
 
     @Override
+    @FileDescriptorCount
     public void sendFailedResult(AnalysisRequestDTO analysis, Throwable e, File analysisDir,
                                  Boolean compressedResult, Long chunkSize) {
 
