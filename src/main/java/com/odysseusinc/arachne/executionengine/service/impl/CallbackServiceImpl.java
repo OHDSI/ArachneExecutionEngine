@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -147,7 +147,8 @@ public class CallbackServiceImpl implements CallbackService {
                 FileUtils.deleteQuietly(zipDir);
             } catch (IOException ex) {
                 log.warn(DELETE_DIR_ERROR_LOG, resultDir.getAbsolutePath(), ex);
-                throw ex;
+                // rethrow of exception cause to results overriden
+//                throw ex;
             }
         }
     }
