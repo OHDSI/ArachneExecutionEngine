@@ -25,7 +25,8 @@ SELECT TOP 1 condition_era_id, person_id, condition_concept_id, condition_era_st
 FROM @cdm_schema.condition_era;
 SELECT TOP 1 condition_occurrence_id, person_id, condition_concept_id, condition_start_date, condition_start_datetime, condition_end_date, condition_end_datetime, condition_type_concept_id, stop_reason, provider_id, visit_occurrence_id, condition_source_value, condition_source_concept_id, condition_status_source_value, condition_status_concept_id
 FROM @cdm_schema.condition_occurrence;
-SELECT TOP 1 cost_id, cost_event_id, cost_domain_id, cost_type_concept_id, currency_concept_id, total_charge, total_cost, total_paid, paid_by_payer, paid_by_patient, paid_patient_copay, paid_patient_coinsurance, paid_patient_deductible, paid_by_primary, paid_ingredient_cost, paid_dispensing_fee, payer_plan_period_id, amount_allowed, revenue_code_concept_id, revenue_code_source_value, drg_concept_id, drg_source_value
+SELECT TOP 1 cost_id, cost_event_id, cost_domain_id, cost_type_concept_id, currency_concept_id, total_charge, total_cost, total_paid, paid_by_payer, paid_by_patient, paid_patient_copay, paid_patient_coinsurance, paid_patient_deductible, paid_by_primary, paid_ingredient_cost, paid_dispensing_fee, payer_plan_period_id, amount_allowed, revenue_code_concept_id, drg_concept_id, drg_source_value
+--, reveue_code_source_value
 FROM @cdm_schema.cost;
 SELECT TOP 1 person_id, death_date, death_datetime, death_type_concept_id, cause_concept_id, cause_source_value, cause_source_concept_id
 FROM @cdm_schema.death;
@@ -53,7 +54,7 @@ SELECT TOP 1 note_nlp_id, note_id, section_concept_id, snippet, "offset", lexica
 FROM @cdm_schema.note_nlp;
 SELECT TOP 1 observation_id, person_id, observation_concept_id, observation_date, observation_datetime, observation_type_concept_id, value_as_number, value_as_string, value_as_concept_id, qualifier_concept_id, unit_concept_id, provider_id, visit_occurrence_id, observation_source_value, observation_source_concept_id, unit_source_value, qualifier_source_value
 FROM @cdm_schema.observation;
-SELECT TOP 1 observation_period_id, person_id, observation_period_start_date, observation_period_start_datetime, observation_period_end_date, observation_period_end_datetime, period_type_concept_id
+SELECT TOP 1 observation_period_id, person_id, observation_period_start_date, observation_period_end_date, period_type_concept_id
 FROM @cdm_schema.observation_period;
 SELECT TOP 1 payer_plan_period_id, person_id, payer_plan_period_start_date, payer_plan_period_end_date, payer_source_value, plan_source_value, family_source_value
 FROM @cdm_schema.payer_plan_period;
