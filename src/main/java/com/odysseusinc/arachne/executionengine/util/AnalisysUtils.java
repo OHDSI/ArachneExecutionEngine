@@ -26,7 +26,6 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -37,7 +36,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import net.lingala.zip4j.exception.ZipException;
@@ -143,7 +141,7 @@ public class AnalisysUtils {
         List<File> resultFiles;
         if (compressedResult) {
             final File zipArchive = new File(dir, String.valueOf(analysis.getId()) + "_result.zip");
-            log.info("Adding folder \"{}\" to zip \"{}\" with chunck size = {}", file.getAbsolutePath(),
+            log.info("Adding folder \"{}\" to zip \"{}\" with chunk size = {}", file.getAbsolutePath(),
                     zipArchive.getAbsolutePath(), chunkSize);
             final File zipDir = CommonFileUtils.compressAndSplit(file, zipArchive, chunkSize, analysis.getResultExclusions());
             resultFiles = AnalisysUtils.getDirectoryItemsExclude(zipDir, EXCLUDE_JARS_MATCHER);
