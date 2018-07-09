@@ -344,18 +344,20 @@ public class RuntimeServiceImpl implements RuntimeService {
         public String call() throws Exception {
 
             StringBuilder stdout = new StringBuilder();
-            do {
-                Thread.sleep(submissionUpdateInterval);
-                InputStream inputStream = process.getInputStream();
-                final String stdoutDiff = getStdoutDiff(inputStream);
-                stdout.append(stdoutDiff);
-                callbackService.updateAnalysisStatus(updateUrl, submissionId, stdoutDiff, password);
-                if (!stdoutDiff.isEmpty()) {
-                    LOGGER.debug(STDOUT_LOG_DIFF, stdoutDiff);
-                }
-
-            } while (process.isAlive());
-
+            try {
+                do {
+                    Thread.sleep(submissionUpdateInterval);
+                    InputStream inputStream = process.getInputStream();
+                    final String stdoutDiff = getStdoutDiff(inputStream);
+                    stdout.append(stdoutDiff);
+                    callbackService.updateAnalysisStatus(updateUrl, submissionId, stdoutDiff, password);
+                    if (!stdoutDiff.isEmpty()) {
+                        LOGGER.debug(STDOUT_LOG_DIFF, stdoutDiff);
+                    }
+                } while (process.isAlive());
+            } catch (IOException e) {
+                LOGGER.warn("Process was destroyed during attempt to write stdout");
+            }
             return stdout.toString();
         }
     }
