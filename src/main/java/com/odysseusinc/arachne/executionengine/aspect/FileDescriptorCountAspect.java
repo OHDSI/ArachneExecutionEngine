@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,13 +43,13 @@ public class FileDescriptorCountAspect {
     private boolean enabled;
 
     @Around("@annotation(com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount)")
-    public void log(final ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+    public Object log(final ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
 
         if (enabled) {
             log("Before " + proceedingJoinPoint.getSignature().toString());
         }
         try {
-            proceedingJoinPoint.proceed();
+            return proceedingJoinPoint.proceed();
         } finally {
             if (enabled) {
                 log("After " + proceedingJoinPoint.getSignature().toString());

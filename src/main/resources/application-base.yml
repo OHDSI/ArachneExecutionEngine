@@ -57,3 +57,10 @@ runtimeservice:
 tmp:
   holder:
     cron: 0 * * ? * *
+
+kerberos:
+  timeout: 60
+
+impala:
+  drivers:
+    location: /impala
