@@ -37,6 +37,9 @@ public class KerberosServiceImpl implements KerberosService {
                 CommandBuilder builder = CommandBuilder.newCommand();
                 switch (dataSource.getKrbAuthMethod()) {
                     case PASSWORD:
+                        if (StringUtils.isBlank(dataSource.getKrbUser())) {
+                            throw new IllegalArgumentException("Kerberos user is required for PASSWORD authentication");
+                        }
                         if (StringUtils.isBlank(dataSource.getKrbPassword())) {
                             throw new IllegalArgumentException("Kerberos password is required for PASSWORD authentication");
                         }
@@ -46,6 +49,9 @@ public class KerberosServiceImpl implements KerberosService {
                                         dataSource.getKrbUser());
                         break;
                     case KEYTAB:
+                        if (StringUtils.isBlank(dataSource.getKrbUser())) {
+                            throw new IllegalArgumentException("Kerberos user is required for KEYTAB authentication");
+                        }
                         if (Objects.isNull(dataSource.getKrbKeytab())) {
                             throw new IllegalArgumentException("Kerberos keytab file is required for KEYTAB authentication");
                         }
