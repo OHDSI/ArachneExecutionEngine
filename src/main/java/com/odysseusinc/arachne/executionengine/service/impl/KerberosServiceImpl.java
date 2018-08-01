@@ -35,11 +35,11 @@ public class KerberosServiceImpl implements KerberosService {
             Path keytab = null;
             try {
                 CommandBuilder builder = CommandBuilder.newCommand();
+                if (StringUtils.isBlank(dataSource.getKrbUser())) {
+                    throw new IllegalArgumentException("Kerberos user is required for authentication");
+                }
                 switch (dataSource.getKrbAuthMethod()) {
                     case PASSWORD:
-                        if (StringUtils.isBlank(dataSource.getKrbUser())) {
-                            throw new IllegalArgumentException("Kerberos user is required for PASSWORD authentication");
-                        }
                         if (StringUtils.isBlank(dataSource.getKrbPassword())) {
                             throw new IllegalArgumentException("Kerberos password is required for PASSWORD authentication");
                         }
@@ -49,9 +49,6 @@ public class KerberosServiceImpl implements KerberosService {
                                         dataSource.getKrbUser());
                         break;
                     case KEYTAB:
-                        if (StringUtils.isBlank(dataSource.getKrbUser())) {
-                            throw new IllegalArgumentException("Kerberos user is required for KEYTAB authentication");
-                        }
                         if (Objects.isNull(dataSource.getKrbKeytab())) {
                             throw new IllegalArgumentException("Kerberos keytab file is required for KEYTAB authentication");
                         }
@@ -59,7 +56,7 @@ public class KerberosServiceImpl implements KerberosService {
                         try (OutputStream out = new FileOutputStream(keytab.toFile())) {
                             IOUtils.write(dataSource.getKrbKeytab(), out);
                         }
-                        builder.statement("kinit")
+                        builder.statement("C:\\Program Files\\MIT\\Kerberos\\bin\\kinit")
                                 .withParam("-k")
                                 .withParam("-t")
                                 .withParam(keytab.toString())
