@@ -1,5 +1,7 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
+import com.github.jknack.handlebars.Template;
+import com.odysseusinc.arachne.commons.utils.TemplateUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.service.KerberosService;
 import com.odysseusinc.arachne.executionengine.util.CommandBuilder;
@@ -8,35 +10,25 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import net.htmlparser.jericho.Source;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
 
 @Service
 public class KerberosServiceImpl implements KerberosService {
 
     private static final Logger log = LoggerFactory.getLogger(KerberosService.class);
     public static final String LOG_FILE = "kinit_out.txt";
-    private final static String templateName = "krb5Conf";
-
-    @Autowired
-    private TemplateEngine templateEngine;
 
     @Value("${kerberos.timeout}")
     private long timeout;
@@ -46,6 +38,8 @@ public class KerberosServiceImpl implements KerberosService {
 
     @Value("${kerberos.configPath}")
     private String configPath;
+
+    private final static String REALMS = "[realms]";
 
     public void kinit(DataSourceUnsecuredDTO dataSource, File workDir) throws IOException {
 
@@ -115,38 +109,36 @@ public class KerberosServiceImpl implements KerberosService {
         }
     }
 
-    private void addKrbRealmToConfig(DataSourceUnsecuredDTO dataSource) throws IOException {
+    private synchronized void addKrbRealmToConfig(DataSourceUnsecuredDTO dataSource) throws IOException {
 
-        Context context = new Context();
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("realmName", dataSource.getKrbRealm());
         parameters.put("adminServer", dataSource.getKrbFQDN());
         parameters.put("kdcServer", dataSource.getKrbFQDN());
-        context.setVariables(parameters);
-        String htmlString = templateEngine.process(templateName, context);
 
-        Source source = new Source(htmlString);
-        String textString = source.getRenderer().toString();
+        Template confTemplate = TemplateUtils.loadTemplate("templates/krb5Conf.mustache");
+        String textString = confTemplate.apply(parameters);
 
         File config = new File(configPath);
         long fileLength = config.length();
-        try (RandomAccessFile raf = new RandomAccessFile(config, "rw"); FileChannel channel = raf.getChannel()) {
-            channel.lock();
-            if (!isRealmDefined(dataSource.getKrbRealm(), raf, (int) fileLength)) {
-                ByteBuffer buf = ByteBuffer.wrap(textString.getBytes());
-                raf.seek(fileLength);
-                channel.write(buf);
+        try (RandomAccessFile raf = new RandomAccessFile(config, "rw")) {
+            String confStr = convertConfigToString(raf, (int) fileLength);
+            boolean isRealmDefined = confStr.toLowerCase().contains(" " + dataSource.getKrbRealm().toLowerCase() + " = {");
+            if (!isRealmDefined) {
+                int startPosition = confStr.indexOf(REALMS) + REALMS.length();
+                String confWithNewRealm = confStr.replace(confStr.substring(0, startPosition + 1), confStr.substring(0, startPosition + 1) + textString);
+                raf.seek(0);
+                raf.write(confWithNewRealm.getBytes());
             }
         }
     }
 
-    private boolean isRealmDefined(String krbRealm, RandomAccessFile raf, int fileLength) throws IOException {
+    private String convertConfigToString(RandomAccessFile raf, int fileLength) throws IOException {
 
         raf.seek(0);
         byte[] fileBytes = new byte[fileLength];
         raf.readFully(fileBytes);
-        String data = new String(fileBytes);
-        return data.toLowerCase().contains(krbRealm.toLowerCase() + " = {");
+        return new String(fileBytes);
     }
 
     private void klist(File workDir) {
