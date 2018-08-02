@@ -160,7 +160,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                 DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
                 RuntimeFinishStatus finishStatus;
                 try {
-                    File runFile = prepareEnvironment(file);
+                    File runFile = prepareEnvironment();
                     try {
                         String[] command = buildRuntimeCommand(runFile, file, executableFileName);
                         final Map<String, String> envp = buildRuntimeEnvVariables(dataSource);
@@ -188,7 +188,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         });
     }
 
-    private File prepareEnvironment(File directory) throws IOException {
+    private File prepareEnvironment() throws IOException {
 
         return isExternalJail()
                 ? new File(rIsolatedRuntimeProps.getJailSh())

@@ -7,32 +7,52 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import net.htmlparser.jericho.Source;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 @Service
 public class KerberosServiceImpl implements KerberosService {
 
     private static final Logger log = LoggerFactory.getLogger(KerberosService.class);
     public static final String LOG_FILE = "kinit_out.txt";
+    private final static String templateName = "krb5Conf";
+
+    @Autowired
+    private TemplateEngine templateEngine;
 
     @Value("${kerberos.timeout}")
     private long timeout;
+
+    @Value("${kerberos.kinitPath}")
+    private String kinitPath;
+
+    @Value("${kerberos.configPath}")
+    private String configPath;
 
     public void kinit(DataSourceUnsecuredDTO dataSource, File workDir) throws IOException {
 
         if (dataSource.getUseKerberos()) {
             String[] command;
             Path keytab = null;
+            addKrbRealmToConfig(dataSource);
             try {
                 CommandBuilder builder = CommandBuilder.newCommand();
                 if (StringUtils.isBlank(dataSource.getKrbUser())) {
@@ -45,8 +65,8 @@ public class KerberosServiceImpl implements KerberosService {
                         }
                         builder.statement("bash")
                                 .withParam("-c")
-                                .statement("echo " + dataSource.getKrbPassword() + " | kinit " +
-                                        dataSource.getKrbUser());
+                                .statement("echo " + dataSource.getKrbPassword() + " | " + kinitPath + "kinit" +
+                                        dataSource.getKrbUser() + "@" + dataSource.getKrbRealm());
                         break;
                     case KEYTAB:
                         if (Objects.isNull(dataSource.getKrbKeytab())) {
@@ -56,11 +76,11 @@ public class KerberosServiceImpl implements KerberosService {
                         try (OutputStream out = new FileOutputStream(keytab.toFile())) {
                             IOUtils.write(dataSource.getKrbKeytab(), out);
                         }
-                        builder.statement("C:\\Program Files\\MIT\\Kerberos\\bin\\kinit")
+                        builder.statement(kinitPath + "kinit")
                                 .withParam("-k")
                                 .withParam("-t")
                                 .withParam(keytab.toString())
-                                .withParam(dataSource.getKrbUser());
+                                .withParam(dataSource.getKrbUser() + "@" + dataSource.getKrbRealm());
                         break;
                     default:
                         throw new IllegalArgumentException("Unsupported authentication type");
@@ -87,7 +107,7 @@ public class KerberosServiceImpl implements KerberosService {
                 } catch (InterruptedException e) {
                     log.error("Failed to obtain kerberos ticket", e);
                 }
-            }finally {
+            } finally {
                 if (Objects.nonNull(keytab)) {
                     FileUtils.deleteQuietly(keytab.toFile());
                 }
@@ -95,7 +115,42 @@ public class KerberosServiceImpl implements KerberosService {
         }
     }
 
-    private void klist(File workDir){
+    private void addKrbRealmToConfig(DataSourceUnsecuredDTO dataSource) throws IOException {
+
+        Context context = new Context();
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("realmName", dataSource.getKrbRealm());
+        parameters.put("adminServer", dataSource.getKrbFQDN());
+        parameters.put("kdcServer", dataSource.getKrbFQDN());
+        context.setVariables(parameters);
+        String htmlString = templateEngine.process(templateName, context);
+
+        Source source = new Source(htmlString);
+        String textString = source.getRenderer().toString();
+
+        File config = new File(configPath);
+        long fileLength = config.length();
+        try (RandomAccessFile raf = new RandomAccessFile(config, "rw"); FileChannel channel = raf.getChannel()) {
+            channel.lock();
+            if (!isRealmDefined(dataSource.getKrbRealm(), raf, (int) fileLength)) {
+                ByteBuffer buf = ByteBuffer.wrap(textString.getBytes());
+                raf.seek(fileLength);
+                channel.write(buf);
+            }
+        }
+    }
+
+    private boolean isRealmDefined(String krbRealm, RandomAccessFile raf, int fileLength) throws IOException {
+
+        raf.seek(0);
+        byte[] fileBytes = new byte[fileLength];
+        raf.readFully(fileBytes);
+        String data = new String(fileBytes);
+        return data.toLowerCase().contains(krbRealm.toLowerCase() + " = {");
+    }
+
+    private void klist(File workDir) {
+
         File stdout = new File(workDir, LOG_FILE);
         try {
             Process process = new ProcessBuilder()
