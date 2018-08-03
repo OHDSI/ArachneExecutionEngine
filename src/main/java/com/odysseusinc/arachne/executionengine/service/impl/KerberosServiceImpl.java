@@ -4,6 +4,7 @@ import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.utils.TemplateUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.service.KerberosService;
+import com.odysseusinc.arachne.executionengine.service.impl.RuntimeServiceImpl.RuntimeServiceMode;
 import com.odysseusinc.arachne.executionengine.util.CommandBuilder;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -12,6 +13,7 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -29,6 +31,7 @@ public class KerberosServiceImpl implements KerberosService {
 
     private static final Logger log = LoggerFactory.getLogger(KerberosService.class);
     public static final String LOG_FILE = "kinit_out.txt";
+    private Map<String, String> krbEnvProps = new HashMap<>();
 
     @Value("${kerberos.timeout}")
     private long timeout;
@@ -41,7 +44,7 @@ public class KerberosServiceImpl implements KerberosService {
 
     private final static String REALMS = "[realms]";
 
-    public void kinit(DataSourceUnsecuredDTO dataSource, File workDir) throws IOException {
+    public void kinit(DataSourceUnsecuredDTO dataSource, File workDir, RuntimeServiceMode environmentMode) throws IOException {
 
         if (dataSource.getUseKerberos()) {
             String[] command;
@@ -83,23 +86,34 @@ public class KerberosServiceImpl implements KerberosService {
                 if (log.isDebugEnabled()) {
                     log.debug("Kerberos init command: {}", StringUtils.join(command, " "));
                 }
-                File stdout = new File(workDir, LOG_FILE);
-                ProcessBuilder pb = new ProcessBuilder();
-                Process process = pb.directory(workDir)
-                        .redirectOutput(ProcessBuilder.Redirect.to(stdout))
-                        .redirectError(ProcessBuilder.Redirect.appendTo(stdout))
-                        .command(command).start();
-                try {
-                    process.waitFor(timeout, TimeUnit.SECONDS);
-                    if (process.exitValue() != 0) {
-                        log.warn("kinit exit code: {}", process.exitValue());
+                if (environmentMode == RuntimeServiceMode.SINGLE) {
+                    File stdout = new File(workDir, LOG_FILE);
+                    ProcessBuilder pb = new ProcessBuilder();
+                    Process process = pb.directory(workDir)
+                            .redirectOutput(ProcessBuilder.Redirect.to(stdout))
+                            .redirectError(ProcessBuilder.Redirect.appendTo(stdout))
+                            .command(command).start();
+                    try {
+                        process.waitFor(timeout, TimeUnit.SECONDS);
+                        if (process.exitValue() != 0) {
+                            log.warn("kinit exit code: {}", process.exitValue());
+                        }
+                        process.destroy();
+                        if (log.isDebugEnabled()) {
+                            klist(workDir);
+                        }
+                    } catch (InterruptedException e) {
+                        log.error("Failed to obtain kerberos ticket", e);
                     }
-                    process.destroy();
-                    if (log.isDebugEnabled()) {
-                        klist(workDir);
-                    }
-                } catch (InterruptedException e) {
-                    log.error("Failed to obtain kerberos ticket", e);
+                } else {
+
+                    String tempKeytabName = keytab.toString();
+                    String commandStr = StringUtils.join(command, " ");
+                    commandStr = commandStr.replace(tempKeytabName, "krb.keytab");
+                    commandStr = commandStr.replace(kinitPath, "");
+                    krbEnvProps.put("KRB_CONF", "/etc/krb5.conf");
+                    krbEnvProps.put("KRB_KEYTAB", tempKeytabName);
+                    krbEnvProps.put("RUN_KINIT", commandStr);
                 }
             } finally {
                 if (Objects.nonNull(keytab)) {
@@ -107,6 +121,11 @@ public class KerberosServiceImpl implements KerberosService {
                 }
             }
         }
+    }
+
+    public Map<String, String> getKrbEnvProps() {
+
+        return Collections.unmodifiableMap(krbEnvProps);
     }
 
     private synchronized void addKrbRealmToConfig(DataSourceUnsecuredDTO dataSource) throws IOException {
