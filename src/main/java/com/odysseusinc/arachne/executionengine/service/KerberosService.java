@@ -7,7 +7,5 @@ import java.io.IOException;
 import java.util.Map;
 
 public interface KerberosService {
-    void kinit(DataSourceUnsecuredDTO dataSource, File workDir, RuntimeServiceMode environmentMode) throws IOException;
-
-    Map<String, String> getKrbEnvProps();
+    Map<String, String> kinit(DataSourceUnsecuredDTO dataSource, File workDir, RuntimeServiceMode environmentMode) throws IOException;
 }
