@@ -26,6 +26,7 @@ import com.google.common.io.Files;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
@@ -33,7 +34,6 @@ import com.odysseusinc.arachne.executionengine.service.KerberosService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
-import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
 import org.apache.commons.lang3.Validate;
@@ -80,7 +80,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         try {
-            kerberosService.kinit(analysis.getDataSource(), analysisDir);
+            kerberosService.kinit(analysis.getDataSource(), analysisDir, runtimeService.getRuntimeServiceMode());
             if (attachCdmMetadata) {
                 try {
                     cdmMetadataService.extractMetadata(analysis, analysisDir);
@@ -105,7 +105,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                 }
 
                 case "r": {
-                    runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback);
+                    runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback, kerberosService.getKrbEnvProps());
                     logger.info("analysis with id={} started in R Runtime Service", analysis.getId());
                     status = AnalysisRequestTypeDTO.R;
                     break;
