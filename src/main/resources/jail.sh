@@ -17,6 +17,7 @@ sudo cp /etc/resolv.conf $JAIL/etc/resolv.conf
 sudo cp $KRB_CONF $JAIL/etc/krb5.conf
 sudo cp $KRB_KEYTAB $JAIL/etc/krb.keytab
 sudo cp /etc/krb-with-R.sh $JAIL/etc/krb-with-R.sh
+sudo chmod +x $JAIL/etc/krb-with-R.sh
 sudo mount --bind /proc $JAIL/proc
 
 
@@ -28,4 +29,4 @@ sudo chroot $JAIL /usr/bin/env -i DBMS_USERNAME=$DBMS_USERNAME \
  TARGET_SCHEMA=$TARGET_SCHEMA RESULT_SCHEMA=$RESULT_SCHEMA \
  COHORT_TARGET_TABLE=$COHORT_TARGET_TABLE PATH=$PATH \
  HOME=$HOME IMPALA_DRIVER_PATH=$IMPALA_DRIVER_PATH \
- bash etc/krb-with-R.sh $RUN_KINIT $ANALYSIS_FILE
+ /etc/krb-with-R.sh "$RUN_KINIT" "$ANALYSIS_FILE"

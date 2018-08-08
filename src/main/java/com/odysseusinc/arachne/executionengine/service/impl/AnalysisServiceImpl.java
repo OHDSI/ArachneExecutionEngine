@@ -37,6 +37,7 @@ import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
 import java.util.Map;
+import javafx.util.Pair;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +82,12 @@ public class AnalysisServiceImpl implements AnalysisService {
 
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         try {
-            Map<String, String> krbEnvProps = kerberosService.kinit(analysis.getDataSource(), analysisDir, runtimeService.getRuntimeServiceMode());
+            Pair<Map<String, String>, String[]> krbPair = kerberosService.prepareToKinit(analysis.getDataSource(), analysisDir, runtimeService.getRuntimeServiceMode());
+            Map<String, String> krbEnvProps = krbPair.getKey();
+            if (runtimeService.getRuntimeServiceMode() == RuntimeServiceImpl.RuntimeServiceMode.SINGLE) {
+                kerberosService.runKinit(analysisDir, krbPair.getValue());
+            }
+
             if (attachCdmMetadata) {
                 try {
                     cdmMetadataService.extractMetadata(analysis, analysisDir);
@@ -107,6 +113,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
                 case "r": {
                     runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback, krbEnvProps);
+                    kerberosService.removeTempFiles();
                     logger.info("analysis with id={} started in R Runtime Service", analysis.getId());
                     status = AnalysisRequestTypeDTO.R;
                     break;

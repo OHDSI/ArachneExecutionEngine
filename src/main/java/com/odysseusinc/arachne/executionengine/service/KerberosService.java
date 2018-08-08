@@ -5,7 +5,14 @@ import com.odysseusinc.arachne.executionengine.service.impl.RuntimeServiceImpl.R
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import javafx.util.Pair;
 
 public interface KerberosService {
-    Map<String, String> kinit(DataSourceUnsecuredDTO dataSource, File workDir, RuntimeServiceMode environmentMode) throws IOException;
+
+
+    Pair<Map<String, String>, String[]> prepareToKinit(DataSourceUnsecuredDTO dataSource, File workDir, RuntimeServiceMode environmentMode) throws IOException;
+
+    void runKinit(File workDir, String[] command) throws IOException;
+
+    void removeTempFiles();
 }
