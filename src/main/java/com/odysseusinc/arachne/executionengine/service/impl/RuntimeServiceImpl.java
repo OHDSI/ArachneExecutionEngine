@@ -168,12 +168,12 @@ public class RuntimeServiceImpl implements RuntimeService {
                         finishStatus = runtime(command, envp, file, runtimeTimeOutSec, updateStatusCallback, id, callbackPassword);
                         AnalysisResultStatusDTO resultStatusDTO = finishStatus.exitCode == 0
                                 ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
-                        cleanupEnvironment(file);
-                        resultCallback.execute(analysis, resultStatusDTO, finishStatus.stdout, file);
+                        //cleanupEnvironment(file);
+                      //  resultCallback.execute(analysis, resultStatusDTO, finishStatus.stdout, file);
                     } finally {
-                        if (!isExternalJail()) {
-                            FileUtils.deleteQuietly(runFile);
-                        }
+//                        if (!isExternalJail()) {
+//                            FileUtils.deleteQuietly(runFile);
+//                        }
                     }
                 } catch (FileNotFoundException ex) {
                     LOGGER.error(ERROR_BUILDING_COMMAND_LOG, ex);
@@ -183,8 +183,8 @@ public class RuntimeServiceImpl implements RuntimeService {
                     throw ex;
                 }
             } catch (Throwable t) {
-                LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
-                failedCallback.execute(analysis, t, file);
+//                LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
+//                failedCallback.execute(analysis, t, file);
             }
         });
     }
@@ -308,9 +308,9 @@ public class RuntimeServiceImpl implements RuntimeService {
             return new RuntimeFinishStatus(process.exitValue(), stdout);
         } finally {
             if (Objects.nonNull(process)) {
-                closeQuietly(process.getOutputStream());
-                closeQuietly(process.getInputStream());
-                closeQuietly(process.getErrorStream());
+//                closeQuietly(process.getOutputStream());
+//                closeQuietly(process.getInputStream());
+//                closeQuietly(process.getErrorStream());
             }
         }
     }

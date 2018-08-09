@@ -113,7 +113,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
                 case "r": {
                     runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback, krbEnvProps);
-                    kerberosService.removeTempFiles();
+                 //   kerberosService.removeTempFiles();
                     logger.info("analysis with id={} started in R Runtime Service", analysis.getId());
                     status = AnalysisRequestTypeDTO.R;
                     break;
