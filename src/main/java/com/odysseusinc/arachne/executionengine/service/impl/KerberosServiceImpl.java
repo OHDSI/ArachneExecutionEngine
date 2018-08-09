@@ -1,6 +1,6 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
-import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMethod.KEYTAB;
+import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMechanism.KEYTAB;
 
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.utils.TemplateUtils;
