@@ -4,6 +4,8 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnse
 import com.odysseusinc.arachne.executionengine.service.impl.RuntimeServiceImpl.RuntimeServiceMode;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import javafx.util.Pair;
 
@@ -14,5 +16,5 @@ public interface KerberosService {
 
     void runKinit(File workDir, String[] command) throws IOException;
 
-    void removeTempFiles();
+    List<Path> getTempFilePaths();
 }

@@ -15,7 +15,9 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -69,14 +71,17 @@ public class KerberosServiceImpl implements KerberosService {
         return new Pair<>(krbEnvProps, command);
     }
 
-    public void removeTempFiles() {
+    public List<Path> getTempFilePaths() {
+
+        List<Path> paths = new ArrayList<>();
 
         if (Objects.nonNull(keytab.get())) {
-            FileUtils.deleteQuietly(keytab.get().toFile());
+            paths.add(keytab.get());
         }
         if (Objects.nonNull(tempConfigPath.get())) {
-            FileUtils.deleteQuietly(tempConfigPath.get().toFile());
+            paths.add(tempConfigPath.get());
         }
+        return paths;
     }
 
     private void fillKrbEnvProps(String[] command, DataSourceUnsecuredDTO dataSource, Map<String, String> krbEnvProps) {
@@ -152,7 +157,10 @@ public class KerberosServiceImpl implements KerberosService {
         } catch (InterruptedException e) {
             log.error("Failed to obtain kerberos ticket", e);
         }
-        removeTempFiles();
+        List<Path> paths = getTempFilePaths();
+        for (Path path : paths) {
+            FileUtils.deleteQuietly(path.toFile());
+        }
     }
 
     private synchronized void addKrbRealmToConfig(DataSourceUnsecuredDTO dataSource, boolean isInIsolatedMode) throws IOException {

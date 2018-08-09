@@ -96,9 +96,7 @@ public class AnalisysUtils {
     public static File extractFiles(List<MultipartFile> files, boolean compressed)
             throws IOException, ZipException {
 
-        //File temporaryDir = com.google.common.io.Files.createTempDir();
-        File temporaryDir = Files.createTempDirectory("newtemp").toFile();
-
+        File temporaryDir = com.google.common.io.Files.createTempDir();
         if (compressed) {
             decompressToDir(temporaryDir, files);
         } else {

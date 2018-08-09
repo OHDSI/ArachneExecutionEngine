@@ -38,9 +38,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -150,7 +152,7 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     @Override
     @FileDescriptorCount
-    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, Map<String, String> krbProps) {
+    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, Map<String, String> krbProps, List<Path> tmpPaths) {
 
         taskExecutor.execute(() -> {
             try {
@@ -168,12 +170,15 @@ public class RuntimeServiceImpl implements RuntimeService {
                         finishStatus = runtime(command, envp, file, runtimeTimeOutSec, updateStatusCallback, id, callbackPassword);
                         AnalysisResultStatusDTO resultStatusDTO = finishStatus.exitCode == 0
                                 ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
-                        //cleanupEnvironment(file);
-                      //  resultCallback.execute(analysis, resultStatusDTO, finishStatus.stdout, file);
+                        cleanupEnvironment(file);
+                        resultCallback.execute(analysis, resultStatusDTO, finishStatus.stdout, file);
                     } finally {
-//                        if (!isExternalJail()) {
-//                            FileUtils.deleteQuietly(runFile);
-//                        }
+                        if (!isExternalJail()) {
+                            FileUtils.deleteQuietly(runFile);
+                            for (Path path : tmpPaths) {
+                                FileUtils.deleteQuietly(path.toFile());
+                            }
+                        }
                     }
                 } catch (FileNotFoundException ex) {
                     LOGGER.error(ERROR_BUILDING_COMMAND_LOG, ex);
@@ -183,8 +188,8 @@ public class RuntimeServiceImpl implements RuntimeService {
                     throw ex;
                 }
             } catch (Throwable t) {
-//                LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
-//                failedCallback.execute(analysis, t, file);
+                LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
+                failedCallback.execute(analysis, t, file);
             }
         });
     }
@@ -308,9 +313,9 @@ public class RuntimeServiceImpl implements RuntimeService {
             return new RuntimeFinishStatus(process.exitValue(), stdout);
         } finally {
             if (Objects.nonNull(process)) {
-//                closeQuietly(process.getOutputStream());
-//                closeQuietly(process.getInputStream());
-//                closeQuietly(process.getErrorStream());
+                closeQuietly(process.getOutputStream());
+                closeQuietly(process.getInputStream());
+                closeQuietly(process.getErrorStream());
             }
         }
     }

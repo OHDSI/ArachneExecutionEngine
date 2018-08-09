@@ -11,10 +11,7 @@ DIST_ARCHIVE=$3
 #echo ".libPaths('~/.R/libs')" > $JAIL/home/vkoulakov/.Rprofile
 
 
-sudo echo $JAIL >> /jailoutput.txt
-sudo echo $DIST_ARCHIVE >> /jailoutput.txt
-
-sudo tar xzvf $DIST_ARCHIVE -C $JAIL >> /jailoutput.txt
+sudo tar xzf $DIST_ARCHIVE -C $JAIL
 
 export R_HOME=/usr/lib/R
 sudo cp /etc/resolv.conf $JAIL/etc/resolv.conf
