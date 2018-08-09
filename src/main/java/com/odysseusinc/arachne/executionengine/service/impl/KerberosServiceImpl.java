@@ -167,7 +167,7 @@ public class KerberosServiceImpl implements KerberosService {
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("realmName", dataSource.getKrbRealm());
-        parameters.put("adminServer", dataSource.getKrbFQDN());
+        parameters.put("adminServer", dataSource.getKrbAdminFQDN());
         parameters.put("kdcServer", dataSource.getKrbFQDN());
 
         Template confTemplate = TemplateUtils.loadTemplate("templates/krb5Conf.mustache");
