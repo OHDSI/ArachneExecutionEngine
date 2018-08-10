@@ -37,9 +37,11 @@ import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -82,15 +84,21 @@ public class AnalysisServiceImpl implements AnalysisService {
                                             Boolean attachCdmMetadata, Long chunkSize) {
 
         Validate.notNull(analysis, "analysis can't be null");
-
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         try {
-            Pair<Map<String, String>, String[]> krbPair = kerberosService.prepareToKinit(analysis.getDataSource(), analysisDir, runtimeService.getRuntimeServiceMode());
-            Map<String, String> krbEnvProps = krbPair.getKey();
-            if (runtimeService.getRuntimeServiceMode() == RuntimeServiceImpl.RuntimeServiceMode.SINGLE) {
-                kerberosService.runKinit(analysisDir, krbPair.getValue());
+            boolean useKerberos = analysis.getDataSource().getUseKerberos();
+            Map<String, String> krbEnvProps = new HashMap<>();
+            List<Path> tmpPaths = new ArrayList<>();
+            if (useKerberos) {
+                Pair<Map<String, String>, String[]> krbPair = kerberosService.prepareToKinit(analysis.getDataSource(), analysisDir, runtimeService.getRuntimeServiceMode());
+                krbEnvProps = krbPair.getKey();
+                for (String tmpName : kerberosService.getTempFileNames()) {
+                    tmpPaths.add(Paths.get(krbEnvProps.get(tmpName)));
+                }
+                if (runtimeService.getRuntimeServiceMode() == RuntimeServiceImpl.RuntimeServiceMode.SINGLE) {
+                    kerberosService.runKinit(analysisDir, krbPair.getValue(), tmpPaths);
+                }
             }
-
             if (attachCdmMetadata) {
                 try {
                     cdmMetadataService.extractMetadata(analysis, analysisDir);
@@ -115,14 +123,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                 }
 
                 case "r": {
-                    List<Path> tmpPaths = kerberosService.getTempFilePaths();
-                    try {
-                        runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback, krbEnvProps);
-                    } finally {
-                        for (Path path : tmpPaths) {
-                            FileUtils.deleteQuietly(path.toFile());
-                        }
-                    }
+                    runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback, krbEnvProps, tmpPaths);
                     logger.info("analysis with id={} started in R Runtime Service", analysis.getId());
                     status = AnalysisRequestTypeDTO.R;
                     break;

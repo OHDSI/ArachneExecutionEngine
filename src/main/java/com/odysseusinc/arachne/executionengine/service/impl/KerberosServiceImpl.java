@@ -15,7 +15,9 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,7 @@ public class KerberosServiceImpl implements KerberosService {
     private static final String LOG_FILE = "kinit_out.txt";
     private static final String RUNTIME_ENV_KRB_KEYTAB = "KRB_KEYTAB";
     private static final String RUNTIME_ENV_KRB_CONF = "KRB_CONF";
+    private static final List<String> tempFileNames = Arrays.asList(RUNTIME_ENV_KRB_CONF, RUNTIME_ENV_KRB_KEYTAB);
     private static final String RUNTIME_ENV_RUN_KINIT = "RUN_KINIT";
     private static final String KRB_KEYTAB_PATH = "/etc/krb.keytab";
     private static final String KINIT_COMMAND = "kinit";
@@ -51,58 +54,49 @@ public class KerberosServiceImpl implements KerberosService {
     private String configPath;
 
     private final static String REALMS = "[realms]";
-    private final ThreadLocal<Path> keytab = new ThreadLocal<>();
-    private final ThreadLocal<Path> tempConfigPath = new ThreadLocal<>();
 
     @Override
     public Pair<Map<String, String>, String[]> prepareToKinit(DataSourceUnsecuredDTO dataSource, File workDir, RuntimeServiceMode environmentMode) throws IOException {
 
         Map<String, String> krbEnvProps = new HashMap<>();
-        String[] command = new String[]{};
-        if (dataSource.getUseKerberos()) {
-            command = buildKinitCommand(dataSource);
-            if (RuntimeServiceMode.SINGLE == environmentMode) {
-                addKrbRealmToConfig(dataSource, false);
-            } else {
-                addKrbRealmToConfig(dataSource, true);
-                fillKrbEnvProps(command, dataSource, krbEnvProps);
-            }
+        Pair<String[], List<Path>> commandTmpPaths = buildKinitCommand(dataSource);
+        if (RuntimeServiceMode.SINGLE == environmentMode) {
+            addKrbRealmToConfig(dataSource, false);
+        } else {
+            Path tempConfigPath = addKrbRealmToConfig(dataSource, true);
+            commandTmpPaths.getRight().add(tempConfigPath);
+            fillKrbEnvProps(commandTmpPaths, dataSource, krbEnvProps);
         }
-        return Pair.of(krbEnvProps, command);
+        return Pair.of(krbEnvProps, commandTmpPaths.getLeft());
     }
 
-    public List<Path> getTempFilePaths() {
+    @Override
+    public List<String> getTempFileNames() {
 
-        List<Path> paths = new ArrayList<>();
-
-        if (Objects.nonNull(keytab.get())) {
-            paths.add(keytab.get());
-        }
-        if (Objects.nonNull(tempConfigPath.get())) {
-            paths.add(tempConfigPath.get());
-        }
-        return paths;
+        return tempFileNames;
     }
 
-    private void fillKrbEnvProps(String[] command, DataSourceUnsecuredDTO dataSource, Map<String, String> krbEnvProps) {
+    private void fillKrbEnvProps(Pair<String[], List<Path>> commandTmpPaths, DataSourceUnsecuredDTO dataSource, Map<String, String> krbEnvProps) {
 
-        String commandStr = StringUtils.join(command, " ");
+        String commandStr = StringUtils.join(commandTmpPaths.getLeft(), " ");
         commandStr = commandStr.replace(kinitPath + KINIT_COMMAND, "");
+        String tempConfigPath = commandTmpPaths.getRight().stream().filter(p -> p.toString().contains(".conf")).findFirst().orElseGet(() -> Paths.get("")).toString();
         if (KEYTAB == dataSource.getKrbAuthMethod()) {
-            String tempKeytabName = keytab.get().toString();
+            String tempKeytabName = commandTmpPaths.getRight().stream().filter(p -> p.toString().contains(".keytab")).findFirst().orElseGet(() -> Paths.get("")).toString();
             commandStr = commandStr.replace(tempKeytabName, KRB_KEYTAB_PATH);
             krbEnvProps.put(RUNTIME_ENV_KRB_KEYTAB, tempKeytabName);
         }
-        krbEnvProps.put(RUNTIME_ENV_KRB_CONF, tempConfigPath.get().toString());
+        krbEnvProps.put(RUNTIME_ENV_KRB_CONF, tempConfigPath);
         krbEnvProps.put(RUNTIME_ENV_RUN_KINIT, commandStr);
     }
 
-    private String[] buildKinitCommand(DataSourceUnsecuredDTO dataSource) throws IOException {
+    private Pair<String[], List<Path>> buildKinitCommand(DataSourceUnsecuredDTO dataSource) throws IOException {
 
         CommandBuilder builder = CommandBuilder.newCommand();
         if (StringUtils.isBlank(dataSource.getKrbUser())) {
             throw new IllegalArgumentException("Kerberos user is required for authentication");
         }
+        Path keytab = Paths.get("");
         switch (dataSource.getKrbAuthMethod()) {
             case PASSWORD:
                 if (StringUtils.isBlank(dataSource.getKrbPassword())) {
@@ -117,14 +111,14 @@ public class KerberosServiceImpl implements KerberosService {
                 if (Objects.isNull(dataSource.getKrbKeytab())) {
                     throw new IllegalArgumentException("Kerberos keytab file is required for KEYTAB authentication");
                 }
-                keytab.set(Files.createTempFile("", ".keytab"));
-                try (OutputStream out = new FileOutputStream(keytab.get().toFile())) {
+                keytab = Files.createTempFile("", ".keytab");
+                try (OutputStream out = new FileOutputStream(keytab.toFile())) {
                     IOUtils.write(dataSource.getKrbKeytab(), out);
                 }
                 builder.statement(kinitPath + KINIT_COMMAND)
                         .withParam("-k")
                         .withParam("-t")
-                        .withParam(keytab.get().toString())
+                        .withParam(keytab.toString())
                         .withParam(dataSource.getKrbUser() + "@" + dataSource.getKrbRealm());
                 break;
             default:
@@ -134,10 +128,12 @@ public class KerberosServiceImpl implements KerberosService {
         if (log.isDebugEnabled()) {
             log.debug("Kerberos init command: {}", StringUtils.join(command, " "));
         }
-        return command;
+        List<Path> paths = new ArrayList<>();
+        paths.add(keytab);
+        return Pair.of(command, paths);
     }
 
-    public void runKinit(File workDir, String[] command) throws IOException {
+    public void runKinit(File workDir, String[] command, List<Path> tmpPaths) throws IOException {
 
         File stdout = new File(workDir, LOG_FILE);
         ProcessBuilder pb = new ProcessBuilder();
@@ -157,13 +153,12 @@ public class KerberosServiceImpl implements KerberosService {
         } catch (InterruptedException e) {
             log.error("Failed to obtain kerberos ticket", e);
         }
-        List<Path> paths = getTempFilePaths();
-        for (Path path : paths) {
+        for (Path path : tmpPaths) {
             FileUtils.deleteQuietly(path.toFile());
         }
     }
 
-    private synchronized void addKrbRealmToConfig(DataSourceUnsecuredDTO dataSource, boolean isInIsolatedMode) throws IOException {
+    private synchronized Path addKrbRealmToConfig(DataSourceUnsecuredDTO dataSource, boolean isInIsolatedMode) throws IOException {
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("realmName", dataSource.getKrbRealm());
@@ -173,10 +168,11 @@ public class KerberosServiceImpl implements KerberosService {
         Template confTemplate = TemplateUtils.loadTemplate("templates/krb5Conf.mustache");
         String textString = confTemplate.apply(parameters);
 
+        Path tempConfigPath = Paths.get("");
         File config = new File(configPath);
         if (isInIsolatedMode) {
-            tempConfigPath.set(Files.createTempFile("", ".conf"));
-            File tempConfFile = tempConfigPath.get().toFile();
+            tempConfigPath = Files.createTempFile("", ".conf");
+            File tempConfFile = tempConfigPath.toFile();
             FileUtils.copyFile(config, tempConfFile);
             config = tempConfFile;
         }
@@ -191,6 +187,7 @@ public class KerberosServiceImpl implements KerberosService {
                 raf.write(confWithNewRealm.getBytes());
             }
         }
+        return tempConfigPath;
     }
 
     private String convertConfigToString(RandomAccessFile raf, int fileLength) throws IOException {

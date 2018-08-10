@@ -14,7 +14,7 @@ public interface KerberosService {
 
     Pair<Map<String, String>, String[]> prepareToKinit(DataSourceUnsecuredDTO dataSource, File workDir, RuntimeServiceMode environmentMode) throws IOException;
 
-    void runKinit(File workDir, String[] command) throws IOException;
+    void runKinit(File workDir, String[] command, List<Path> tmpPaths) throws IOException;
 
-    List<Path> getTempFilePaths();
+    List<String> getTempFileNames();
 }

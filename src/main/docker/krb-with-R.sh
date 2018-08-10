@@ -3,5 +3,9 @@
 RUN_KINIT=$1
 ANALYSIS_FILE=$2
 
-kinit $RUN_KINIT
+if [ -n "$RUN_KINIT" ]
+then
+  kinit $RUN_KINIT
+fi
+
 Rscript /$ANALYSIS_FILE
