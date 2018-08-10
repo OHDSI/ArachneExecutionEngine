@@ -36,9 +36,12 @@ import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
-import javafx.util.Pair;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,7 +115,14 @@ public class AnalysisServiceImpl implements AnalysisService {
                 }
 
                 case "r": {
-                    runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback, krbEnvProps, kerberosService.getTempFilePaths());
+                    List<Path> tmpPaths = kerberosService.getTempFilePaths();
+                    try {
+                        runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback, krbEnvProps);
+                    } finally {
+                        for (Path path : tmpPaths) {
+                            FileUtils.deleteQuietly(path.toFile());
+                        }
+                    }
                     logger.info("analysis with id={} started in R Runtime Service", analysis.getId());
                     status = AnalysisRequestTypeDTO.R;
                     break;

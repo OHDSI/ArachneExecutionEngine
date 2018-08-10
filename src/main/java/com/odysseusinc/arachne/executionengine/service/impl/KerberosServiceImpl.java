@@ -21,10 +21,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import javafx.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -68,7 +68,7 @@ public class KerberosServiceImpl implements KerberosService {
                 fillKrbEnvProps(command, dataSource, krbEnvProps);
             }
         }
-        return new Pair<>(krbEnvProps, command);
+        return Pair.of(krbEnvProps, command);
     }
 
     public List<Path> getTempFilePaths() {

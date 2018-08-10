@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public interface KerberosService {
 
