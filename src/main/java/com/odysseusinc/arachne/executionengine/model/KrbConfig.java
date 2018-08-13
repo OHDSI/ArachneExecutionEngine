@@ -1,5 +1,6 @@
 package com.odysseusinc.arachne.executionengine.model;
 
+import com.odysseusinc.arachne.executionengine.service.impl.RuntimeServiceImpl.RuntimeServiceMode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -17,6 +18,7 @@ public class KrbConfig {
     private Path keytabPath = Paths.get("");
     private Path confPath = Paths.get("");
     private String[] kinitCommand;
+    private RuntimeServiceMode mode;
 
     public Map<String, String> getIsolatedRuntimeEnvs() {
 
@@ -24,11 +26,14 @@ public class KrbConfig {
         krbEnvProps.put(RUNTIME_ENV_KRB_KEYTAB, getKeytabPath().toString());
         krbEnvProps.put(RUNTIME_ENV_KRB_CONF, getConfPath().toString());
 
-        String[] kinitParams = Arrays.copyOfRange(getKinitCommand(), 1, getKinitCommand().length);
-        String kinitParamsLine = StringUtils.join(kinitParams, " ").replace(getKeytabPath().toString(), KRB_KEYTAB_PATH);
-
+        String kinitParamsLine;
+        if (kinitCommand == null) {
+            kinitParamsLine = "";
+        } else {
+            String[] kinitParams = Arrays.copyOfRange(getKinitCommand(), 1, getKinitCommand().length);
+            kinitParamsLine = StringUtils.join(kinitParams, " ").replace(getKeytabPath().toString(), KRB_KEYTAB_PATH);
+        }
         krbEnvProps.put(RUNTIME_ENV_KINIT_PARAMS, kinitParamsLine);
-
         return krbEnvProps;
     }
 
@@ -60,5 +65,15 @@ public class KrbConfig {
     public void setKinitCommand(String[] kinitCommand) {
 
         this.kinitCommand = kinitCommand;
+    }
+
+    public RuntimeServiceMode getMode() {
+
+        return mode;
+    }
+
+    public void setMode(RuntimeServiceMode mode) {
+
+        this.mode = mode;
     }
 }

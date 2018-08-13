@@ -59,6 +59,7 @@ public class KerberosServiceImpl implements KerberosService {
         } else {
             configPath = extendKrbConf(Paths.get(this.configPath), dataSource);
         }
+        krbConfig.setMode(environmentMode);
         krbConfig.setConfPath(configPath);
 
         Path keytabPath = Paths.get("");
@@ -99,7 +100,6 @@ public class KerberosServiceImpl implements KerberosService {
         } catch (InterruptedException e) {
             log.error("Failed to obtain kerberos ticket", e);
         }
-        FileUtils.deleteQuietly(krbConfig.getKeytabPath().toFile());
     }
 
     private String[] buildKinitCommand(DataSourceUnsecuredDTO dataSource, Path keytab) {
