@@ -97,7 +97,6 @@ public class AnalisysUtils {
             throws IOException, ZipException {
 
         File temporaryDir = com.google.common.io.Files.createTempDir();
-
         if (compressed) {
             decompressToDir(temporaryDir, files);
         } else {

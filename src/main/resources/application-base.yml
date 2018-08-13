@@ -60,6 +60,8 @@ tmp:
 
 kerberos:
   timeout: 60
+  kinitPath:
+  configPath: /etc/krb5.conf
 
 impala:
   drivers:
