@@ -39,11 +39,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -153,7 +151,7 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     @Override
     @FileDescriptorCount
-    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, KrbConfig krbConfig, List<Path> tmpPaths) {
+    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, KrbConfig krbConfig) {
 
         taskExecutor.execute(() -> {
             try {
@@ -176,6 +174,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                     } finally {
                         if (!isExternalJail()) {
                             FileUtils.deleteQuietly(runFile);
+                            FileUtils.deleteQuietly(krbConfig.getConfPath().toFile());
                         }
                         FileUtils.deleteQuietly(krbConfig.getKeytabPath().toFile());
                     }

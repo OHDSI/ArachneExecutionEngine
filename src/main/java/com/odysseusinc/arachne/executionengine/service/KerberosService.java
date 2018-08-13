@@ -5,13 +5,10 @@ import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.impl.RuntimeServiceImpl.RuntimeServiceMode;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 public interface KerberosService {
 
     KrbConfig prepareToKinit(DataSourceUnsecuredDTO dataSource, RuntimeServiceMode environmentMode) throws IOException;
 
     void runKinit(File workDir, KrbConfig krbConfig) throws IOException;
-
-    List<String> getTempFileNames();
 }

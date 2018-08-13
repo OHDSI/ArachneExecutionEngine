@@ -37,14 +37,7 @@ import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.apache.commons.lang3.Validate;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,9 +81,9 @@ public class AnalysisServiceImpl implements AnalysisService {
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         try {
             boolean useKerberos = analysis.getDataSource().getUseKerberos();
-            Map<String, String> krbEnvProps = new HashMap<>();
+            KrbConfig krbConfig = new KrbConfig();
             if (useKerberos) {
-                KrbConfig krbConfig = kerberosService.prepareToKinit(analysis.getDataSource(), runtimeService.getRuntimeServiceMode());
+                krbConfig = kerberosService.prepareToKinit(analysis.getDataSource(), runtimeService.getRuntimeServiceMode());
                 if (runtimeService.getRuntimeServiceMode() == RuntimeServiceImpl.RuntimeServiceMode.SINGLE) {
                     kerberosService.runKinit(analysisDir, krbConfig);
                 }

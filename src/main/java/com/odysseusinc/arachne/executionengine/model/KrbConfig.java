@@ -1,11 +1,11 @@
 package com.odysseusinc.arachne.executionengine.model;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 
 public class KrbConfig {
 
@@ -14,8 +14,8 @@ public class KrbConfig {
     private static final String RUNTIME_ENV_KINIT_PARAMS = "KINIT_PARAMS";
     private static final String KRB_KEYTAB_PATH = "/etc/krb.keytab";
 
-    private Path keytabPath;
-    private Path confPath;
+    private Path keytabPath = Paths.get("");
+    private Path confPath = Paths.get("");
     private String[] kinitCommand;
 
     public Map<String, String> getIsolatedRuntimeEnvs() {

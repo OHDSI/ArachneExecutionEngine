@@ -23,16 +23,14 @@
 package com.odysseusinc.arachne.executionengine.service;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
+import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.impl.RuntimeServiceImpl;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
 
 public interface RuntimeService {
-    void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, Map<String, String> krbProps, List<Path> tmpPaths);
+    void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, KrbConfig krbConfig);
 
     RuntimeServiceImpl.RuntimeServiceMode getRuntimeServiceMode();
 }

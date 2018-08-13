@@ -1,12 +1,11 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
-import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMechanism.KEYTAB;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.utils.TemplateUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMethod;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMechanism;
 import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.KerberosService;
 import com.odysseusinc.arachne.executionengine.service.impl.RuntimeServiceImpl.RuntimeServiceMode;
@@ -19,18 +18,14 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,10 +36,6 @@ public class KerberosServiceImpl implements KerberosService {
 
     private static final Logger log = LoggerFactory.getLogger(KerberosService.class);
     private static final String LOG_FILE = "kinit_out.txt";
-    private static final String RUNTIME_ENV_KRB_KEYTAB = "KRB_KEYTAB";
-    private static final String RUNTIME_ENV_KRB_CONF = "KRB_CONF";
-    private static final List<String> tempFileNames = Arrays.asList(RUNTIME_ENV_KRB_CONF, RUNTIME_ENV_KRB_KEYTAB);
-    private static final String RUNTIME_ENV_RUN_KINIT = "RUN_KINIT";
     private static final String KINIT_COMMAND = "kinit";
 
     @Value("${kerberos.timeout}")
@@ -62,7 +53,6 @@ public class KerberosServiceImpl implements KerberosService {
     public synchronized KrbConfig prepareToKinit(DataSourceUnsecuredDTO dataSource, RuntimeServiceMode environmentMode) throws IOException {
 
         KrbConfig krbConfig = new KrbConfig();
-
         Path configPath;
         if (RuntimeServiceMode.ISOLATED == environmentMode) {
             configPath = buildTempKrbConf(dataSource);
@@ -71,8 +61,8 @@ public class KerberosServiceImpl implements KerberosService {
         }
         krbConfig.setConfPath(configPath);
 
-        Path keytabPath = null;
-        if (dataSource.getKrbAuthMethod().equals(KerberosAuthMethod.KEYTAB)) {
+        Path keytabPath = Paths.get("");
+        if (dataSource.getKrbAuthMethod().equals(KerberosAuthMechanism.KEYTAB)) {
             if (Objects.isNull(dataSource.getKrbKeytab())) {
                 throw new IllegalArgumentException("Kerberos keytab file is required for KEYTAB authentication");
             }
@@ -87,12 +77,6 @@ public class KerberosServiceImpl implements KerberosService {
         krbConfig.setKinitCommand(kinitCommand);
 
         return krbConfig;
-    }
-
-    @Override
-    public List<String> getTempFileNames() {
-
-        return tempFileNames;
     }
 
     public void runKinit(File workDir, KrbConfig krbConfig) throws IOException {
@@ -115,11 +99,10 @@ public class KerberosServiceImpl implements KerberosService {
         } catch (InterruptedException e) {
             log.error("Failed to obtain kerberos ticket", e);
         }
-
         FileUtils.deleteQuietly(krbConfig.getKeytabPath().toFile());
     }
 
-    private String[] buildKinitCommand(DataSourceUnsecuredDTO dataSource, Path keytab) throws IOException {
+    private String[] buildKinitCommand(DataSourceUnsecuredDTO dataSource, Path keytab) {
 
         CommandBuilder builder = CommandBuilder.newCommand();
         if (StringUtils.isBlank(dataSource.getKrbUser())) {
@@ -136,9 +119,6 @@ public class KerberosServiceImpl implements KerberosService {
                                 dataSource.getKrbUser() + "@" + dataSource.getKrbRealm());
                 break;
             case KEYTAB:
-                if (Objects.isNull(keytab)) {
-                    throw new IllegalArgumentException("Kerberos keytab file is required for KEYTAB authentication");
-                }
                 builder.statement(kinitPath + KINIT_COMMAND)
                         .withParam("-k")
                         .withParam("-t")
@@ -158,21 +138,16 @@ public class KerberosServiceImpl implements KerberosService {
     private Path buildTempKrbConf(DataSourceUnsecuredDTO dataSource) throws IOException {
 
         Path configPath = Files.createTempFile("", ".conf");
-
         String krbConfHeader = buildKrbConfHeader(dataSource.getKrbRealm());
-
         FileUtils.write(configPath.toFile(), krbConfHeader, UTF_8);
         extendKrbConf(configPath, dataSource);
-
         return configPath;
     }
 
     private Path extendKrbConf(Path configPath, DataSourceUnsecuredDTO dataSource) throws IOException {
 
         File config = configPath.toFile();
-
         String krbConfEntry = buildKrbConfEntry(dataSource);
-
         long fileLength = config.length();
         try (RandomAccessFile raf = new RandomAccessFile(config, "rw")) {
             String confStr = convertConfigToString(raf, (int) fileLength);
