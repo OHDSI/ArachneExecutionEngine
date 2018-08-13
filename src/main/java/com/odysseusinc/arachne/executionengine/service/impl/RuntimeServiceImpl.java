@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
+import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
@@ -152,7 +153,7 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     @Override
     @FileDescriptorCount
-    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, Map<String, String> krbProps, List<Path> tmpPaths) {
+    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, KrbConfig krbConfig, List<Path> tmpPaths) {
 
         taskExecutor.execute(() -> {
             try {
@@ -166,7 +167,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                     File runFile = prepareEnvironment();
                     try {
                         String[] command = buildRuntimeCommand(runFile, file, executableFileName);
-                        final Map<String, String> envp = buildRuntimeEnvVariables(dataSource, krbProps);
+                        final Map<String, String> envp = buildRuntimeEnvVariables(dataSource, krbConfig.getIsolatedRuntimeEnvs());
                         finishStatus = runtime(command, envp, file, runtimeTimeOutSec, updateStatusCallback, id, callbackPassword);
                         AnalysisResultStatusDTO resultStatusDTO = finishStatus.exitCode == 0
                                 ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
@@ -176,9 +177,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                         if (!isExternalJail()) {
                             FileUtils.deleteQuietly(runFile);
                         }
-                        for (Path path : tmpPaths) {
-                            FileUtils.deleteQuietly(path.toFile());
-                        }
+                        FileUtils.deleteQuietly(krbConfig.getKeytabPath().toFile());
                     }
                 } catch (FileNotFoundException ex) {
                     LOGGER.error(ERROR_BUILDING_COMMAND_LOG, ex);

@@ -4,7 +4,7 @@ VOLUME /tmp
 VOLUME /libs-r
 VOLUME /dist
 ADD krb5.conf /etc/
-ADD krb-with-R.sh /etc/
+ADD R-with-krb.sh /etc/
 RUN apt-get update && apt-get install -y sudo krb5-user dos2unix
 RUN rm -f /usr/bin/java && update-alternatives --config java
 ENV R_INSTALL_SCRIPT=libs.r

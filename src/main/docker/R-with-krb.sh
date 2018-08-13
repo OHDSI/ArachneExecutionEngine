@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-RUN_KINIT=$1
+KINIT_PARAMS=$1
 ANALYSIS_FILE=$2
 
-if [ -n "$RUN_KINIT" ]
+if [ -n "$KINIT_PARAMS" ]
 then
-  kinit $RUN_KINIT
+  kinit $KINIT_PARAMS
 fi
 
 Rscript /$ANALYSIS_FILE

@@ -27,6 +27,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
+import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
@@ -88,15 +89,10 @@ public class AnalysisServiceImpl implements AnalysisService {
         try {
             boolean useKerberos = analysis.getDataSource().getUseKerberos();
             Map<String, String> krbEnvProps = new HashMap<>();
-            List<Path> tmpPaths = new ArrayList<>();
             if (useKerberos) {
-                Pair<Map<String, String>, String[]> krbPair = kerberosService.prepareToKinit(analysis.getDataSource(), analysisDir, runtimeService.getRuntimeServiceMode());
-                krbEnvProps = krbPair.getKey();
-                for (String tmpName : kerberosService.getTempFileNames()) {
-                    tmpPaths.add(Paths.get(krbEnvProps.get(tmpName)));
-                }
+                KrbConfig krbConfig = kerberosService.prepareToKinit(analysis.getDataSource(), runtimeService.getRuntimeServiceMode());
                 if (runtimeService.getRuntimeServiceMode() == RuntimeServiceImpl.RuntimeServiceMode.SINGLE) {
-                    kerberosService.runKinit(analysisDir, krbPair.getValue(), tmpPaths);
+                    kerberosService.runKinit(analysisDir, krbConfig);
                 }
             }
             if (attachCdmMetadata) {
@@ -123,7 +119,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                 }
 
                 case "r": {
-                    runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback, krbEnvProps, tmpPaths);
+                    runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback, krbConfig);
                     logger.info("analysis with id={} started in R Runtime Service", analysis.getId());
                     status = AnalysisRequestTypeDTO.R;
                     break;
