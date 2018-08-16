@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
+import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
@@ -130,7 +131,8 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
     }
 
-    private RuntimeServiceMode getRuntimeServiceMode() {
+    @Override
+    public RuntimeServiceMode getRuntimeServiceMode() {
 
         return StringUtils.isNotBlank(rIsolatedRuntimeProps.getArchive()) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
     }
@@ -149,7 +151,7 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     @Override
     @FileDescriptorCount
-    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback) {
+    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, KrbConfig krbConfig) {
 
         taskExecutor.execute(() -> {
             try {
@@ -160,10 +162,10 @@ public class RuntimeServiceImpl implements RuntimeService {
                 DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
                 RuntimeFinishStatus finishStatus;
                 try {
-                    File runFile = prepareEnvironment(file);
+                    File runFile = prepareEnvironment();
                     try {
                         String[] command = buildRuntimeCommand(runFile, file, executableFileName);
-                        final Map<String, String> envp = buildRuntimeEnvVariables(dataSource);
+                        final Map<String, String> envp = buildRuntimeEnvVariables(dataSource, krbConfig.getIsolatedRuntimeEnvs());
                         finishStatus = runtime(command, envp, file, runtimeTimeOutSec, updateStatusCallback, id, callbackPassword);
                         AnalysisResultStatusDTO resultStatusDTO = finishStatus.exitCode == 0
                                 ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
@@ -172,6 +174,10 @@ public class RuntimeServiceImpl implements RuntimeService {
                     } finally {
                         if (!isExternalJail()) {
                             FileUtils.deleteQuietly(runFile);
+                        }
+                        FileUtils.deleteQuietly(krbConfig.getKeytabPath().toFile());
+                        if (RuntimeServiceMode.ISOLATED == krbConfig.getMode()) {
+                            FileUtils.deleteQuietly(krbConfig.getConfPath().toFile());
                         }
                     }
                 } catch (FileNotFoundException ex) {
@@ -188,7 +194,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         });
     }
 
-    private File prepareEnvironment(File directory) throws IOException {
+    private File prepareEnvironment() throws IOException {
 
         return isExternalJail()
                 ? new File(rIsolatedRuntimeProps.getJailSh())
@@ -249,9 +255,9 @@ public class RuntimeServiceImpl implements RuntimeService {
         return command;
     }
 
-    private Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource) {
+    private Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, Map<String, String> krbProps) {
 
-        Map<String, String> environment = new HashMap<>();
+        Map<String, String> environment = new HashMap<>(krbProps);
         environment.put(RUNTIME_ENV_DBMS_USERNAME, dataSource.getUsername());
         environment.put(RUNTIME_ENV_DBMS_PASSWORD, dataSource.getPassword());
         environment.put(RUNTIME_ENV_DBMS_TYPE, dataSource.getType().getOhdsiDB());
@@ -362,7 +368,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
     }
 
-    enum RuntimeServiceMode {
+    public enum RuntimeServiceMode {
         SINGLE, ISOLATED
     }
 }

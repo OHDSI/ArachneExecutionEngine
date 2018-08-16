@@ -72,7 +72,7 @@ cp $WS/libs.r $BUILD_PATH/root/
 #Impala drivers
 mkdir $BUILD_PATH/impala/
 cp ../extras/impala/*.jar $BUILD_PATH/impala/
-
+cp ../docker/krb5.conf $BUILD_PATH/etc/
 
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $DIST
