@@ -199,7 +199,7 @@
         <profile>
             <id>impala</id>
             <properties>
-                <impala.classpath>...path/to/impala/jdbc/drivers...</impala.classpath>
+                <impala.classpath>/impala/</impala.classpath>
             </properties>
             <dependencies>
                 <!-- Impala driver -->
@@ -215,7 +215,7 @@
                 </dependency>
                 <dependency>
                     <groupId>com.cloudera</groupId>
-                    <artifactId>ImpalaJDBC4</artifactId>
+                    <artifactId>ImpalaJDBC41</artifactId>
                     <version>2.5.41</version>
                 </dependency>
                 <dependency>

@@ -13,3 +13,7 @@ swagger:
   description: Arachne Execution Engine API
   version: 1.0.0
   basePackage: com.odysseusinc.arachne.executionengine.controller
+
+kerberos:
+#  kinitPath: C:\Program Files\MIT\Kerberos\bin\
+#  configPath: D:\projects\Odysseus\community\ArachneExecutionEngine\src\main\docker\krb5.conf
