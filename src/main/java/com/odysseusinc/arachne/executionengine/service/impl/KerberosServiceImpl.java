@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -176,7 +177,15 @@ public class KerberosServiceImpl implements KerberosService {
                 raf.setLength(confLength);
             }
         }
+        removeEmptyLines(configPath);
         return configPath;
+    }
+
+    private void removeEmptyLines(Path configPath) throws IOException {
+
+        List<String> lines = FileUtils.readLines(configPath.toFile(), "UTF-8");
+        lines.removeIf(line -> line.trim().isEmpty());
+        FileUtils.writeLines(configPath.toFile(), lines);
     }
 
     private String addNewRealm(DataSourceUnsecuredDTO dataSource, String confStr) throws IOException {
