@@ -18,6 +18,7 @@ sudo cp /etc/resolv.conf $JAIL/etc/resolv.conf
 sudo cp $KRB_CONF $JAIL/etc/krb5.conf
 sudo cp $KRB_KEYTAB $JAIL/etc/krb.keytab
 sudo cp /etc/R-with-krb.sh $JAIL/etc/R-with-krb.sh
+sudo cp -R /impala/. $JAIL/impala/
 sudo chmod +x $JAIL/etc/R-with-krb.sh
 sudo mount --bind /proc $JAIL/proc
 
