@@ -195,11 +195,11 @@ public class KerberosServiceImpl implements KerberosService {
         return confStr.replace(confStr.substring(0, startPosition), confStr.substring(0, startPosition) + newRealm);
     }
 
-    private String addNewDomainRealm(DataSourceUnsecuredDTO dataSource, String confStr) throws IOException {
+    private String addNewDomainRealm(DataSourceUnsecuredDTO dataSource, String confStr) {
 
-        String newDomain = buildKrbConfDomainRealm(dataSource);
+        String newDomain = "  " + dataSource.getKrbFQDN() + " = " + dataSource.getKrbRealm();
         int startPosition = confStr.indexOf(DOMAIIN_REALM) + DOMAIIN_REALM.length();
-        return confStr.replace(confStr.substring(0, startPosition), confStr.substring(0, startPosition) + newDomain);
+        return confStr.replace(confStr.substring(0, startPosition), confStr.substring(0, startPosition) + System.lineSeparator() + newDomain);
     }
 
     private String removeInconsistentDomainRealm(DataSourceUnsecuredDTO dataSource, String confStr) {
@@ -237,16 +237,6 @@ public class KerberosServiceImpl implements KerberosService {
         parameters.put("kdcServer", dataSource.getKrbFQDN());
 
         Template confTemplate = TemplateUtils.loadTemplate("templates/krb5ConfRealm.mustache");
-        return confTemplate.apply(parameters);
-    }
-
-    private String buildKrbConfDomainRealm(DataSourceUnsecuredDTO dataSource) throws IOException {
-
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("domain", dataSource.getKrbFQDN());
-        parameters.put("realm", dataSource.getKrbRealm());
-
-        Template confTemplate = TemplateUtils.loadTemplate("templates/krb5ConfDomainRealm.mustache");
         return confTemplate.apply(parameters);
     }
 
