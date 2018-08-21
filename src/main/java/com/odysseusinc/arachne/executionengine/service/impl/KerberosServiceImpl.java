@@ -155,31 +155,17 @@ public class KerberosServiceImpl implements KerberosService {
             String confStr = convertConfigToString(raf, (int) fileLength);
 
             //remove inconsistent part (if it exists) with old values of admin_server or kdc
-            Pattern pattern = Pattern.compile(".*?( " + dataSource.getKrbRealm().toLowerCase() + " = \\{\\s*?admin_server = (.*?)\\s*?kdc = (.*?)\\s*?}.*?)\\S.*", Pattern.DOTALL);
-            Matcher matcher = pattern.matcher(confStr.toLowerCase());
-            if (matcher.matches() && (!matcher.group(2).equalsIgnoreCase(dataSource.getKrbAdminFQDN()) || !matcher.group(3).equalsIgnoreCase(dataSource.getKrbFQDN()))) {
-                confStr = confStr.replaceAll("(?i)" + Pattern.quote(matcher.group(1)), "  ");
-            }
-
+            confStr = removeInconsistentRealm(dataSource, confStr);
             boolean isRealmDefined = confStr.toLowerCase().contains(" " + dataSource.getKrbRealm().toLowerCase() + " = {");
             if (!isRealmDefined) {
-                String newRealm = buildKrbConfRealm(dataSource);
-                int startPosition = confStr.indexOf(REALMS) + REALMS.length();
-                confStr = confStr.replace(confStr.substring(0, startPosition), confStr.substring(0, startPosition) + newRealm);
+                confStr = addNewRealm(dataSource, confStr);
             }
 
             //remove inconsistent part (if it exists) with old values of pair domain-realm
-            Pattern realmPattern = Pattern.compile(".*?( " + dataSource.getKrbFQDN() + " = (\\S*)\\s*?)\\S.*", Pattern.DOTALL);
-            Matcher realmMatcher = realmPattern.matcher(confStr.toLowerCase());
-            if (realmMatcher.matches() && !(realmMatcher.group(2).equalsIgnoreCase(dataSource.getKrbRealm()))) {
-                confStr = confStr.replaceAll("(?i)" + Pattern.quote(realmMatcher.group(1)), "  ");
-            }
-
-            boolean isDomainDefined = confStr.toLowerCase().contains(" " + dataSource.getKrbFQDN() +" = ");
+            confStr = removeInconsistentDomainRealm(dataSource, confStr);
+            boolean isDomainDefined = confStr.toLowerCase().contains(" " + dataSource.getKrbFQDN() + " = ");
             if (!isDomainDefined) {
-                String newDomain = buildKrbConfDomainRealm(dataSource);
-                int startPosition = confStr.indexOf(DOMAIIN_REALM) + DOMAIIN_REALM.length();
-                confStr = confStr.replace(confStr.substring(0, startPosition), confStr.substring(0, startPosition) + newDomain);
+                confStr = addNewDomainRealm(dataSource, confStr);
             }
 
             if (!isRealmDefined || !isDomainDefined) {
@@ -191,6 +177,40 @@ public class KerberosServiceImpl implements KerberosService {
             }
         }
         return configPath;
+    }
+
+    private String addNewRealm(DataSourceUnsecuredDTO dataSource, String confStr) throws IOException {
+
+        String newRealm = buildKrbConfRealm(dataSource);
+        int startPosition = confStr.indexOf(REALMS) + REALMS.length();
+        return confStr.replace(confStr.substring(0, startPosition), confStr.substring(0, startPosition) + newRealm);
+    }
+
+    private String addNewDomainRealm(DataSourceUnsecuredDTO dataSource, String confStr) throws IOException {
+
+        String newDomain = buildKrbConfDomainRealm(dataSource);
+        int startPosition = confStr.indexOf(DOMAIIN_REALM) + DOMAIIN_REALM.length();
+        return confStr.replace(confStr.substring(0, startPosition), confStr.substring(0, startPosition) + newDomain);
+    }
+
+    private String removeInconsistentDomainRealm(DataSourceUnsecuredDTO dataSource, String confStr) {
+
+        Pattern realmPattern = Pattern.compile(".*?( " + dataSource.getKrbFQDN() + " = (\\S*)\\s*?)\\S*.*", Pattern.DOTALL);
+        Matcher realmMatcher = realmPattern.matcher(confStr.toLowerCase());
+        if (realmMatcher.matches() && !(realmMatcher.group(2).equalsIgnoreCase(dataSource.getKrbRealm()))) {
+            confStr = confStr.replaceAll("(?i)" + Pattern.quote(realmMatcher.group(1)), "  ");
+        }
+        return confStr;
+    }
+
+    private String removeInconsistentRealm(DataSourceUnsecuredDTO dataSource, String confStr) {
+
+        Pattern pattern = Pattern.compile(".*?( " + dataSource.getKrbRealm().toLowerCase() + " = \\{\\s*?admin_server = (.*?)\\s*?kdc = (.*?)\\s*?}.*?)\\S.*", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(confStr.toLowerCase());
+        if (matcher.matches() && (!matcher.group(2).equalsIgnoreCase(dataSource.getKrbAdminFQDN()) || !matcher.group(3).equalsIgnoreCase(dataSource.getKrbFQDN()))) {
+            confStr = confStr.replaceAll("(?i)" + Pattern.quote(matcher.group(1)), "  ");
+        }
+        return confStr;
     }
 
     private String buildKrbConfHeader(String defaultRealmName) throws IOException {
@@ -212,6 +232,7 @@ public class KerberosServiceImpl implements KerberosService {
     }
 
     private String buildKrbConfDomainRealm(DataSourceUnsecuredDTO dataSource) throws IOException {
+
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("domain", dataSource.getKrbFQDN());
         parameters.put("realm", dataSource.getKrbRealm());
