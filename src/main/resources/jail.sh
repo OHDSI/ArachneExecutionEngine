@@ -15,8 +15,16 @@ sudo tar xzf $DIST_ARCHIVE -C $JAIL
 
 export R_HOME=/usr/lib/R
 sudo cp /etc/resolv.conf $JAIL/etc/resolv.conf
-sudo cp $KRB_CONF $JAIL/etc/krb5.conf
-sudo cp $KRB_KEYTAB $JAIL/etc/krb.keytab
+
+if [ -n "$KRB_CONF" ]
+then
+  sudo cp $KRB_CONF $JAIL/etc/krb5.conf
+fi
+if [ -n "$KRB_KEYTAB" ]
+then
+  sudo cp $KRB_KEYTAB $JAIL/etc/krb.keytab
+fi
+
 sudo cp /etc/R-with-krb.sh $JAIL/etc/R-with-krb.sh
 sudo cp -R /impala/. $JAIL/impala/
 sudo chmod +x $JAIL/etc/R-with-krb.sh
