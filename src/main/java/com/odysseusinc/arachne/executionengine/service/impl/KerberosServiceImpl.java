@@ -119,7 +119,7 @@ public class KerberosServiceImpl implements KerberosService {
                 }
                 builder.statement("bash")
                         .withParam("-c")
-                        .statement("echo " + dataSource.getKrbPassword() + " | " + kinitPath + KINIT_COMMAND +
+                        .statement("echo " + dataSource.getKrbPassword() + " | " + kinitPath + KINIT_COMMAND + " " +
                                 dataSource.getKrbUser() + "@" + dataSource.getKrbRealm());
                 break;
             case KEYTAB:
