@@ -84,6 +84,7 @@ public class KerberosServiceImpl implements KerberosService {
         KrbConfig krbConfig = new KrbConfig();
         if (RuntimeServiceMode.ISOLATED == environmentMode) {
             krbConfig.setConfPath(buildTempKrbConf(dataSource));
+            //it is needed to extend config on host for successful detectCdmVersion() because it uses non-jail config
             extendKrbConf(Paths.get(this.configPath), dataSource);
         } else {
             krbConfig.setConfPath(extendKrbConf(Paths.get(this.configPath), dataSource));
