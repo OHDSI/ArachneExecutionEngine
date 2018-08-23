@@ -82,14 +82,13 @@ public class KerberosServiceImpl implements KerberosService {
     private synchronized KrbConfig prepareToKinit(DataSourceUnsecuredDTO dataSource, RuntimeServiceMode environmentMode) throws IOException {
 
         KrbConfig krbConfig = new KrbConfig();
-        Path configPath;
         if (RuntimeServiceMode.ISOLATED == environmentMode) {
-            configPath = buildTempKrbConf(dataSource);
+            krbConfig.setConfPath(buildTempKrbConf(dataSource));
+            extendKrbConf(Paths.get(this.configPath), dataSource);
         } else {
-            configPath = extendKrbConf(Paths.get(this.configPath), dataSource);
+            krbConfig.setConfPath(extendKrbConf(Paths.get(this.configPath), dataSource));
         }
         krbConfig.setMode(environmentMode);
-        krbConfig.setConfPath(configPath);
 
         Path keytabPath = Paths.get("");
         if (dataSource.getKrbAuthMethod().equals(KerberosAuthMechanism.KEYTAB)) {
