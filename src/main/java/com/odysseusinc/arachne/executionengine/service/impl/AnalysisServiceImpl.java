@@ -82,11 +82,9 @@ public class AnalysisServiceImpl implements AnalysisService {
         try {
             boolean useKerberos = analysis.getDataSource().getUseKerberos();
             KrbConfig krbConfig = new KrbConfig();
+            //we need to login to Kerberos regardless of current RuntimeServiceMode due to further detectCdmVersion()
             if (useKerberos) {
-                krbConfig = kerberosService.prepareToKinit(analysis.getDataSource(), runtimeService.getRuntimeServiceMode());
-                if (runtimeService.getRuntimeServiceMode() == RuntimeServiceImpl.RuntimeServiceMode.SINGLE) {
-                    kerberosService.runKinit(analysisDir, krbConfig);
-                }
+                krbConfig = kerberosService.runKinit(analysis.getDataSource(), runtimeService.getRuntimeServiceMode(), analysisDir);
             }
             if (attachCdmMetadata) {
                 try {
