@@ -54,7 +54,32 @@ public class KerberosServiceImpl implements KerberosService {
     private final static String DOMAIIN_REALM = "[domain_realm]";
 
     @Override
-    public synchronized KrbConfig prepareToKinit(DataSourceUnsecuredDTO dataSource, RuntimeServiceMode environmentMode) throws IOException {
+    public KrbConfig runKinit(DataSourceUnsecuredDTO dataSource, RuntimeServiceMode environmentMode, File workDir) throws IOException {
+
+        KrbConfig krbConfig = prepareToKinit(dataSource, environmentMode);
+
+        File stdout = new File(workDir, LOG_FILE);
+        ProcessBuilder pb = new ProcessBuilder();
+        Process process = pb.directory(workDir)
+                .redirectOutput(ProcessBuilder.Redirect.to(stdout))
+                .redirectError(ProcessBuilder.Redirect.appendTo(stdout))
+                .command(krbConfig.getKinitCommand()).start();
+        try {
+            process.waitFor(timeout, TimeUnit.SECONDS);
+            if (process.exitValue() != 0) {
+                log.warn("kinit exit code: {}", process.exitValue());
+            }
+            process.destroy();
+            if (log.isDebugEnabled()) {
+                klist(workDir);
+            }
+        } catch (InterruptedException e) {
+            log.error("Failed to obtain kerberos ticket", e);
+        }
+        return krbConfig;
+    }
+
+    private synchronized KrbConfig prepareToKinit(DataSourceUnsecuredDTO dataSource, RuntimeServiceMode environmentMode) throws IOException {
 
         KrbConfig krbConfig = new KrbConfig();
         Path configPath;
@@ -82,28 +107,6 @@ public class KerberosServiceImpl implements KerberosService {
         krbConfig.setKinitCommand(kinitCommand);
 
         return krbConfig;
-    }
-
-    public void runKinit(File workDir, KrbConfig krbConfig) throws IOException {
-
-        File stdout = new File(workDir, LOG_FILE);
-        ProcessBuilder pb = new ProcessBuilder();
-        Process process = pb.directory(workDir)
-                .redirectOutput(ProcessBuilder.Redirect.to(stdout))
-                .redirectError(ProcessBuilder.Redirect.appendTo(stdout))
-                .command(krbConfig.getKinitCommand()).start();
-        try {
-            process.waitFor(timeout, TimeUnit.SECONDS);
-            if (process.exitValue() != 0) {
-                log.warn("kinit exit code: {}", process.exitValue());
-            }
-            process.destroy();
-            if (log.isDebugEnabled()) {
-                klist(workDir);
-            }
-        } catch (InterruptedException e) {
-            log.error("Failed to obtain kerberos ticket", e);
-        }
     }
 
     private String[] buildKinitCommand(DataSourceUnsecuredDTO dataSource, Path keytab) {

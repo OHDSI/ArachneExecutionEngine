@@ -8,7 +8,5 @@ import java.io.IOException;
 
 public interface KerberosService {
 
-    KrbConfig prepareToKinit(DataSourceUnsecuredDTO dataSource, RuntimeServiceMode environmentMode) throws IOException;
-
-    void runKinit(File workDir, KrbConfig krbConfig) throws IOException;
+    KrbConfig runKinit(DataSourceUnsecuredDTO dataSource, RuntimeServiceMode environmentMode, File workDir) throws IOException;
 }
