@@ -82,6 +82,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         try {
             boolean useKerberos = analysis.getDataSource().getUseKerberos();
             KrbConfig krbConfig = new KrbConfig();
+            //we need to login to Kerberos regardless of current RuntimeServiceMode due to further detectCdmVersion()
             if (useKerberos) {
                 krbConfig = kerberosService.runKinit(analysis.getDataSource(), runtimeService.getRuntimeServiceMode(), analysisDir);
             }
