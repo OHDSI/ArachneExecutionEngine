@@ -82,14 +82,15 @@ public class KerberosServiceImpl implements KerberosService {
     private synchronized KrbConfig prepareToKinit(DataSourceUnsecuredDTO dataSource, RuntimeServiceMode environmentMode) throws IOException {
 
         KrbConfig krbConfig = new KrbConfig();
-        Path configPath;
+        //it is needed to extend config on host regardless of current RuntimeServiceMode for successful detectCdmVersion() because it uses non-jail config
+        Path path = extendKrbConf(Paths.get(this.configPath), dataSource);
+
         if (RuntimeServiceMode.ISOLATED == environmentMode) {
-            configPath = buildTempKrbConf(dataSource);
+            krbConfig.setConfPath(buildTempKrbConf(dataSource));
         } else {
-            configPath = extendKrbConf(Paths.get(this.configPath), dataSource);
+            krbConfig.setConfPath(path);
         }
         krbConfig.setMode(environmentMode);
-        krbConfig.setConfPath(configPath);
 
         Path keytabPath = Paths.get("");
         if (dataSource.getKrbAuthMethod().equals(KerberosAuthMechanism.KEYTAB)) {
