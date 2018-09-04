@@ -57,3 +57,10 @@ runtimeservice:
 tmp:
   holder:
     cron: 0 * * ? * *
+
+connectionpool:
+  ttl:
+    minutes: 60
+  capacity:
+    min: 4
+    max: 10
