@@ -29,6 +29,13 @@ submission:
   update:
     interval: 10000
 
+connectionpool:
+  ttl:
+    minutes: 60
+  capacity:
+    min: 4
+    max: 10
+
 runtime:
   timeOutSec: 259200
 
@@ -57,12 +64,3 @@ runtimeservice:
 tmp:
   holder:
     cron: 0 * * ? * *
-
-kerberos:
-  timeout: 60
-  kinitPath:
-  configPath: /etc/krb5.conf
-
-impala:
-  drivers:
-    location: /impala
