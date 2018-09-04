@@ -2,14 +2,20 @@ package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import org.ohdsi.sql.SqlTranslate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +23,8 @@ import org.springframework.stereotype.Service;
 public class HikariConnectionPoolService implements ConnectionPoolService {
 
     private static final String TEST_SQL = "select 1;";
+
+    private static final Logger logger = LoggerFactory.getLogger(ConnectionPoolService.class);
 
     private Cache<String, DataSource> dataSourceCache;
 
@@ -29,10 +37,13 @@ public class HikariConnectionPoolService implements ConnectionPoolService {
     @Value("${connectionpool.ttl.minutes}")
     private int ttl;
 
-    public HikariConnectionPoolService() {
+    @PostConstruct
+    public void init() {
 
+        RemovalListener<String, DataSource> removalListener = event -> ((HikariDataSource)event.getValue()).close();
         dataSourceCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(ttl, TimeUnit.MINUTES)
+                .removalListener(removalListener)
                 .build();
     }
 
@@ -40,6 +51,7 @@ public class HikariConnectionPoolService implements ConnectionPoolService {
     public DataSource getDataSource(DataSourceUnsecuredDTO dataSourceDTO) {
 
         try {
+            logger.info("Using JDBC: " + dataSourceDTO.getConnectionStringForLogging());
             return dataSourceCache.get(dataSourceDTO.getConnectionString(), () -> buildDataSource(dataSourceDTO));
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
