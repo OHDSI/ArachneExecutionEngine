@@ -7,6 +7,7 @@ ADD krb5.conf /etc/
 ADD R-with-krb.sh /etc/
 RUN apt-get update && apt-get install -y sudo krb5-user dos2unix
 RUN rm -f /usr/bin/java && update-alternatives --config java
+RUN ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
 ENV R_INSTALL_SCRIPT=libs.r
 ADD execution-engine.jar /execution-engine.jar
 RUN mkdir /impala
