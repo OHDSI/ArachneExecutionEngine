@@ -5,6 +5,7 @@ VOLUME /libs-r
 VOLUME /dist
 RUN apt-get update && apt-get install -y sudo
 RUN rm -f /usr/bin/java && update-alternatives --config java
+RUN ln -fs /usr/share/zoneinfo/Etc/GMT /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
 ENV R_INSTALL_SCRIPT=libs.r
 ADD execution-engine.jar /execution-engine.jar
 RUN mkdir /impala
