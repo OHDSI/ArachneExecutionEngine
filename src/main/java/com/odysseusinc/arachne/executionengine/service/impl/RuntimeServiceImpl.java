@@ -29,12 +29,13 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
-import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
+import com.odysseusinc.krblogin.KrbConfig;
+import com.odysseusinc.krblogin.RuntimeServiceMode;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -366,9 +367,5 @@ public class RuntimeServiceImpl implements RuntimeService {
             }
             return stdout.toString();
         }
-    }
-
-    public enum RuntimeServiceMode {
-        SINGLE, ISOLATED
     }
 }

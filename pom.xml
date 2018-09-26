@@ -162,6 +162,12 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.odysseusinc</groupId>
+            <artifactId>krb-login</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
     </dependencies>
 
     <profiles>

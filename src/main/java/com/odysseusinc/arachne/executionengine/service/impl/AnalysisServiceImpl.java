@@ -27,15 +27,15 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
-import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
-import com.odysseusinc.arachne.executionengine.service.KerberosService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
+import com.odysseusinc.krblogin.KerberosService;
+import com.odysseusinc.krblogin.KrbConfig;
 import java.io.File;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
