@@ -22,8 +22,8 @@
 
 package com.odysseusinc.arachne.executionengine.config;
 
-import com.odysseusinc.krblogin.KerberosService;
-import com.odysseusinc.krblogin.KerberosServiceImpl;
+import com.odysseusinc.datasourcemanager.krblogin.KerberosService;
+import com.odysseusinc.datasourcemanager.krblogin.KerberosServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +40,12 @@ public class AnalisysConfig {
     private Integer maxPoolSize;
     @Value("${executor.queueCapacity}")
     private Integer queueCapacity;
+    @Value("${kerberos.timeout}")
+    private long timeout;
+    @Value("${kerberos.kinitPath}")
+    private String kinitPath;
+    @Value("${kerberos.configPath}")
+    private String configPath;
 
     @Bean(name = "analysisTaskExecutor")
     public ThreadPoolTaskExecutor taskExecutor() {
@@ -60,6 +66,6 @@ public class AnalisysConfig {
     @Bean
     public KerberosService kerberosService() {
 
-        return new KerberosServiceImpl();
+        return new KerberosServiceImpl(timeout, kinitPath, configPath);
     }
 }
