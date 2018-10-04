@@ -205,7 +205,7 @@
         <profile>
             <id>impala</id>
             <properties>
-                <impala.classpath>/impala/</impala.classpath>
+                <impala.classpath>...path/to/impala/jdbc/drivers...</impala.classpath>
             </properties>
             <dependencies>
                 <!-- Impala driver -->
