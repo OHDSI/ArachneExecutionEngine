@@ -64,3 +64,11 @@ runtimeservice:
 tmp:
   holder:
     cron: 0 * * ? * *
+
+kerberos:
+  timeout: 60
+  kinitPath:
+  configPath: /etc/krb5.conf
+ impala:
+  drivers:
+    location: /impala
