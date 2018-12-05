@@ -28,10 +28,10 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
+import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
-import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import com.odysseusinc.arachne.executionengine.util.SQLUtils;
 import java.io.BufferedWriter;
@@ -52,7 +52,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -71,15 +70,17 @@ public class SQLServiceImpl implements SQLService {
     private final Logger log = LoggerFactory.getLogger(SQLServiceImpl.class);
     private final TaskExecutor taskExecutor;
     private final CallbackService callbackService;
+    private final ConnectionPoolService poolService;
 
     @Value("${csv.separator}")
     private char csvSeparator;
 
     @Autowired
-    public SQLServiceImpl(TaskExecutor taskExecutor, CallbackService callbackService) {
+    public SQLServiceImpl(TaskExecutor taskExecutor, CallbackService callbackService, ConnectionPoolService poolService) {
 
         this.taskExecutor = taskExecutor;
         this.callbackService = callbackService;
+        this.poolService = poolService;
     }
 
     @Override
@@ -94,7 +95,7 @@ public class SQLServiceImpl implements SQLService {
                 Long id = analysis.getId();
                 String callbackPassword = analysis.getCallbackPassword();
 
-                try (Connection conn = SQLUtils.getConnectionWithAutoCommit(dataSource)) {
+                try (Connection conn = poolService.getDataSource(dataSource).getConnection()) {
 
                     List<File> files = AnalisysUtils.getDirectoryItemsFiltered(file, SQL_MATCHER);
                     for (File sqlFile : files) {
