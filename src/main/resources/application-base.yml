@@ -70,6 +70,6 @@ kerberos:
   kinitPath:
   configPath: /etc/krb5.conf
 
- impala:
+impala:
   drivers:
     location: /impala
