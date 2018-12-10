@@ -139,7 +139,7 @@
         <dependency>
             <groupId>com.oracle</groupId>
             <artifactId>ojdbc6</artifactId>
-            <version>12.1.0.1-atlassian-hosted</version>
+            <version>12.1.0.1</version>
         </dependency>
 
         <dependency>
@@ -228,7 +228,7 @@
                 <dependency>
                     <groupId>com.cloudera</groupId>
                     <artifactId>ImpalaJDBC4</artifactId>
-                    <version>2.5.41</version>
+                    <version>2.5.42</version>
                 </dependency>
                 <dependency>
                     <groupId>libfb</groupId>
@@ -280,7 +280,7 @@
                                 <configuration>
                                     <groupId>com.cloudera</groupId>
                                     <artifactId>ImpalaJDBC4</artifactId>
-                                    <version>2.5.41</version>
+                                    <version>2.5.42</version>
                                     <packaging>jar</packaging>
                                     <file>${impala.classpath}/ImpalaJDBC4.jar</file>
                                 </configuration>
