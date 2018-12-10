@@ -7,8 +7,6 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnse
 import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
@@ -52,7 +50,8 @@ public class HikariConnectionPoolService implements ConnectionPoolService {
 
         try {
             logger.info("Using JDBC: " + dataSourceDTO.getConnectionStringForLogging());
-            return dataSourceCache.get(dataSourceDTO.getConnectionString(), () -> buildDataSource(dataSourceDTO));
+            return dataSourceCache.get(dataSourceDTO.getConnectionStringAndUserAndPassword(),
+                    () -> buildDataSource(dataSourceDTO));
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
