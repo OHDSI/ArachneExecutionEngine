@@ -86,20 +86,17 @@ public class AnalysisServiceImpl implements AnalysisService {
             if (useKerberos) {
                 krbConfig = kerberosService.runKinit(analysis.getDataSource(), runtimeService.getRuntimeServiceMode(), analysisDir);
             }
-            if (attachCdmMetadata) {
-                try {
-                    cdmMetadataService.extractMetadata(analysis, analysisDir);
-                } catch (Exception e) {
-                    logger.info("Failed to collect CDM metadata. " + e);
-                }
-            }
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
 
-            ResultCallback resultCallback = (finishedAnalysis, resultStatus, stdout, resultDir) ->
-                    callbackService.processAnalysisResult(finishedAnalysis, resultStatus, stdout, resultDir, compressedResult, chunkSize);
-            FailedCallback failedCallback = (failedAnalysis, ex, resultDir) ->
-                    callbackService.sendFailedResult(failedAnalysis, ex, resultDir, compressedResult, chunkSize);
+            ResultCallback resultCallback = (finishedAnalysis, resultStatus, stdout, resultDir) -> {
+                if (attachCdmMetadata) saveMetadata(analysis, resultDir);
+                callbackService.processAnalysisResult(finishedAnalysis, resultStatus, stdout, resultDir, compressedResult, chunkSize);
+            };
+            FailedCallback failedCallback = (failedAnalysis, ex, resultDir) -> {
+                if (attachCdmMetadata) saveMetadata(analysis, resultDir);
+                callbackService.sendFailedResult(failedAnalysis, ex, resultDir, compressedResult, chunkSize);
+            };
 
             switch (fileExtension) {
                 case "sql": {
@@ -132,5 +129,13 @@ public class AnalysisServiceImpl implements AnalysisService {
     public int activeTasks() {
 
         return threadPoolTaskExecutor.getActiveCount();
+    }
+
+    private void saveMetadata(AnalysisRequestDTO analysis, File toDir) {
+        try {
+            cdmMetadataService.extractMetadata(analysis, toDir);
+        } catch (Exception e) {
+            logger.info("Failed to collect CDM metadata for analysis id={}. {}", analysis.getId(), e);
+        }
     }
 }
