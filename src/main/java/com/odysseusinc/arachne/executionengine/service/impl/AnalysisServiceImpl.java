@@ -135,7 +135,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         try {
             cdmMetadataService.extractMetadata(analysis, toDir);
         } catch (Exception e) {
-            logger.info("Failed to collect CDM metadata. " + e);
+            logger.info("Failed to collect CDM metadata for analysis id={}. {}", analysis.getId(), e);
         }
     }
 }
