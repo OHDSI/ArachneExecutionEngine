@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,8 @@ import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import net.lingala.zip4j.exception.ZipException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -51,6 +53,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Api
 @RequestMapping(value = AnalisysController.REST_API_MAIN)
 public class AnalisysController {
+
+    private static final Logger log = LoggerFactory.getLogger(AnalisysController.class);
 
     @SuppressWarnings("WeakerAccess")
     public static final String REST_API_MAIN = "/api/v1";
@@ -90,7 +94,9 @@ public class AnalisysController {
     ) throws IOException, ZipException {
 
         try {
+            log.info("Started processing request for analysis ID = {}", analysisRequest.getId());
             final File analysisDir = AnalisysUtils.extractFiles(files, compressed);
+            log.info("Extracted files for analysis ID = {}", analysisRequest.getId());
             return analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, attachCdmMetadata, chunkSize);
         } catch (IOException | ZipException e) {
             callbackService.sendFailedResult(analysisRequest, e, null, waitCompressedResult, chunkSize);

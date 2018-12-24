@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
+import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
@@ -95,6 +96,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String RUNTIME_ENV_LANG_VALUE = "en_US.UTF-8";
     private static final String RUNTIME_ENV_LC_ALL_KEY = "LC_ALL";
     private static final String RUNTIME_ENV_LC_ALL_VALUE = "en_US.UTF-8";
+    private static final String RUNTIME_ENV_IMPALA_DRIVER_PATH = "IMPALA_DRIVER_PATH";
 
     private final TaskExecutor taskExecutor;
     private final CallbackService callbackService;
@@ -104,6 +106,8 @@ public class RuntimeServiceImpl implements RuntimeService {
     private int runtimeTimeOutSec;
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
+    @Value("${impala.drivers.location}")
+    private String impalaDriversLocation;
 
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
 
@@ -127,7 +131,8 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
     }
 
-    private RuntimeServiceMode getRuntimeServiceMode() {
+    @Override
+    public RuntimeServiceMode getRuntimeServiceMode() {
 
         return StringUtils.isNotBlank(rIsolatedRuntimeProps.getArchive()) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
     }
@@ -146,7 +151,7 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     @Override
     @FileDescriptorCount
-    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback) {
+    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, KrbConfig krbConfig) {
 
         taskExecutor.execute(() -> {
             try {
@@ -157,10 +162,10 @@ public class RuntimeServiceImpl implements RuntimeService {
                 DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
                 RuntimeFinishStatus finishStatus;
                 try {
-                    File runFile = prepareEnvironment(file);
+                    File runFile = prepareEnvironment();
                     try {
                         String[] command = buildRuntimeCommand(runFile, file, executableFileName);
-                        final Map<String, String> envp = buildRuntimeEnvVariables(dataSource);
+                        final Map<String, String> envp = buildRuntimeEnvVariables(dataSource, krbConfig.getIsolatedRuntimeEnvs());
                         finishStatus = runtime(command, envp, file, runtimeTimeOutSec, updateStatusCallback, id, callbackPassword);
                         AnalysisResultStatusDTO resultStatusDTO = finishStatus.exitCode == 0
                                 ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
@@ -169,6 +174,10 @@ public class RuntimeServiceImpl implements RuntimeService {
                     } finally {
                         if (!isExternalJail()) {
                             FileUtils.deleteQuietly(runFile);
+                        }
+                        FileUtils.deleteQuietly(krbConfig.getKeytabPath().toFile());
+                        if (RuntimeServiceMode.ISOLATED == krbConfig.getMode()) {
+                            FileUtils.deleteQuietly(krbConfig.getConfPath().toFile());
                         }
                     }
                 } catch (FileNotFoundException ex) {
@@ -185,7 +194,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         });
     }
 
-    private File prepareEnvironment(File directory) throws IOException {
+    private File prepareEnvironment() throws IOException {
 
         return isExternalJail()
                 ? new File(rIsolatedRuntimeProps.getJailSh())
@@ -246,9 +255,9 @@ public class RuntimeServiceImpl implements RuntimeService {
         return command;
     }
 
-    private Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource) {
+    private Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, Map<String, String> krbProps) {
 
-        Map<String, String> environment = new HashMap<>();
+        Map<String, String> environment = new HashMap<>(krbProps);
         environment.put(RUNTIME_ENV_DBMS_USERNAME, dataSource.getUsername());
         environment.put(RUNTIME_ENV_DBMS_PASSWORD, dataSource.getPassword());
         environment.put(RUNTIME_ENV_DBMS_TYPE, dataSource.getType().getOhdsiDB());
@@ -257,6 +266,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         environment.put(RUNTIME_ENV_TARGET_SCHEMA, dataSource.getTargetSchema());
         environment.put(RUNTIME_ENV_RESULT_SCHEMA, dataSource.getResultSchema());
         environment.put(RUNTIME_ENV_COHORT_TARGET_TABLE, dataSource.getCohortTargetTable());
+        environment.put(RUNTIME_ENV_IMPALA_DRIVER_PATH, impalaDriversLocation);
         environment.put(RUNTIME_ENV_PATH_KEY, RUNTIME_ENV_PATH_VALUE);
         environment.put(RUNTIME_ENV_HOME_KEY, RUNTIME_ENV_HOME_VALUE);
         environment.put(RUNTIME_ENV_HOSTNAME_KEY, RUNTIME_ENV_HOSTNAME_VALUE);
@@ -340,23 +350,25 @@ public class RuntimeServiceImpl implements RuntimeService {
         public String call() throws Exception {
 
             StringBuilder stdout = new StringBuilder();
-            do {
-                Thread.sleep(submissionUpdateInterval);
-                InputStream inputStream = process.getInputStream();
-                final String stdoutDiff = getStdoutDiff(inputStream);
-                stdout.append(stdoutDiff);
-                callbackService.updateAnalysisStatus(updateUrl, submissionId, stdoutDiff, password);
-                if (!stdoutDiff.isEmpty()) {
-                    LOGGER.debug(STDOUT_LOG_DIFF, stdoutDiff);
-                }
-
-            } while (process.isAlive());
-
+            try {
+                do {
+                    Thread.sleep(submissionUpdateInterval);
+                    InputStream inputStream = process.getInputStream();
+                    final String stdoutDiff = getStdoutDiff(inputStream);
+                    stdout.append(stdoutDiff);
+                    callbackService.updateAnalysisStatus(updateUrl, submissionId, stdoutDiff, password);
+                    if (!stdoutDiff.isEmpty()) {
+                        LOGGER.debug(STDOUT_LOG_DIFF, stdoutDiff);
+                    }
+                } while (process.isAlive());
+            } catch (IOException e) {
+                LOGGER.warn("Process was destroyed during attempt to write stdout");
+            }
             return stdout.toString();
         }
     }
 
-    enum RuntimeServiceMode {
+    public enum RuntimeServiceMode {
         SINGLE, ISOLATED
     }
 }
