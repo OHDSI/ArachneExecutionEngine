@@ -90,11 +90,15 @@ public class AnalysisServiceImpl implements AnalysisService {
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
 
             ResultCallback resultCallback = (finishedAnalysis, resultStatus, stdout, resultDir) -> {
-                if (attachCdmMetadata) saveMetadata(analysis, resultDir);
+                if (attachCdmMetadata) {
+                    saveMetadata(analysis, resultDir);
+                }
                 callbackService.processAnalysisResult(finishedAnalysis, resultStatus, stdout, resultDir, compressedResult, chunkSize);
             };
             FailedCallback failedCallback = (failedAnalysis, ex, resultDir) -> {
-                if (attachCdmMetadata) saveMetadata(analysis, resultDir);
+                if (attachCdmMetadata) {
+                    saveMetadata(analysis, resultDir);
+                }
                 callbackService.sendFailedResult(failedAnalysis, ex, resultDir, compressedResult, chunkSize);
             };
 
