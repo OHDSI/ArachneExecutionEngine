@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,9 +27,9 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisExecut
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
-import com.odysseusinc.arachne.executionengine.service.CallbackService;
-
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
+import com.odysseusinc.arachne.executionengine.service.CallbackService;
+import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -38,8 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-
-import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -118,7 +116,7 @@ public class CallbackServiceImpl implements CallbackService {
             File resultDir,
             Boolean compressedResult,
             Long chunkSize
-    ) throws IOException, ZipException {
+    ) throws ZipException {
 
         final File zipDir = com.google.common.io.Files.createTempDir();
         try {
@@ -147,7 +145,8 @@ public class CallbackServiceImpl implements CallbackService {
                 FileUtils.deleteQuietly(zipDir);
             } catch (IOException ex) {
                 log.warn(DELETE_DIR_ERROR_LOG, resultDir.getAbsolutePath(), ex);
-                throw ex;
+                // rethrow of exception cause to results overriden
+//                throw ex;
             }
         }
     }

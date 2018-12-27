@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,13 +26,15 @@ import com.google.common.io.Files;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
+import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
+import com.odysseusinc.arachne.executionengine.service.KerberosService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
-import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
 import org.apache.commons.lang3.Validate;
@@ -52,19 +54,22 @@ public class AnalysisServiceImpl implements AnalysisService {
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
     private final CdmMetadataService cdmMetadataService;
     private final CallbackService callbackService;
+    private final KerberosService kerberosService;
 
     @Autowired
     public AnalysisServiceImpl(SQLService sqlService,
                                RuntimeService runtimeService,
                                @Qualifier("analysisTaskExecutor") ThreadPoolTaskExecutor threadPoolTaskExecutor,
                                CdmMetadataService cdmMetadataService,
-                               CallbackService callbackService) {
+                               CallbackService callbackService,
+                               KerberosService kerberosService) {
 
         this.sqlService = sqlService;
         this.runtimeService = runtimeService;
         this.threadPoolTaskExecutor = threadPoolTaskExecutor;
         this.cdmMetadataService = cdmMetadataService;
         this.callbackService = callbackService;
+        this.kerberosService = kerberosService;
     }
 
     @Override
@@ -73,23 +78,29 @@ public class AnalysisServiceImpl implements AnalysisService {
                                             Boolean attachCdmMetadata, Long chunkSize) {
 
         Validate.notNull(analysis, "analysis can't be null");
-
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         try {
-            if (attachCdmMetadata) {
-                try {
-                    cdmMetadataService.extractMetadata(analysis, analysisDir);
-                } catch (Exception e) {
-                    logger.info("Failed to collect CDM metadata. " + e);
-                }
+            boolean useKerberos = analysis.getDataSource().getUseKerberos();
+            KrbConfig krbConfig = new KrbConfig();
+            //we need to login to Kerberos regardless of current RuntimeServiceMode due to further detectCdmVersion()
+            if (useKerberos) {
+                krbConfig = kerberosService.runKinit(analysis.getDataSource(), runtimeService.getRuntimeServiceMode(), analysisDir);
             }
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
 
-            ResultCallback resultCallback = (finishedAnalysis, resultStatus, stdout, resultDir) ->
-                    callbackService.processAnalysisResult(finishedAnalysis, resultStatus, stdout, resultDir, compressedResult, chunkSize);
-            FailedCallback failedCallback = (failedAnalysis, ex, resultDir) ->
-                    callbackService.sendFailedResult(failedAnalysis, ex, resultDir, compressedResult, chunkSize);
+            ResultCallback resultCallback = (finishedAnalysis, resultStatus, stdout, resultDir) -> {
+                if (attachCdmMetadata) {
+                    saveMetadata(analysis, resultDir);
+                }
+                callbackService.processAnalysisResult(finishedAnalysis, resultStatus, stdout, resultDir, compressedResult, chunkSize);
+            };
+            FailedCallback failedCallback = (failedAnalysis, ex, resultDir) -> {
+                if (attachCdmMetadata) {
+                    saveMetadata(analysis, resultDir);
+                }
+                callbackService.sendFailedResult(failedAnalysis, ex, resultDir, compressedResult, chunkSize);
+            };
 
             switch (fileExtension) {
                 case "sql": {
@@ -100,7 +111,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                 }
 
                 case "r": {
-                    runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback);
+                    runtimeService.analyze(analysis, analysisDir, resultCallback, failedCallback, krbConfig);
                     logger.info("analysis with id={} started in R Runtime Service", analysis.getId());
                     status = AnalysisRequestTypeDTO.R;
                     break;
@@ -122,5 +133,13 @@ public class AnalysisServiceImpl implements AnalysisService {
     public int activeTasks() {
 
         return threadPoolTaskExecutor.getActiveCount();
+    }
+
+    private void saveMetadata(AnalysisRequestDTO analysis, File toDir) {
+        try {
+            cdmMetadataService.extractMetadata(analysis, toDir);
+        } catch (Exception e) {
+            logger.info("Failed to collect CDM metadata for analysis id={}. {}", analysis.getId(), e);
+        }
     }
 }

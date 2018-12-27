@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,10 +23,14 @@
 package com.odysseusinc.arachne.executionengine.service;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
+import com.odysseusinc.arachne.executionengine.model.KrbConfig;
+import com.odysseusinc.arachne.executionengine.service.impl.RuntimeServiceImpl;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import java.io.File;
 
 public interface RuntimeService {
-    void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback);
+    void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, KrbConfig krbConfig);
+
+    RuntimeServiceImpl.RuntimeServiceMode getRuntimeServiceMode();
 }
