@@ -51,6 +51,7 @@ public class SqlMetadataServiceFactory {
                 result = new RedshiftMetadataService(dataSource);
                 break;
             case IMPALA:
+            case BIGQUERY:
                 result = new ImpalaMetadataService(dataSource);
                 break;
             default:

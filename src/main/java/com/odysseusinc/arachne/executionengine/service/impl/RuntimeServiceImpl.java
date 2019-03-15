@@ -24,6 +24,7 @@ package com.odysseusinc.arachne.executionengine.service.impl;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
@@ -31,6 +32,7 @@ import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
+import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
@@ -97,7 +99,8 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String RUNTIME_ENV_LANG_VALUE = "en_US.UTF-8";
     private static final String RUNTIME_ENV_LC_ALL_KEY = "LC_ALL";
     private static final String RUNTIME_ENV_LC_ALL_VALUE = "en_US.UTF-8";
-    private static final String RUNTIME_ENV_IMPALA_DRIVER_PATH = "IMPALA_DRIVER_PATH";
+    private static final String RUNTIME_ENV_DRIVER_PATH = "JDBC_DRIVER_PATH";
+    private static final String RUNTIME_BQ_KEYFILE = "BQ_KEYFILE";
 
     private final TaskExecutor taskExecutor;
     private final CallbackService callbackService;
@@ -107,8 +110,10 @@ public class RuntimeServiceImpl implements RuntimeService {
     private int runtimeTimeOutSec;
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
-    @Value("${impala.drivers.location}")
+    @Value("${drivers.location.impala}")
     private String impalaDriversLocation;
+    @Value("${drivers.location.bq}")
+    private String bqDriversLocation;
 
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
 
@@ -267,7 +272,8 @@ public class RuntimeServiceImpl implements RuntimeService {
         environment.put(RUNTIME_ENV_TARGET_SCHEMA, dataSource.getTargetSchema());
         environment.put(RUNTIME_ENV_RESULT_SCHEMA, dataSource.getResultSchema());
         environment.put(RUNTIME_ENV_COHORT_TARGET_TABLE, dataSource.getCohortTargetTable());
-        environment.put(RUNTIME_ENV_IMPALA_DRIVER_PATH, impalaDriversLocation);
+        environment.put(RUNTIME_ENV_DRIVER_PATH, getDriversPath(dataSource));
+        environment.put(RUNTIME_BQ_KEYFILE, getBigQueryKeyFile(dataSource));
         environment.put(RUNTIME_ENV_PATH_KEY, RUNTIME_ENV_PATH_VALUE);
         environment.put(RUNTIME_ENV_HOME_KEY, RUNTIME_ENV_HOME_VALUE);
         environment.put(RUNTIME_ENV_HOSTNAME_KEY, RUNTIME_ENV_HOSTNAME_VALUE);
@@ -276,6 +282,24 @@ public class RuntimeServiceImpl implements RuntimeService {
 
         environment.values().removeIf(Objects::isNull);
         return environment;
+    }
+
+    private String getBigQueryKeyFile(DataSourceUnsecuredDTO dataSource) {
+
+        return dataSource.getType().equals(DBMSType.BIGQUERY) ?
+                AnalisysUtils.getBigQueryKeyPath(dataSource.getConnectionString()) : null;
+    }
+
+    private String getDriversPath(DataSourceUnsecuredDTO dataSource) {
+
+        switch (dataSource.getType()) {
+            case IMPALA:
+                return impalaDriversLocation;
+            case BIGQUERY:
+                return bqDriversLocation;
+            default:
+                return null;
+        }
     }
 
     private RuntimeFinishStatus runtime(String[] command,

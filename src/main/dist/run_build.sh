@@ -5,6 +5,9 @@ ARCH=amd64
 BUILD_PATH=./dist
 WS=`dirname $0`
 
+BQ_PATH=../extras/bigquery/
+IMPALA_PATH=../extras/impala/
+
 function print_help {
 	echo "Usage: run_build.sh [OPTIONS]"
 	echo "Available options are:"
@@ -12,11 +15,13 @@ function print_help {
 	echo -e "  -d DIST_NAME \t\tUbuntu distribution name, e.g. trusty or xenial, default is trusty"
 	echo -e "  -b BUILDDIR \t\tDirectory where distribution build would be running"
 	echo -e "  -f FILE \t\tOutput archive filename"
+	echo -e "  -bq PATH \t\tPath to BigQuery drivers"
+	echo -e "  -impala PATH \t\tPath to Impala drivers"
 	echo -e "  -h \t\t\tPrints this"
 }
 
 OPTIND=1
-while getopts ":a:d:b:f:h" opt; do
+while getopts ":a:d:b:f:h:bq:impala" opt; do
 	case $opt in 
 		a)
 			ARCH=$OPTARG
@@ -34,6 +39,12 @@ while getopts ":a:d:b:f:h" opt; do
 			print_help
 			exit 0
 			;;
+		bq)
+		    BQ_PATH=$OPTARG
+		    ;;
+		impala)
+		    IMPALA_PATH=$OPTARG
+		    ;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
 			exit 1
@@ -71,8 +82,12 @@ cp $WS/install_packages.sh $BUILD_PATH/root/
 cp $WS/libs.r $BUILD_PATH/root/
 #Impala drivers
 mkdir $BUILD_PATH/impala/
-cp ../extras/impala/*.jar $BUILD_PATH/impala/
+cp $IMPALA_PATH/*.jar $BUILD_PATH/impala/
 cp ../docker/krb5.conf $BUILD_PATH/etc/
+
+# BigQuery drivers
+mkdir $BUILD_PATH/bigquery/
+cp $BQ_PATH/*.jar $BUILD_PATH/bigquery/
 
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $DIST

@@ -23,20 +23,29 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.google.common.io.Files;
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
+import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import com.odysseusinc.datasourcemanager.krblogin.KerberosService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Objects;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,6 +92,7 @@ public class AnalysisServiceImpl implements AnalysisService {
             boolean useKerberos = analysis.getDataSource().getUseKerberos();
             KrbConfig krbConfig = new KrbConfig();
             //we need to login to Kerberos regardless of current RuntimeServiceMode due to further detectCdmVersion()
+            File keyFile = Objects.equals(DBMSType.BIGQUERY, analysis.getDataSource().getType()) ? prepareBQAuth(analysis.getDataSource()) : null;
             if (useKerberos) {
                 krbConfig = kerberosService.runKinit(analysis.getDataSource(), runtimeService.getRuntimeServiceMode(), analysisDir);
             }
@@ -99,10 +109,12 @@ public class AnalysisServiceImpl implements AnalysisService {
             ResultCallback resultCallback = (finishedAnalysis, resultStatus, stdout, resultDir) -> {
                 if (attachCdmMetadata) saveMetadata(analysis, resultDir);
                 callbackService.processAnalysisResult(finishedAnalysis, resultStatus, stdout, resultDir, compressedResult, chunkSize);
+                if (Objects.nonNull(keyFile)) FileUtils.deleteQuietly(keyFile);
             };
             FailedCallback failedCallback = (failedAnalysis, ex, resultDir) -> {
                 if (attachCdmMetadata) saveMetadata(analysis, resultDir);
                 callbackService.sendFailedResult(failedAnalysis, ex, resultDir, compressedResult, chunkSize);
+                if (Objects.nonNull(keyFile)) FileUtils.deleteQuietly(keyFile);
             };
 
             switch (fileExtension) {
@@ -130,6 +142,23 @@ public class AnalysisServiceImpl implements AnalysisService {
             callbackService.sendFailedResult(analysis, e, analysisDir, compressedResult, chunkSize);
         }
         return new AnalysisRequestStatusDTO(analysis.getId(), status);
+    }
+
+    private File prepareBQAuth(DataSourceUnsecuredDTO dataSource) throws IOException {
+
+        byte[] keyFileData = dataSource.getKrbKeytab();
+        if (Objects.nonNull(keyFileData)) {
+            File keyFile = java.nio.file.Files.createTempFile("", ".json").toFile();
+            try(OutputStream out = new FileOutputStream(keyFile)) {
+                IOUtils.write(keyFileData, out);
+            }
+            String filePath = keyFile.getAbsolutePath();
+            String connStr = AnalisysUtils.replaceBigQueryKeyPath(dataSource.getConnectionString(), filePath);
+            dataSource.setConnectionString(connStr);
+            dataSource.setKrbRealm(filePath);
+            return keyFile;
+        }
+        return null;
     }
 
     @Override

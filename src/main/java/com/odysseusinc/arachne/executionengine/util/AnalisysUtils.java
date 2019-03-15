@@ -38,6 +38,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import net.lingala.zip4j.exception.ZipException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,7 @@ public class AnalisysUtils {
     private static final Logger log = LoggerFactory.getLogger(AnalisysUtils.class);
     private static final String VISITOR_ACCESS_ERROR = "Access error when access to file '{}'. Skipped";
     private static final PathMatcher EXCLUDE_JARS_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.jar");
+    private static final String BQ_KEYPATH_REGEX = "(OAuthPvtKeyPath=)(.+?)[;$]";
 
     public static List<File> getDirectoryItems(File parentDir, Function<Path, Optional<File>> func) {
 
@@ -148,5 +151,17 @@ public class AnalisysUtils {
             resultFiles = AnalisysUtils.getDirectoryItemsExclude(file, EXCLUDE_JARS_MATCHER);
         }
         return CommonFileUtils.getFSResources(resultFiles);
+    }
+
+    public static String replaceBigQueryKeyPath(String connectionString, String replacement) {
+
+        return connectionString.replaceFirst(BQ_KEYPATH_REGEX,
+                "$1" + replacement + ";");
+    }
+
+    public static String getBigQueryKeyPath(String connectionString) {
+
+        Matcher matcher = Pattern.compile(".*(OAuthPvtKeyPath=)(.+?)[;$].*").matcher(connectionString);
+        return matcher.matches() && matcher.groupCount() > 1 ? matcher.group(2) : null;
     }
 }
