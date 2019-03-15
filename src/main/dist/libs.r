@@ -25,6 +25,12 @@ if ("SqlRender" %in% installed.packages() == FALSE){
 if ("Cyclops" %in% installed.packages() == FALSE){
   install_github("OHDSI/Cyclops", ref="v2.0.1")
 }
+if ("OhdsiSharing" %in% installed.packages() == FALSE){
+  install_github("OHDSI/OhdsiSharing", ref="v0.1.3")
+}
+if ("MethodEvaluation" %in% installed.packages() == FALSE){
+  install_github("OHDSI/MethodEvaluation", ref="v1.0.1")
+}
 if ("PatientLevelPrediction" %in% installed.packages() == FALSE){
   install_github("OHDSI/PatientLevelPrediction", ref="v3.0.1")
 }
