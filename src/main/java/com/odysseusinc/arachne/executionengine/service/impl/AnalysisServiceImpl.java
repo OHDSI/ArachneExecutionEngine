@@ -146,7 +146,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     private File prepareBQAuth(DataSourceUnsecuredDTO dataSource) throws IOException {
 
-        byte[] keyFileData = dataSource.getKrbKeytab();
+        byte[] keyFileData = dataSource.getKeyfile();
         if (Objects.nonNull(keyFileData)) {
             File keyFile = java.nio.file.Files.createTempFile("", ".json").toFile();
             try(OutputStream out = new FileOutputStream(keyFile)) {
