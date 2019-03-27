@@ -156,7 +156,7 @@ public class AnalisysUtils {
     public static String replaceBigQueryKeyPath(String connectionString, String replacement) {
 
         return connectionString.replaceFirst(BQ_KEYPATH_REGEX,
-                "$1" + replacement + ";");
+                "$1" + Matcher.quoteReplacement(replacement) + ";");
     }
 
     public static String getBigQueryKeyPath(String connectionString) {
