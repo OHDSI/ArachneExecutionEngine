@@ -33,10 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -155,7 +152,9 @@ public class AnalisysUtils {
 
     public static String replaceBigQueryKeyPath(String connectionString, String replacement) {
 
-        return connectionString.replaceFirst(BQ_KEYPATH_REGEX,
+        String cs = Objects.isNull(getBigQueryKeyPath(connectionString)) ? connectionString + ";OAuthPvtKeyPath=keypath;"
+                : connectionString;
+        return cs.replaceFirst(BQ_KEYPATH_REGEX,
                 "$1" + Matcher.quoteReplacement(replacement) + ";");
     }
 
