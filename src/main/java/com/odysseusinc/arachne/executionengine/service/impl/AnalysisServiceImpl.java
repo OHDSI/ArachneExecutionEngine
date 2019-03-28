@@ -28,13 +28,13 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
-import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import com.odysseusinc.datasourcemanager.krblogin.KerberosService;
@@ -153,7 +153,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                 IOUtils.write(keyFileData, out);
             }
             String filePath = keyFile.getAbsolutePath();
-            String connStr = AnalisysUtils.replaceBigQueryKeyPath(dataSource.getConnectionString(), filePath);
+            String connStr = BigQueryUtils.replaceBigQueryKeyPath(dataSource.getConnectionString(), filePath);
             dataSource.setConnectionString(connStr);
             dataSource.setKrbRealm(filePath);
             return keyFile;

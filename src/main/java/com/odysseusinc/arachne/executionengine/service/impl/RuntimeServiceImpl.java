@@ -28,11 +28,11 @@ import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
-import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
@@ -287,7 +287,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private String getBigQueryKeyFile(DataSourceUnsecuredDTO dataSource) {
 
         return dataSource.getType().equals(DBMSType.BIGQUERY) ?
-                AnalisysUtils.getBigQueryKeyPath(dataSource.getConnectionString()) : null;
+                BigQueryUtils.getBigQueryKeyPath(dataSource.getConnectionString()) : null;
     }
 
     private String getDriversPath(DataSourceUnsecuredDTO dataSource) {

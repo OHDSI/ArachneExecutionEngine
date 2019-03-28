@@ -47,7 +47,6 @@ public class AnalisysUtils {
     private static final Logger log = LoggerFactory.getLogger(AnalisysUtils.class);
     private static final String VISITOR_ACCESS_ERROR = "Access error when access to file '{}'. Skipped";
     private static final PathMatcher EXCLUDE_JARS_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.jar");
-    private static final String BQ_KEYPATH_REGEX = "(OAuthPvtKeyPath=)(.+?)[;$]";
 
     public static List<File> getDirectoryItems(File parentDir, Function<Path, Optional<File>> func) {
 
@@ -148,19 +147,5 @@ public class AnalisysUtils {
             resultFiles = AnalisysUtils.getDirectoryItemsExclude(file, EXCLUDE_JARS_MATCHER);
         }
         return CommonFileUtils.getFSResources(resultFiles);
-    }
-
-    public static String replaceBigQueryKeyPath(String connectionString, String replacement) {
-
-        String cs = Objects.isNull(getBigQueryKeyPath(connectionString)) ? connectionString + ";OAuthPvtKeyPath=keypath;"
-                : connectionString;
-        return cs.replaceFirst(BQ_KEYPATH_REGEX,
-                "$1" + Matcher.quoteReplacement(replacement) + ";");
-    }
-
-    public static String getBigQueryKeyPath(String connectionString) {
-
-        Matcher matcher = Pattern.compile(".*(OAuthPvtKeyPath=)(.+?)[;$].*").matcher(connectionString);
-        return matcher.matches() && matcher.groupCount() > 1 ? matcher.group(2) : null;
     }
 }
