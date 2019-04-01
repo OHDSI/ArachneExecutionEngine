@@ -8,7 +8,7 @@ if ("CohortMethod" %in% installed.packages() == FALSE){
   install_github("OHDSI/CohortMethod", ref="v3.0.2")
 }
 if ("DatabaseConnector" %in% installed.packages() == FALSE){
-  install_github("OHDSI/DatabaseConnector", ref="v2.3.0")
+  install_github("OHDSI/DatabaseConnector") # ref="v2.3.0"
 }
 if ("EmpiricalCalibration" %in% installed.packages() == FALSE){
   install_github("OHDSI/EmpiricalCalibration", ref="v1.4.0")
