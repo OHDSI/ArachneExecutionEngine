@@ -23,7 +23,7 @@ if ("SqlRender" %in% installed.packages() == FALSE){
   install_github("OHDSI/SqlRender", ref="v1.6.0")
 }
 if ("Cyclops" %in% installed.packages() == FALSE){
-  install_github("OHDSI/Cyclops", ref="v2.0.1")
+  install_github("OHDSI/Cyclops", ref="v2.0.2")
 }
 if ("OhdsiSharing" %in% installed.packages() == FALSE){
   install_github("OHDSI/OhdsiSharing", ref="v0.1.3")
@@ -36,7 +36,7 @@ if ("PatientLevelPrediction" %in% installed.packages() == FALSE){
 }
 
 if ("assertthat" %in% installed.packages() == FALSE){
-  install_version("assertthat", version="0.2.0", type="source")
+  install_version("assertthat", version="0.2.1", type="source")
 }
 if ("AUC" %in% installed.packages() == FALSE){
   install_version("AUC", version="0.3.0", type="source")
@@ -59,8 +59,11 @@ if ("bit" %in% installed.packages() == FALSE){
 if ("bitops" %in% installed.packages() == FALSE){
   install_version("bitops", version="1.0-6", type="source")
 }
+if ("cli" %in% installed.packages() == FALSE) {
+  install_version("cli", version="1.1.0", type="source")
+}
 if ("colorspace" %in% installed.packages() == FALSE){
-  install_version("colorspace", version="1.4-0", type="source")
+  install_version("colorspace", version="1.4-1", type="source")
 }
 if ("crosstalk" %in% installed.packages() == FALSE){
   install_version("crosstalk", version="1.0.0", type="source")
@@ -111,7 +114,7 @@ if ("futile.options" %in% installed.packages() == FALSE){
   install_version("futile.options", version="1.0.1", type="source")
 }
 if ("gdtools" %in% installed.packages() == FALSE){
-  install_version("gdtools", version="0.1.7", type="source")
+  install_version("gdtools", version="0.1.8", type="source")
 }
 if ("ggplot2" %in% installed.packages() == FALSE){
   install_version("ggplot2", version="3.1.0", type="source")
@@ -126,7 +129,7 @@ if ("gridExtra" %in% installed.packages() == FALSE){
   install_version("gridExtra", version="2.3", type="source")
 }
 if ("gtable" %in% installed.packages() == FALSE){
-  install_version("gtable", version="0.2.0", type="source")
+  install_version("gtable", version="0.3.0", type="source")
 }
 if ("hexbin" %in% installed.packages() == FALSE){
   install_version("hexbin", version="1.27.2", type="source")
@@ -159,7 +162,7 @@ if ("lambda.r" %in% installed.packages() == FALSE){
   install_version("lambda.r", version="1.2.3", type="source")
 }
 if ("lazyeval" %in% installed.packages() == FALSE){
-  install_version("lazyeval", version="0.2.1", type="source")
+  install_version("lazyeval", version="0.2.2", type="source")
 }
 if ("magrittr" %in% installed.packages() == FALSE){
   install_version("magrittr", version="1.5", type="source")
@@ -207,7 +210,7 @@ if ("png" %in% installed.packages() == FALSE){
   install_version("png", version="0.1-7", type="source")
 }
 if ("purrr" %in% installed.packages() == FALSE){
-  install_version("purrr", version="0.2.3", type="source")
+  install_version("purrr", version="0.3.2", type="source")
 }
 if ("PythonInR" %in% installed.packages() == FALSE){
   install_version("PythonInR", version="0.1-6", type="source")
@@ -228,7 +231,7 @@ if ("RColorBrewer" %in% installed.packages() == FALSE){
   install_version("RColorBrewer", version="1.1-2", type="source")
 }
 if ("Rcpp" %in% installed.packages() == FALSE){
-  install_version("Rcpp", version="1.0.0", type="source")
+  install_version("Rcpp", version="1.0.1", type="source")
 }
 if ("RcppEigen" %in% installed.packages() == FALSE){
   install_version("RcppEigen", version="0.3.3.5.0", type="source")
@@ -249,7 +252,7 @@ if ("reshape2" %in% installed.packages() == FALSE){
   install_version("reshape2", version="1.4.3", type="source")
 }
 if ("rJava" %in% installed.packages() == FALSE){
-  install_version("rJava", version="0.9-10", type="source")
+  install_version("rJava", version="0.9-11", type="source")
 }
 if ("RJDBC" %in% installed.packages() == FALSE){
   install_version("RJDBC", version="0.2-7.1", type="source")
@@ -258,7 +261,7 @@ if ("RJSONIO" %in% installed.packages() == FALSE){
   install_version("RJSONIO", version="1.3-1.1", type="source")
 }
 if ("rlang" %in% installed.packages() == FALSE){
-  install_version("rlang", version="0.3.1", type="source")
+  install_version("rlang", version="0.3.3", type="source")
 }
 if ("rstudioapi" %in% installed.packages() == FALSE){
   install_version("rstudioapi", version="0.9.0", type="source")
@@ -291,7 +294,7 @@ if ("survAUC" %in% installed.packages() == FALSE){
   install_version("survAUC", version="1.0-5", type="source")
 }
 if ("tibble" %in% installed.packages() == FALSE){
-  install_version("tibble", version="2.0.1", type="source")
+  install_version("tibble", version="2.1.1", type="source")
 }
 if ("tidyr" %in% installed.packages() == FALSE){
   install_version("tidyr", version="0.8.2", type="source")
