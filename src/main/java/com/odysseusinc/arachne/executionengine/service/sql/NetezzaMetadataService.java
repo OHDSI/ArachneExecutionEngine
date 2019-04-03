@@ -29,7 +29,6 @@ public class NetezzaMetadataService extends AbstractSqlMetadataService {
     private static final String CDM_QUERY = "select cdm_version from %s.cdm_source limit 1";
 
     NetezzaMetadataService(DataSourceUnsecuredDTO dataSource) {
-
         super(dataSource);
     }
 
@@ -44,11 +43,4 @@ public class NetezzaMetadataService extends AbstractSqlMetadataService {
 
         return CDM_QUERY;
     }
-
-    @Override
-    String getSchema() {
-
-        return super.getSchema().toUpperCase();
-    }
-
 }
