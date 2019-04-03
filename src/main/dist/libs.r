@@ -23,7 +23,7 @@ if ("SqlRender" %in% installed.packages() == FALSE){
   install_github("OHDSI/SqlRender", ref="v1.6.0")
 }
 if ("Cyclops" %in% installed.packages() == FALSE){
-  install_github("OHDSI/Cyclops", ref="v2.0.1")
+  install_github("OHDSI/Cyclops", ref="v2.0.2")
 }
 if ("OhdsiSharing" %in% installed.packages() == FALSE){
   install_github("OHDSI/OhdsiSharing", ref="v0.1.3")
@@ -36,7 +36,7 @@ if ("PatientLevelPrediction" %in% installed.packages() == FALSE){
 }
 
 if ("assertthat" %in% installed.packages() == FALSE){
-  install_version("assertthat", version="0.2.0", type="source")
+  install_version("assertthat", version="0.2.1", type="source")
 }
 if ("AUC" %in% installed.packages() == FALSE){
   install_version("AUC", version="0.3.0", type="source")
@@ -231,7 +231,7 @@ if ("RColorBrewer" %in% installed.packages() == FALSE){
   install_version("RColorBrewer", version="1.1-2", type="source")
 }
 if ("Rcpp" %in% installed.packages() == FALSE){
-  install_version("Rcpp", version="1.0.0", type="source")
+  install_version("Rcpp", version="1.0.1", type="source")
 }
 if ("RcppEigen" %in% installed.packages() == FALSE){
   install_version("RcppEigen", version="0.3.3.5.0", type="source")
