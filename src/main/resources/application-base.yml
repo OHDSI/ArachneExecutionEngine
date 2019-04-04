@@ -74,3 +74,4 @@ drivers:
   location:
     impala: /impala
     bq: /bigquery
+    netezza: /netezza

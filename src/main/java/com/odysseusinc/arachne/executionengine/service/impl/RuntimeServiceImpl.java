@@ -22,8 +22,6 @@
 
 package com.odysseusinc.arachne.executionengine.service.impl;
 
-import static org.apache.commons.io.IOUtils.closeQuietly;
-
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
@@ -38,23 +36,6 @@ import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import javax.annotation.PostConstruct;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -65,6 +46,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.*;
+
+import static org.apache.commons.io.IOUtils.closeQuietly;
 
 @Service
 public class RuntimeServiceImpl implements RuntimeService {
@@ -114,6 +109,8 @@ public class RuntimeServiceImpl implements RuntimeService {
     private String impalaDriversLocation;
     @Value("${drivers.location.bq}")
     private String bqDriversLocation;
+    @Value("${drivers.location.netezza}")
+    private String netezzaDriversLocation;
 
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
 
@@ -297,6 +294,8 @@ public class RuntimeServiceImpl implements RuntimeService {
                 return impalaDriversLocation;
             case BIGQUERY:
                 return bqDriversLocation;
+            case NETEZZA:
+                return netezzaDriversLocation;
             default:
                 return null;
         }
