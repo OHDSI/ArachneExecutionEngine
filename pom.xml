@@ -24,7 +24,6 @@
         <postgresql.version>42.2.1</postgresql.version>
         <jtds.version>1.3.1</jtds.version>
         <mysql.version>5.1.30</mysql.version>
-        <netezza.version>1.0</netezza.version>
     </properties>
 
     <parent>
@@ -141,12 +140,6 @@
             <groupId>com.oracle</groupId>
             <artifactId>ojdbc6</artifactId>
             <version>12.1.0.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.netezza</groupId>
-            <artifactId>nzjdbc</artifactId>
-            <version>${netezza.version}</version>
         </dependency>
 
         <dependency>
@@ -522,6 +515,9 @@
             <id>netezza</id>
             <properties>
                 <netezza.enabled>true</netezza.enabled>
+                <netezza.version>1.0</netezza.version>
+                <!-- Netezza JDBC driver path -->
+                <netezza.classpath>/netezza</netezza.classpath>
             </properties>
             <dependencies>
                 <dependency>
@@ -548,7 +544,7 @@
                                     <artifactId>nzjdbc</artifactId>
                                     <version>1.0</version>
                                     <packaging>jar</packaging>
-                                    <file>${basedir}/src/main/extras/netezza/nzjdbc.jar</file>
+                                    <file>${netezza.classpath}/nzjdbc-${netezza.version}.jar</file>
                                 </configuration>
                             </execution>
                         </executions>
