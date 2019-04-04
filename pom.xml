@@ -542,7 +542,7 @@
                                 <configuration>
                                     <groupId>org.netezza</groupId>
                                     <artifactId>nzjdbc</artifactId>
-                                    <version>1.0</version>
+                                    <version>${netezza.version}</version>
                                     <packaging>jar</packaging>
                                     <file>${netezza.classpath}/nzjdbc-${netezza.version}.jar</file>
                                 </configuration>
