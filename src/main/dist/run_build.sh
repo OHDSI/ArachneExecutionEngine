@@ -7,6 +7,7 @@ WS=`dirname $0`
 
 BQ_PATH=../extras/bigquery/
 IMPALA_PATH=../extras/impala/
+NETEZZA_PATH=../extras/netezza/
 
 function print_help {
 	echo "Usage: run_build.sh [OPTIONS]"
@@ -17,11 +18,12 @@ function print_help {
 	echo -e "  -f FILE \t\tOutput archive filename"
 	echo -e "  -bq PATH \t\tPath to BigQuery drivers"
 	echo -e "  -impala PATH \t\tPath to Impala drivers"
+	echo -e "  -netezza PATH \t\tPath to Netezza drivers"
 	echo -e "  -h \t\t\tPrints this"
 }
 
 OPTIND=1
-while getopts ":a:d:b:f:h:bq:impala" opt; do
+while getopts ":a:d:b:f:h:bq:impala:netezza" opt; do
 	case $opt in 
 		a)
 			ARCH=$OPTARG
@@ -44,6 +46,9 @@ while getopts ":a:d:b:f:h:bq:impala" opt; do
 		    ;;
 		impala)
 		    IMPALA_PATH=$OPTARG
+		    ;;
+		netezza)
+		    NETEZZA_PATH=$OPTARG
 		    ;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
@@ -88,6 +93,10 @@ cp ../docker/krb5.conf $BUILD_PATH/etc/
 # BigQuery drivers
 mkdir $BUILD_PATH/bigquery/
 cp $BQ_PATH/*.jar $BUILD_PATH/bigquery/
+
+# Netezza drivers
+mkdir $BUILD_PATH/netezza/
+cp $NETEZZA_PATH/*.jar $BUILD_PATH/netezza/
 
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $DIST

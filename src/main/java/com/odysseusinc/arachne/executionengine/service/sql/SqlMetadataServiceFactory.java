@@ -54,6 +54,9 @@ public class SqlMetadataServiceFactory {
             case BIGQUERY:
                 result = new ImpalaMetadataService(dataSource);
                 break;
+            case NETEZZA:
+                result = new NetezzaMetadataService(dataSource);
+                break;
             default:
                 throw new IllegalArgumentException("DBMS " + type + " is not supported");
         }
