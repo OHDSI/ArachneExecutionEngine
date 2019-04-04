@@ -523,7 +523,7 @@
                 <dependency>
                     <groupId>org.netezza</groupId>
                     <artifactId>nzjdbc</artifactId>
-                    <version>1.0</version>
+                    <version>${netezza.version}</version>
                 </dependency>
             </dependencies>
             <build>
