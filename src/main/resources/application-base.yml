@@ -70,6 +70,8 @@ kerberos:
   kinitPath:
   configPath: /etc/krb5.conf
 
-impala:
-  drivers:
-    location: /impala
+drivers:
+  location:
+    impala: /impala
+    bq: /bigquery
+    netezza: /netezza

@@ -1,13 +1,14 @@
-FROM odysseusinc/r-env:1.0.4
+FROM odysseusinc/r-env:1.0.5
 MAINTAINER alexandr.ryabokon@odysseusinc.com
 VOLUME /tmp
 VOLUME /libs-r
 VOLUME /dist
 ADD krb5.conf /etc/
 ADD R-with-krb.sh /etc/
-RUN apt-get update && apt-get install -y sudo krb5-user dos2unix
+RUN apt-get update && apt-get install -y sudo krb5-user dos2unix cron rsyslog logrotate
 RUN rm -f /usr/bin/java && update-alternatives --config java
 RUN ln -fs /usr/share/zoneinfo/Etc/GMT /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
+RUN update-rc.d cron defaults && update-rc.d rsyslog defaults
 ENV R_INSTALL_SCRIPT=libs.r
 ADD execution-engine.jar /execution-engine.jar
 RUN mkdir /impala

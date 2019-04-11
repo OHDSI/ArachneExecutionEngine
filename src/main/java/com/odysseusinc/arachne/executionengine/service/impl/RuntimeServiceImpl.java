@@ -22,36 +22,20 @@
 
 package com.odysseusinc.arachne.executionengine.service.impl;
 
-import static org.apache.commons.io.IOUtils.closeQuietly;
-
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
-import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import javax.annotation.PostConstruct;
+import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
+import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -62,6 +46,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.*;
+
+import static org.apache.commons.io.IOUtils.closeQuietly;
 
 @Service
 public class RuntimeServiceImpl implements RuntimeService {
@@ -96,7 +94,8 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String RUNTIME_ENV_LANG_VALUE = "en_US.UTF-8";
     private static final String RUNTIME_ENV_LC_ALL_KEY = "LC_ALL";
     private static final String RUNTIME_ENV_LC_ALL_VALUE = "en_US.UTF-8";
-    private static final String RUNTIME_ENV_IMPALA_DRIVER_PATH = "IMPALA_DRIVER_PATH";
+    private static final String RUNTIME_ENV_DRIVER_PATH = "JDBC_DRIVER_PATH";
+    private static final String RUNTIME_BQ_KEYFILE = "BQ_KEYFILE";
 
     private final TaskExecutor taskExecutor;
     private final CallbackService callbackService;
@@ -106,8 +105,12 @@ public class RuntimeServiceImpl implements RuntimeService {
     private int runtimeTimeOutSec;
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
-    @Value("${impala.drivers.location}")
+    @Value("${drivers.location.impala}")
     private String impalaDriversLocation;
+    @Value("${drivers.location.bq}")
+    private String bqDriversLocation;
+    @Value("${drivers.location.netezza}")
+    private String netezzaDriversLocation;
 
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
 
@@ -175,7 +178,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                         if (!isExternalJail()) {
                             FileUtils.deleteQuietly(runFile);
                         }
-                        FileUtils.deleteQuietly(krbConfig.getKeytabPath().toFile());
+                        FileUtils.deleteQuietly(krbConfig.getComponents().getKeytabPath().toFile());
                         if (RuntimeServiceMode.ISOLATED == krbConfig.getMode()) {
                             FileUtils.deleteQuietly(krbConfig.getConfPath().toFile());
                         }
@@ -266,7 +269,8 @@ public class RuntimeServiceImpl implements RuntimeService {
         environment.put(RUNTIME_ENV_TARGET_SCHEMA, dataSource.getTargetSchema());
         environment.put(RUNTIME_ENV_RESULT_SCHEMA, dataSource.getResultSchema());
         environment.put(RUNTIME_ENV_COHORT_TARGET_TABLE, dataSource.getCohortTargetTable());
-        environment.put(RUNTIME_ENV_IMPALA_DRIVER_PATH, impalaDriversLocation);
+        environment.put(RUNTIME_ENV_DRIVER_PATH, getDriversPath(dataSource));
+        environment.put(RUNTIME_BQ_KEYFILE, getBigQueryKeyFile(dataSource));
         environment.put(RUNTIME_ENV_PATH_KEY, RUNTIME_ENV_PATH_VALUE);
         environment.put(RUNTIME_ENV_HOME_KEY, RUNTIME_ENV_HOME_VALUE);
         environment.put(RUNTIME_ENV_HOSTNAME_KEY, RUNTIME_ENV_HOSTNAME_VALUE);
@@ -275,6 +279,26 @@ public class RuntimeServiceImpl implements RuntimeService {
 
         environment.values().removeIf(Objects::isNull);
         return environment;
+    }
+
+    private String getBigQueryKeyFile(DataSourceUnsecuredDTO dataSource) {
+
+        return dataSource.getType().equals(DBMSType.BIGQUERY) ?
+                BigQueryUtils.getBigQueryKeyPath(dataSource.getConnectionString()) : null;
+    }
+
+    private String getDriversPath(DataSourceUnsecuredDTO dataSource) {
+
+        switch (dataSource.getType()) {
+            case IMPALA:
+                return impalaDriversLocation;
+            case BIGQUERY:
+                return bqDriversLocation;
+            case NETEZZA:
+                return netezzaDriversLocation;
+            default:
+                return null;
+        }
     }
 
     private RuntimeFinishStatus runtime(String[] command,
@@ -366,9 +390,5 @@ public class RuntimeServiceImpl implements RuntimeService {
             }
             return stdout.toString();
         }
-    }
-
-    public enum RuntimeServiceMode {
-        SINGLE, ISOLATED
     }
 }

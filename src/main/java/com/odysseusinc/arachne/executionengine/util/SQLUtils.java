@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.executionengine.util;
 
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -35,7 +36,9 @@ public class SQLUtils {
     public static Connection getConnection(DataSourceUnsecuredDTO dataSource) throws SQLException {
 
         Connection conn = getConnectionWithAutoCommit(dataSource);
-        conn.setAutoCommit(Boolean.FALSE);
+        if (!dataSource.getType().equals(DBMSType.BIGQUERY)) {
+            conn.setAutoCommit(Boolean.FALSE);
+        }
 
         return conn;
     }
