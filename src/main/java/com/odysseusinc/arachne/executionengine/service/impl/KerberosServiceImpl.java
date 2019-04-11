@@ -6,10 +6,10 @@ import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.utils.TemplateUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMechanism;
-import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.KerberosService;
-import com.odysseusinc.arachne.executionengine.service.impl.RuntimeServiceImpl.RuntimeServiceMode;
-import com.odysseusinc.arachne.executionengine.util.CommandBuilder;
+import com.odysseusinc.datasourcemanager.krblogin.CommandBuilder;
+import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
+import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -63,7 +63,7 @@ public class KerberosServiceImpl implements KerberosService {
         Process process = pb.directory(workDir)
                 .redirectOutput(ProcessBuilder.Redirect.to(stdout))
                 .redirectError(ProcessBuilder.Redirect.appendTo(stdout))
-                .command(krbConfig.getKinitCommand()).start();
+                .command(krbConfig.getComponents().getKinitCommand()).start();
         try {
             process.waitFor(timeout, TimeUnit.SECONDS);
             if (process.exitValue() != 0) {
@@ -99,13 +99,13 @@ public class KerberosServiceImpl implements KerberosService {
             }
             keytabPath = Files.createTempFile("", ".keytab");
             try (OutputStream out = new FileOutputStream(keytabPath.toFile())) {
-                IOUtils.write(dataSource.getKrbKeytab(), out);
+                IOUtils.write(dataSource.getKeyfile(), out);
             }
-            krbConfig.setKeytabPath(keytabPath);
+            krbConfig.getComponents().setKeytabPath(keytabPath);
         }
 
         String[] kinitCommand = buildKinitCommand(dataSource, keytabPath);
-        krbConfig.setKinitCommand(kinitCommand);
+        krbConfig.getComponents().setKinitCommand(kinitCommand);
 
         return krbConfig;
     }
