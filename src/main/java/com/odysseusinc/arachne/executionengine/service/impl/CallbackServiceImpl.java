@@ -63,6 +63,8 @@ public class CallbackServiceImpl implements CallbackService {
     private final Map<Long, Date> outSented = new ConcurrentHashMap<>();
     @Value("${submission.update.interval}")
     private Long submissionUpdateInterval;
+    @Value("${submission.cleanupResults}")
+    private boolean cleanupResults;
     private final RestTemplate nodeRestTemplate;
     private static final String SENDING_STDOUT_TO_CENTRAL_LOG =
             "Sending stdout to callback for analysis with id='{}'";
@@ -141,8 +143,10 @@ public class CallbackServiceImpl implements CallbackService {
             throw ex;
         } finally {
             try {
-                FileUtils.deleteDirectory(resultDir);
-                FileUtils.deleteQuietly(zipDir);
+                if (cleanupResults) {
+                    FileUtils.deleteDirectory(resultDir);
+                    FileUtils.deleteQuietly(zipDir);
+                }
             } catch (IOException ex) {
                 log.warn(DELETE_DIR_ERROR_LOG, resultDir.getAbsolutePath(), ex);
                 // rethrow of exception cause to results overriden
