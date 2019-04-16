@@ -28,6 +28,7 @@ executor:
 submission:
   update:
     interval: 10000
+  cleanupResults: true
 
 connectionpool:
   ttl:
