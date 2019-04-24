@@ -293,6 +293,12 @@ if ("stringr" %in% installed.packages() == FALSE){
 if ("survAUC" %in% installed.packages() == FALSE){
   install_version("survAUC", version="1.0-5", type="source")
 }
+if ("shinycssloaders" %in% installed.packages() == FALSE){
+  install.packages("shinycssloaders")
+}
+if ("shinydashboard" %in% installed.packages() == FALSE){
+  install.packages("shinydashboard")
+}
 if ("tibble" %in% installed.packages() == FALSE){
   install_version("tibble", version="2.1.1", type="source")
 }
