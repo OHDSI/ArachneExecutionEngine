@@ -45,7 +45,7 @@ prevent_devtools_updates <- function(pkgs = NULL, dependencies = NA,
     }
   }
   
-#  godmode:::assignAnywhere("update.packages", prevent_updates)
-#  godmode:::assignAnywhere("update_packages", prevent_devtools_updates)
-#  godmode:::assignInName("remotes", "install_local", remotes.install_local_wrapper)
+  godmode:::assignAnywhere("update.packages", prevent_updates)
+  godmode:::assignAnywhere("update_packages", prevent_devtools_updates)
+  godmode:::assignInName("remotes", "install_local", remotes.install_local_wrapper)
 }
