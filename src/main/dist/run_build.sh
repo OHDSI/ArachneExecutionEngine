@@ -106,5 +106,8 @@ rm $BUILD_PATH/root/install_packages.sh
 rm $BUILD_PATH/root/libs.r
 cd $BUILD_PATH
 
+# To prevent unexpected package updates
+cp $WS/.Rprofile $BUILD_PATH/root/
+
 tar czf $ARCHIVE .
 echo "Distribution Archive built and available at $ARCHIVE"

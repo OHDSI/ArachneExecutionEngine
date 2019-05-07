@@ -76,6 +76,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String STDOUT_LOG_DIFF = "stdout update:\n{}";
     private static final String DELETE_DIR_ERROR_LOG = "Can't delete analysis directory: '{}'";
 
+    private static final String RUNTIME_ENV_DATA_SOURCE_NAME = "DATA_SOURCE_NAME";
     private static final String RUNTIME_ENV_DBMS_USERNAME = "DBMS_USERNAME";
     private static final String RUNTIME_ENV_DBMS_PASSWORD = "DBMS_PASSWORD";
     private static final String RUNTIME_ENV_DBMS_TYPE = "DBMS_TYPE";
@@ -263,6 +264,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, Map<String, String> krbProps) {
 
         Map<String, String> environment = new HashMap<>(krbProps);
+        environment.put(RUNTIME_ENV_DATA_SOURCE_NAME, dataSource.getName());
         environment.put(RUNTIME_ENV_DBMS_USERNAME, dataSource.getUsername());
         environment.put(RUNTIME_ENV_DBMS_PASSWORD, dataSource.getPassword());
         environment.put(RUNTIME_ENV_DBMS_TYPE, dataSource.getType().getOhdsiDB());

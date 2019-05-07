@@ -43,19 +43,26 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AnalysisServiceImpl implements AnalysisService {
+public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
 
     private final SQLService sqlService;
@@ -64,6 +71,14 @@ public class AnalysisServiceImpl implements AnalysisService {
     private final CdmMetadataService cdmMetadataService;
     private final CallbackService callbackService;
     private final KerberosService kerberosService;
+    @Value("${drivers.location.impala}")
+    private String impalaDriversLocation;
+    @Value("${drivers.location.bq}")
+    private String bqDriversLocation;
+    @Value("${drivers.location.netezza}")
+    private String netezzaDriversLocation;
+
+    private String driverPathExclusions;
 
     @Autowired
     public AnalysisServiceImpl(SQLService sqlService,
@@ -106,15 +121,27 @@ public class AnalysisServiceImpl implements AnalysisService {
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
 
+            analysis.setResultExclusions(Stream.of(analysis.getResultExclusions(), driverPathExclusions)
+                    .filter(StringUtils::isNotBlank).collect(Collectors.joining(",")));
+
             ResultCallback resultCallback = (finishedAnalysis, resultStatus, stdout, resultDir) -> {
-                if (attachCdmMetadata) saveMetadata(analysis, resultDir);
+
+                if (attachCdmMetadata) {
+                    saveMetadata(analysis, resultDir);
+                }
                 callbackService.processAnalysisResult(finishedAnalysis, resultStatus, stdout, resultDir, compressedResult, chunkSize);
-                if (Objects.nonNull(keyFile)) FileUtils.deleteQuietly(keyFile);
+                if (Objects.nonNull(keyFile)) {
+                    FileUtils.deleteQuietly(keyFile);
+                }
             };
             FailedCallback failedCallback = (failedAnalysis, ex, resultDir) -> {
-                if (attachCdmMetadata) saveMetadata(analysis, resultDir);
+                if (attachCdmMetadata) {
+                    saveMetadata(analysis, resultDir);
+                }
                 callbackService.sendFailedResult(failedAnalysis, ex, resultDir, compressedResult, chunkSize);
-                if (Objects.nonNull(keyFile)) FileUtils.deleteQuietly(keyFile);
+                if (Objects.nonNull(keyFile)) {
+                    FileUtils.deleteQuietly(keyFile);
+                }
             };
 
             switch (fileExtension) {
@@ -173,5 +200,15 @@ public class AnalysisServiceImpl implements AnalysisService {
         } catch (Exception e) {
             logger.info("Failed to collect CDM metadata for analysis id={}. {}", analysis.getId(), e);
         }
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+
+        driverPathExclusions = Stream.of(impalaDriversLocation, bqDriversLocation, netezzaDriversLocation)
+                .filter(StringUtils::isNotBlank)
+                .map(path -> path.startsWith("/") ? path.substring(1) : path)
+                .map(path -> path + "/**/*")
+                .collect(Collectors.joining(","));
     }
 }
