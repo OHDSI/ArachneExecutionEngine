@@ -65,8 +65,12 @@ public class AnalysisServiceImpl implements AnalysisService {
     private final CdmMetadataService cdmMetadataService;
     private final CallbackService callbackService;
     private final KerberosService kerberosService;
-    @Value("${analysis-results.exclusions}")
-    private String defaultExclusions;
+    @Value("${drivers.location.impala}")
+    private String impalaDriversLocation;
+    @Value("${drivers.location.bq}")
+    private String bqDriversLocation;
+    @Value("${drivers.location.netezza}")
+    private String netezzaDriversLocation;
 
     @Autowired
     public AnalysisServiceImpl(SQLService sqlService,
@@ -110,7 +114,10 @@ public class AnalysisServiceImpl implements AnalysisService {
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
 
             ResultCallback resultCallback = (finishedAnalysis, resultStatus, stdout, resultDir) -> {
-                finishedAnalysis.setResultExclusions(finishedAnalysis.getResultExclusions() + "," + defaultExclusions);
+                finishedAnalysis.setResultExclusions(finishedAnalysis.getResultExclusions() + ", **" + 
+                        impalaDriversLocation + "/**, **" + 
+                        bqDriversLocation + "/**, **" + 
+                        netezzaDriversLocation + "/**");
                 if (attachCdmMetadata) {
                     saveMetadata(analysis, resultDir);
                 }

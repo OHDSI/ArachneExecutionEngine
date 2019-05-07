@@ -72,8 +72,12 @@ public class CallbackServiceImpl implements CallbackService {
     private static final String SEND_RESULT_FAILED_LOG = "Send analysis result id={} failed";
     private static final String EXECUTION_RESULT_FILES_COUNT_LOG = "Execution id={} produced {} result files";
     private static final String DELETE_DIR_ERROR_LOG = "Can't delete analysis directory: '{}'";
-    @Value("${analysis-results.exclusions}")
-    private String defaultExclusions;
+    @Value("${drivers.location.impala}")
+    private String impalaDriversLocation;
+    @Value("${drivers.location.bq}")
+    private String bqDriversLocation;
+    @Value("${drivers.location.netezza}")
+    private String netezzaDriversLocation;
 
     @Autowired
     public CallbackServiceImpl(@Qualifier("nodeRestTemplate") RestTemplate nodeRestTemplate) {
@@ -194,7 +198,10 @@ public class CallbackServiceImpl implements CallbackService {
     public void sendFailedResult(AnalysisRequestDTO analysis, Throwable e, File analysisDir,
                                  Boolean compressedResult, Long chunkSize) {
 
-        analysis.setResultExclusions(analysis.getResultExclusions() + "," + defaultExclusions);
+        analysis.setResultExclusions(analysis.getResultExclusions() + ", **" +
+                impalaDriversLocation + "/**, **" +
+                bqDriversLocation + "/**, **" +
+                netezzaDriversLocation + "/**");
         AnalysisResultDTO result = new AnalysisResultDTO();
         result.setId(analysis.getId());
         result.setStatus(AnalysisResultStatusDTO.FAILED);
