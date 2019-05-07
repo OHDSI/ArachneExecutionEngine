@@ -33,11 +33,10 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import net.lingala.zip4j.exception.ZipException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,7 +122,7 @@ public class AnalisysUtils {
         try {
             // TODO. Temp solution - this will not work correct with splitted archives
             List<File> fileList = getDirectoryItems(temporaryDir);
-            for (File zippedFile : fileList) {
+            for (File zippedFile: fileList) {
                 CommonFileUtils.unzipFiles(zippedFile, parent);
             }
         } finally {
