@@ -51,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -64,6 +65,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     private final CdmMetadataService cdmMetadataService;
     private final CallbackService callbackService;
     private final KerberosService kerberosService;
+    @Value("${analysis-results.exclusions}")
+    private String defaultExclusions;
 
     @Autowired
     public AnalysisServiceImpl(SQLService sqlService,
@@ -107,14 +110,23 @@ public class AnalysisServiceImpl implements AnalysisService {
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
 
             ResultCallback resultCallback = (finishedAnalysis, resultStatus, stdout, resultDir) -> {
-                if (attachCdmMetadata) saveMetadata(analysis, resultDir);
+                finishedAnalysis.setResultExclusions(finishedAnalysis.getResultExclusions() + "," + defaultExclusions);
+                if (attachCdmMetadata) {
+                    saveMetadata(analysis, resultDir);
+                }
                 callbackService.processAnalysisResult(finishedAnalysis, resultStatus, stdout, resultDir, compressedResult, chunkSize);
-                if (Objects.nonNull(keyFile)) FileUtils.deleteQuietly(keyFile);
+                if (Objects.nonNull(keyFile)) {
+                    FileUtils.deleteQuietly(keyFile);
+                }
             };
             FailedCallback failedCallback = (failedAnalysis, ex, resultDir) -> {
-                if (attachCdmMetadata) saveMetadata(analysis, resultDir);
+                if (attachCdmMetadata) {
+                    saveMetadata(analysis, resultDir);
+                }
                 callbackService.sendFailedResult(failedAnalysis, ex, resultDir, compressedResult, chunkSize);
-                if (Objects.nonNull(keyFile)) FileUtils.deleteQuietly(keyFile);
+                if (Objects.nonNull(keyFile)) {
+                    FileUtils.deleteQuietly(keyFile);
+                }
             };
 
             switch (fileExtension) {

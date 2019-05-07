@@ -48,7 +48,6 @@ public class AnalisysUtils {
     private static final Logger log = LoggerFactory.getLogger(AnalisysUtils.class);
     private static final String VISITOR_ACCESS_ERROR = "Access error when access to file '{}'. Skipped";
     private static final PathMatcher EXCLUDE_JARS_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.jar");
-    private static final String DEFAULT_EXCLUSIONS = "**/bigquery/**, **/netezza/**, **/impala/**";
 
     public static List<File> getDirectoryItems(File parentDir, Function<Path, Optional<File>> func) {
 
@@ -143,7 +142,7 @@ public class AnalisysUtils {
             final File zipArchive = new File(dir, String.valueOf(analysis.getId()) + "_result.zip");
             log.info("Adding folder \"{}\" to zip \"{}\" with chunk size = {}", file.getAbsolutePath(),
                     zipArchive.getAbsolutePath(), chunkSize);
-            final File zipDir = CommonFileUtils.compressAndSplit(file, zipArchive, chunkSize, DEFAULT_EXCLUSIONS + "," + analysis.getResultExclusions());
+            final File zipDir = CommonFileUtils.compressAndSplit(file, zipArchive, chunkSize, analysis.getResultExclusions());
             resultFiles = AnalisysUtils.getDirectoryItemsExclude(zipDir, EXCLUDE_JARS_MATCHER);
         } else {
             resultFiles = AnalisysUtils.getDirectoryItemsExclude(file, EXCLUDE_JARS_MATCHER);

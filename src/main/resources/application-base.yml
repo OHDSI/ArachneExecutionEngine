@@ -76,3 +76,6 @@ drivers:
     impala: /impala
     bq: /bigquery
     netezza: /netezza
+
+analysis-results:
+  exclusions: '**/bigquery/**, **/netezza/**, **/impala/**'
