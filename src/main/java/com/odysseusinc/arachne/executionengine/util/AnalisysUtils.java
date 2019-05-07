@@ -33,10 +33,11 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import net.lingala.zip4j.exception.ZipException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +48,7 @@ public class AnalisysUtils {
     private static final Logger log = LoggerFactory.getLogger(AnalisysUtils.class);
     private static final String VISITOR_ACCESS_ERROR = "Access error when access to file '{}'. Skipped";
     private static final PathMatcher EXCLUDE_JARS_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.jar");
+    private static final String DEFAULT_EXCLUSIONS = "**/bigquery/**, **/netezza/**, **/impala/**";
 
     public static List<File> getDirectoryItems(File parentDir, Function<Path, Optional<File>> func) {
 
@@ -122,7 +124,7 @@ public class AnalisysUtils {
         try {
             // TODO. Temp solution - this will not work correct with splitted archives
             List<File> fileList = getDirectoryItems(temporaryDir);
-            for (File zippedFile: fileList) {
+            for (File zippedFile : fileList) {
                 CommonFileUtils.unzipFiles(zippedFile, parent);
             }
         } finally {
@@ -141,7 +143,7 @@ public class AnalisysUtils {
             final File zipArchive = new File(dir, String.valueOf(analysis.getId()) + "_result.zip");
             log.info("Adding folder \"{}\" to zip \"{}\" with chunk size = {}", file.getAbsolutePath(),
                     zipArchive.getAbsolutePath(), chunkSize);
-            final File zipDir = CommonFileUtils.compressAndSplit(file, zipArchive, chunkSize, analysis.getResultExclusions());
+            final File zipDir = CommonFileUtils.compressAndSplit(file, zipArchive, chunkSize, DEFAULT_EXCLUSIONS + "," + analysis.getResultExclusions());
             resultFiles = AnalisysUtils.getDirectoryItemsExclude(zipDir, EXCLUDE_JARS_MATCHER);
         } else {
             resultFiles = AnalisysUtils.getDirectoryItemsExclude(file, EXCLUDE_JARS_MATCHER);
