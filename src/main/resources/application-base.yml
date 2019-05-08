@@ -28,6 +28,14 @@ executor:
 submission:
   update:
     interval: 10000
+  cleanupResults: true
+
+connectionpool:
+  ttl:
+    minutes: 60
+  capacity:
+    min: 4
+    max: 10
 
 connectionpool:
   ttl:
@@ -70,6 +78,8 @@ kerberos:
   kinitPath:
   configPath: /etc/krb5.conf
 
-impala:
-  drivers:
-    location: /impala
+drivers:
+  location:
+    impala: /impala
+    bq: /bigquery
+    netezza: /netezza

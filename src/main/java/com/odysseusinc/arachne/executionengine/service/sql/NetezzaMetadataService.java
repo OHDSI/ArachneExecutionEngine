@@ -16,21 +16,31 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: March 24, 2017
+ * Created: April 03, 2019
  *
  */
 
-package com.odysseusinc.arachne.executionengine.service;
+package com.odysseusinc.arachne.executionengine.service.sql;
 
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
-import com.odysseusinc.arachne.executionengine.util.FailedCallback;
-import com.odysseusinc.arachne.executionengine.util.ResultCallback;
-import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
-import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
-import java.io.File;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 
-public interface RuntimeService {
-    void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, KrbConfig krbConfig);
+public class NetezzaMetadataService extends AbstractSqlMetadataService {
 
-    RuntimeServiceMode getRuntimeServiceMode();
+    private static final String CDM_QUERY = "select cdm_version from %s.cdm_source limit 1";
+
+    NetezzaMetadataService(DataSourceUnsecuredDTO dataSource) {
+        super(dataSource);
+    }
+
+    @Override
+    protected String getDefaultSchema() {
+
+        return dataSource.getUsername();
+    }
+
+    @Override
+    protected String getCdmQuery() {
+
+        return CDM_QUERY;
+    }
 }
