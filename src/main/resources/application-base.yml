@@ -37,13 +37,6 @@ connectionpool:
     min: 4
     max: 10
 
-connectionpool:
-  ttl:
-    minutes: 60
-  capacity:
-    min: 4
-    max: 10
-
 runtime:
   timeOutSec: 259200
 
