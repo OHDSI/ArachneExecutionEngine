@@ -97,6 +97,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String RUNTIME_ENV_LC_ALL_VALUE = "en_US.UTF-8";
     private static final String RUNTIME_ENV_DRIVER_PATH = "JDBC_DRIVER_PATH";
     private static final String RUNTIME_BQ_KEYFILE = "BQ_KEYFILE";
+    private static final String RUNTIME_ANALYSIS_ID = "ANALYSIS_ID";
 
     private final TaskExecutor taskExecutor;
     private final CallbackService callbackService;
@@ -170,6 +171,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                     try {
                         String[] command = buildRuntimeCommand(runFile, file, executableFileName);
                         final Map<String, String> envp = buildRuntimeEnvVariables(dataSource, krbConfig.getIsolatedRuntimeEnvs());
+                        envp.put(RUNTIME_ANALYSIS_ID, analysis.getId().toString());
                         finishStatus = runtime(command, envp, file, runtimeTimeOutSec, updateStatusCallback, id, callbackPassword);
                         AnalysisResultStatusDTO resultStatusDTO = finishStatus.exitCode == 0
                                 ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
