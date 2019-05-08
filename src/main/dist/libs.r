@@ -149,6 +149,9 @@ if ("httpuv" %in% installed.packages() == FALSE){
 if ("httr" %in% installed.packages() == FALSE){
   install_version("httr", version="1.4.0", type="source")
 }
+if ("hms" %in% installed.packages() == FALSE) {
+  install_version("hms", version="0.4.2", type="source")
+}
 if ("jsonlite" %in% installed.packages() == FALSE){
   install_version("jsonlite", version="1.6", type="source")
 }
@@ -241,6 +244,9 @@ if ("RcppParallel" %in% installed.packages() == FALSE){
 }
 if ("RCurl" %in% installed.packages() == FALSE){
   install_version("RCurl", version="1.95-4.11", type="source")
+}
+if ("readr" %in% installed.packages() == FALSE){
+  install_version("readr", version="1.3.1", type="source")
 }
 if ("ReporteRs" %in% installed.packages() == FALSE){
   install_version("ReporteRs", version="0.8.10", type="source")
