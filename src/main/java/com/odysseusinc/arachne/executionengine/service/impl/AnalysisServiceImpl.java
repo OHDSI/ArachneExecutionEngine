@@ -111,13 +111,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
             if (useKerberos) {
                 krbConfig = kerberosService.runKinit(analysis.getDataSource(), runtimeService.getRuntimeServiceMode(), analysisDir);
             }
-            if (attachCdmMetadata) {
-                try {
-                    cdmMetadataService.extractMetadata(analysis, analysisDir);
-                } catch (Exception e) {
-                    logger.info("Failed to collect CDM metadata. " + e);
-                }
-            }
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
 
