@@ -22,11 +22,12 @@
 
 package com.odysseusinc.arachne.executionengine.service;
 
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
-import com.odysseusinc.arachne.executionengine.util.FailedCallback;
-import com.odysseusinc.arachne.executionengine.util.ResultCallback;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
+import com.odysseusinc.arachne.executionengine.service.impl.StdoutHandlerParams;
+import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
 import java.io.File;
+import java.util.concurrent.Future;
 
 public interface SQLService {
-    void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback);
+    Future analyze(AnalysisSyncRequestDTO analysis, File file, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback callback);
 }

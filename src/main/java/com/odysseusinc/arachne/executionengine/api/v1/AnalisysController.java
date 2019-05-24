@@ -24,8 +24,11 @@ package com.odysseusinc.arachne.executionengine.api.v1;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
+import com.odysseusinc.arachne.execution_engine_common.client.FeignSpringFormEncoder;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
+import com.odysseusinc.arachne.executionengine.service.impl.StdoutHandlerParams;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -33,8 +36,13 @@ import net.lingala.zip4j.exception.ZipException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -44,9 +52,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.Future;
 
 
 @RestController
@@ -102,6 +113,71 @@ public class AnalisysController {
             callbackService.sendFailedResult(analysisRequest, e, null, waitCompressedResult, chunkSize);
             throw e;
         }
+    }
+
+    @ApiOperation(value = "Execute analysis synchronously")
+    @RequestMapping(value = "/analyze/sync",
+            method = RequestMethod.POST,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.MULTIPART_FORM_DATA_VALUE //MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    public ResponseEntity analyzeSync(
+            @RequestPart("analysisRequest") AnalysisSyncRequestDTO analysisRequest,
+            @RequestPart("file") List<MultipartFile> files
+    ) throws IOException, InterruptedException, ZipException {
+
+        log.info("Started processing request for synchronous analysis ID = {}", analysisRequest.getId());
+        final File analysisDir = AnalisysUtils.extractFiles(files, false);
+        log.info("Extracted files for synchronous analysis ID = {}", analysisRequest.getId());
+
+        StringBuilder stdoutBuilder = new StringBuilder();
+        StdoutHandlerParams stdoutHandlerParams = new StdoutHandlerParams(
+                100,
+                stdoutDiff -> stdoutBuilder.append(stdoutDiff).append("\r\n")
+        );
+
+        long startTime = System.currentTimeMillis();
+
+        AnalysisRequestStatusDTO requestStatus = analysisService.analyze(
+                analysisRequest,
+                analysisDir,
+                false,
+                stdoutHandlerParams,
+                (resultingStatus, stdout, resultDir, ex) -> {
+                }
+        );
+
+        Future executionFuture = requestStatus.getExecutionFuture();
+        while (!executionFuture.isDone()) {
+            Thread.sleep(100);
+        }
+
+        long elapsedTime = System.currentTimeMillis() - startTime;
+
+        log.info("Execution of synchronous analysis ID = {} took: {} sec", analysisRequest.getId(), elapsedTime / 1000);
+
+        final MultiValueMap<String, Object> results = new LinkedMultiValueMap<>();
+
+        // Encode and attach result files
+        File[] directoryListing = analysisDir.listFiles();
+        if (directoryListing != null) {
+            Arrays.stream(directoryListing).filter(File::isFile).forEach(f -> {
+                try {
+                    MultipartFile mf = new MockMultipartFile(f.getName(), f.getName(), null, new FileInputStream(f));
+                    results.add("file", FeignSpringFormEncoder.encodeMultipartFile(mf));
+                } catch (IOException ex) {
+                    throw new UncheckedIOException(ex);
+                }
+            });
+        }
+
+        // Encode and attach stdout
+        results.add("stdout", FeignSpringFormEncoder.encodeMultipartFile(new MockMultipartFile("stdout.txt", "stdout.txt", null, stdoutBuilder.toString().getBytes())));
+
+        // Encode and attach status DTO
+        results.add("status", FeignSpringFormEncoder.encodeJsonObject(requestStatus));
+
+        return new ResponseEntity<>(results, HttpStatus.OK);
     }
 
     @ApiOperation(value = "Prometheus compatible metrics")

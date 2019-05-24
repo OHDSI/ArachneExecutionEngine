@@ -23,7 +23,6 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.odysseusinc.arachne.commons.types.DBMSType;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
@@ -33,7 +32,6 @@ import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
-import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
 import org.apache.commons.io.FileUtils;
