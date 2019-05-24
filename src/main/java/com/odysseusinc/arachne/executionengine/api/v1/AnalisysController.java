@@ -119,7 +119,7 @@ public class AnalisysController {
     @RequestMapping(value = "/analyze/sync",
             method = RequestMethod.POST,
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.MULTIPART_FORM_DATA_VALUE //MediaType.APPLICATION_JSON_UTF8_VALUE
+            produces = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity analyzeSync(
             @RequestPart("analysisRequest") AnalysisSyncRequestDTO analysisRequest,
