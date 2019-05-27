@@ -7,6 +7,7 @@ drat::addRepo(c("OHDSI","cloudyr"))
 if ("CohortMethod" %in% installed.packages() == FALSE){
   install_github("OHDSI/CohortMethod", ref="v3.0.2")
 }
+installed.packages("DBI")
 if ("DatabaseConnector" %in% installed.packages() == FALSE){
   install_github("OHDSI/DatabaseConnector") # ref="v2.3.0"
 }
