@@ -36,20 +36,18 @@ import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
-import com.odysseusinc.arachne.executionengine.util.FailedCallback;
-import com.odysseusinc.arachne.executionengine.util.ResultCallback;
+import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
 import com.odysseusinc.datasourcemanager.krblogin.KerberosService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
@@ -82,8 +80,8 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     @Value("${drivers.location.netezza}")
     private String netezzaDriversLocation;
 
-		@Value("${submission.update.interval}")
-		private int submissionUpdateInterval;
+    @Value("${submission.update.interval}")
+    private int submissionUpdateInterval;
 
     private String driverPathExclusions;
 
@@ -204,23 +202,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         if (Objects.nonNull(keyFileData)) {
             File keyFile = java.nio.file.Files.createTempFile("", ".json").toFile();
             try (OutputStream out = new FileOutputStream(keyFile)) {
-                IOUtils.write(keyFileData, out);
-            }
-            String filePath = keyFile.getAbsolutePath();
-            String connStr = BigQueryUtils.replaceBigQueryKeyPath(dataSource.getConnectionString(), filePath);
-            dataSource.setConnectionString(connStr);
-            dataSource.setKrbRealm(filePath);
-            return keyFile;
-        }
-        return null;
-    }
-
-    private File prepareBQAuth(DataSourceUnsecuredDTO dataSource) throws IOException {
-
-        byte[] keyFileData = dataSource.getKeyfile();
-        if (Objects.nonNull(keyFileData)) {
-            File keyFile = java.nio.file.Files.createTempFile("", ".json").toFile();
-            try(OutputStream out = new FileOutputStream(keyFile)) {
                 IOUtils.write(keyFileData, out);
             }
             String filePath = keyFile.getAbsolutePath();
