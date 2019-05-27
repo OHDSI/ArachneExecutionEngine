@@ -23,30 +23,46 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.google.common.io.Files;
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
-import com.odysseusinc.arachne.executionengine.model.KrbConfig;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
-import com.odysseusinc.arachne.executionengine.service.KerberosService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.FailedCallback;
 import com.odysseusinc.arachne.executionengine.util.ResultCallback;
+import com.odysseusinc.datasourcemanager.krblogin.KerberosService;
+import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AnalysisServiceImpl implements AnalysisService {
+public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
 
     private final SQLService sqlService;
@@ -55,6 +71,14 @@ public class AnalysisServiceImpl implements AnalysisService {
     private final CdmMetadataService cdmMetadataService;
     private final CallbackService callbackService;
     private final KerberosService kerberosService;
+    @Value("${drivers.location.impala}")
+    private String impalaDriversLocation;
+    @Value("${drivers.location.bq}")
+    private String bqDriversLocation;
+    @Value("${drivers.location.netezza}")
+    private String netezzaDriversLocation;
+
+    private String driverPathExclusions;
 
     @Autowired
     public AnalysisServiceImpl(SQLService sqlService,
@@ -83,23 +107,34 @@ public class AnalysisServiceImpl implements AnalysisService {
             boolean useKerberos = analysis.getDataSource().getUseKerberos();
             KrbConfig krbConfig = new KrbConfig();
             //we need to login to Kerberos regardless of current RuntimeServiceMode due to further detectCdmVersion()
+            File keyFile = Objects.equals(DBMSType.BIGQUERY, analysis.getDataSource().getType()) ? prepareBQAuth(analysis.getDataSource()) : null;
             if (useKerberos) {
                 krbConfig = kerberosService.runKinit(analysis.getDataSource(), runtimeService.getRuntimeServiceMode(), analysisDir);
             }
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
 
+            analysis.setResultExclusions(Stream.of(analysis.getResultExclusions(), driverPathExclusions)
+                    .filter(StringUtils::isNotBlank).collect(Collectors.joining(",")));
+
             ResultCallback resultCallback = (finishedAnalysis, resultStatus, stdout, resultDir) -> {
+
                 if (attachCdmMetadata) {
                     saveMetadata(analysis, resultDir);
                 }
                 callbackService.processAnalysisResult(finishedAnalysis, resultStatus, stdout, resultDir, compressedResult, chunkSize);
+                if (Objects.nonNull(keyFile)) {
+                    FileUtils.deleteQuietly(keyFile);
+                }
             };
             FailedCallback failedCallback = (failedAnalysis, ex, resultDir) -> {
                 if (attachCdmMetadata) {
                     saveMetadata(analysis, resultDir);
                 }
                 callbackService.sendFailedResult(failedAnalysis, ex, resultDir, compressedResult, chunkSize);
+                if (Objects.nonNull(keyFile)) {
+                    FileUtils.deleteQuietly(keyFile);
+                }
             };
 
             switch (fileExtension) {
@@ -129,6 +164,23 @@ public class AnalysisServiceImpl implements AnalysisService {
         return new AnalysisRequestStatusDTO(analysis.getId(), status);
     }
 
+    private File prepareBQAuth(DataSourceUnsecuredDTO dataSource) throws IOException {
+
+        byte[] keyFileData = dataSource.getKeyfile();
+        if (Objects.nonNull(keyFileData)) {
+            File keyFile = java.nio.file.Files.createTempFile("", ".json").toFile();
+            try(OutputStream out = new FileOutputStream(keyFile)) {
+                IOUtils.write(keyFileData, out);
+            }
+            String filePath = keyFile.getAbsolutePath();
+            String connStr = BigQueryUtils.replaceBigQueryKeyPath(dataSource.getConnectionString(), filePath);
+            dataSource.setConnectionString(connStr);
+            dataSource.setKrbRealm(filePath);
+            return keyFile;
+        }
+        return null;
+    }
+
     @Override
     public int activeTasks() {
 
@@ -141,5 +193,15 @@ public class AnalysisServiceImpl implements AnalysisService {
         } catch (Exception e) {
             logger.info("Failed to collect CDM metadata for analysis id={}. {}", analysis.getId(), e);
         }
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+
+        driverPathExclusions = Stream.of(impalaDriversLocation, bqDriversLocation, netezzaDriversLocation)
+                .filter(StringUtils::isNotBlank)
+                .map(path -> path.startsWith("/") ? path.substring(1) : path)
+                .map(path -> path + "/**/*")
+                .collect(Collectors.joining(","));
     }
 }

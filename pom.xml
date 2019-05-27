@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.13.0</version>
+    <version>1.14.0</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -135,11 +135,10 @@
             <version>4.0</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/com.oracle/ojdbc6 -->
         <dependency>
             <groupId>com.oracle</groupId>
-            <artifactId>ojdbc6</artifactId>
-            <version>12.1.0.1</version>
+            <artifactId>ojdbc7</artifactId>
+            <version>12.1.0.2</version>
         </dependency>
 
         <dependency>
@@ -160,6 +159,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.odysseusinc</groupId>
+            <artifactId>data-source-manager</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -205,7 +210,7 @@
         <profile>
             <id>impala</id>
             <properties>
-                <impala.classpath>...path/to/impala/jdbc/drivers...</impala.classpath>
+                <impala.classpath>/impala/</impala.classpath>
             </properties>
             <dependencies>
                 <!-- Impala driver -->
@@ -222,7 +227,7 @@
                 <dependency>
                     <groupId>com.cloudera</groupId>
                     <artifactId>ImpalaJDBC4</artifactId>
-                    <version>2.5.41</version>
+                    <version>2.5.42</version>
                 </dependency>
                 <dependency>
                     <groupId>libfb</groupId>
@@ -274,7 +279,7 @@
                                 <configuration>
                                     <groupId>com.cloudera</groupId>
                                     <artifactId>ImpalaJDBC4</artifactId>
-                                    <version>2.5.41</version>
+                                    <version>2.5.42</version>
                                     <packaging>jar</packaging>
                                     <file>${impala.classpath}/ImpalaJDBC4.jar</file>
                                 </configuration>
@@ -361,6 +366,184 @@
                                     <version>1.0.0</version>
                                     <packaging>jar</packaging>
                                     <file>${impala.classpath}/TCLIServiceClient.jar</file>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>bigquery</id>
+            <properties>
+                <bigquery.enabled>true</bigquery.enabled>
+                <bigquery.version>1.28.0</bigquery.version>
+                <bigquery.api.version>v2-rev426-1.25.0</bigquery.api.version>
+                <!-- BigQuery JDBC driver path -->
+                <bigquery.classpath>/bigquery</bigquery.classpath>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.google.api-client</groupId>
+                    <artifactId>google-api-client</artifactId>
+                    <version>${bigquery.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.apis</groupId>
+                    <artifactId>google-api-services-bigquery</artifactId>
+                    <version>${bigquery.api.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.cloud</groupId>
+                    <artifactId>google-cloud-bigquery</artifactId>
+                    <version>${bigquery.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.http-client</groupId>
+                    <artifactId>google-http-client</artifactId>
+                    <version>${bigquery.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.http-client</groupId>
+                    <artifactId>google-http-client-jackson2</artifactId>
+                    <version>${bigquery.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.oauth-client</groupId>
+                    <artifactId>google-oauth-client</artifactId>
+                    <version>${bigquery.version}</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-install-plugin</artifactId>
+                        <version>2.5.2</version>
+                        <executions>
+                            <execution>
+                                <id>google-api-client</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <groupId>com.google.api-client</groupId>
+                                    <artifactId>google-api-client</artifactId>
+                                    <version>${bigquery.version}</version>
+                                    <packaging>jar</packaging>
+                                    <file>${bigquery.classpath}/google-api-client-${bigquery.version}.jar</file>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>google-api-services-bigquery</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <groupId>com.google.apis</groupId>
+                                    <artifactId>google-api-services-bigquery</artifactId>
+                                    <version>${bigquery.version}</version>
+                                    <packaging>jar</packaging>
+                                    <file>${bigquery.classpath}/google-api-services-bigquery-${bigquery.api.version}.jar</file>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>google-cloud-bigquery</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <groupId>com.google.cloud</groupId>
+                                    <artifactId>google-cloud-bigquery</artifactId>
+                                    <version>${bigquery.version}</version>
+                                    <packaging>jar</packaging>
+                                    <file>${bigquery.classpath}/GoogleBigQueryJDBC42.jar</file>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>google-http-client</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <groupId>com.google.http-client</groupId>
+                                    <artifactId>google-http-client</artifactId>
+                                    <version>${bigquery.version}</version>
+                                    <packaging>jar</packaging>
+                                    <file>${bigquery.classpath}/google-http-client-${bigquery.version}.jar</file>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>google-http-client-jackson2</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <groupId>com.google.http-client</groupId>
+                                    <artifactId>google-http-client-jackson2</artifactId>
+                                    <version>${bigquery.version}</version>
+                                    <packaging>jar</packaging>
+                                    <file>${bigquery.classpath}/google-http-client-jackson2-${bigquery.version}.jar</file>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>google-oauth-client</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <groupId>com.google.oauth-client</groupId>
+                                    <artifactId>google-oauth-client</artifactId>
+                                    <version>${bigquery.version}</version>
+                                    <packaging>jar</packaging>
+                                    <file>${bigquery.classpath}/google-oauth-client-${bigquery.version}.jar</file>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>netezza</id>
+            <properties>
+                <netezza.enabled>true</netezza.enabled>
+                <netezza.version>1.0</netezza.version>
+                <!-- Netezza JDBC driver path -->
+                <netezza.classpath>/netezza</netezza.classpath>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.netezza</groupId>
+                    <artifactId>nzjdbc</artifactId>
+                    <version>${netezza.version}</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-install-plugin</artifactId>
+                        <version>2.5.2</version>
+                        <executions>
+                            <execution>
+                                <id>netezza-jdbc</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <groupId>org.netezza</groupId>
+                                    <artifactId>nzjdbc</artifactId>
+                                    <version>${netezza.version}</version>
+                                    <packaging>jar</packaging>
+                                    <file>${netezza.classpath}/nzjdbc-${netezza.version}.jar</file>
                                 </configuration>
                             </execution>
                         </executions>
