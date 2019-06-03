@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.14.0-SNAPSHOT</version>
+    <version>1.15.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -135,11 +135,10 @@
             <version>4.0</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/com.oracle/ojdbc6 -->
         <dependency>
             <groupId>com.oracle</groupId>
-            <artifactId>ojdbc6</artifactId>
-            <version>12.1.0.1</version>
+            <artifactId>ojdbc7</artifactId>
+            <version>12.1.0.2</version>
         </dependency>
 
         <dependency>
