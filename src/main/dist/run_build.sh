@@ -80,6 +80,12 @@ echo "Build dir: $BUILD_PATH"
 echo "Output file: $ARCHIVE"
 echo ""
 
+# Download libs.r from GitHub repo
+if [[ -f "libs.r" ]]; then
+    rm -f "libs.r"
+fi
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs.r -o libs.r
+
 debootstrap --arch amd64 $DIST $BUILD_PATH http://ubuntu.cs.utah.edu/ubuntu/
 mount --bind /proc $BUILD_PATH/proc
 
