@@ -23,7 +23,7 @@ function print_help {
 }
 
 OPTIND=1
-while getopts ":a:d:b:f:h:bq:impala:netezza" opt; do
+while getopts ":a:d:b:f:h:g:i:n" opt; do
 	case $opt in 
 		a)
 			ARCH=$OPTARG
@@ -41,13 +41,13 @@ while getopts ":a:d:b:f:h:bq:impala:netezza" opt; do
 			print_help
 			exit 0
 			;;
-		bq)
+		g)
 		    BQ_PATH=$OPTARG
 		    ;;
-		impala)
+		i)
 		    IMPALA_PATH=$OPTARG
 		    ;;
-		netezza)
+		n)
 		    NETEZZA_PATH=$OPTARG
 		    ;;
 		\?)
@@ -108,12 +108,13 @@ sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $DIST
 
 umount $BUILD_PATH/proc
-rm $BUILD_PATH/root/install_packages.sh
-rm $BUILD_PATH/root/libs.r
-cd $BUILD_PATH
+sudo rm -f $BUILD_PATH/root/install_packages.sh
+sudo rm -f $BUILD_PATH/root/libs.r
+
 
 # To prevent unexpected package updates
-cp $WS/.Rprofile $BUILD_PATH/root/
+sudo cp $WS/.Rprofile $BUILD_PATH/root/
 
+cd $BUILD_PATH
 tar czf $ARCHIVE .
 echo "Distribution Archive built and available at $ARCHIVE"
