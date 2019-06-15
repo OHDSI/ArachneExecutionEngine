@@ -554,7 +554,7 @@
     </profiles>
 
     <build>
-        <finalName>execution-engine-exec</finalName>
+        <finalName>execution-engine</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -595,7 +595,7 @@
                         <resource>
                             <!--<targetPath>/</targetPath>-->
                             <directory>${project.build.directory}</directory>
-                            <include>${project.build.finalName}.${project.packaging}</include>
+                            <include>${project.build.finalName}-exec.${project.packaging}</include>
                         </resource>
                     </resources>
                     <serverId>docker-hub</serverId>
