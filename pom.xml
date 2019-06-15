@@ -48,7 +48,12 @@
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
-            <artifactId>arachne-commons</artifactId>
+            <artifactId>arachne-common-types</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.odysseusinc.arachne</groupId>
+            <artifactId>arachne-common-utils</artifactId>
             <version>${project.version}</version>
         </dependency>
 

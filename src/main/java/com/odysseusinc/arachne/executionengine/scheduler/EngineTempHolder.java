@@ -21,8 +21,16 @@
 package com.odysseusinc.arachne.executionengine.scheduler;
 
 import com.odysseusinc.arachne.commons.utils.TempHolder;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+
 @Component
-public class EngineTempHolder extends TempHolder{
+public class EngineTempHolder extends TempHolder {
+
+    @Scheduled(cron = "${tmp.holder.cron}")
+    public void hold() throws IOException {
+        super.hold();
+    }
 }
