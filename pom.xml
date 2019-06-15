@@ -554,7 +554,7 @@
     </profiles>
 
     <build>
-        <finalName>execution-engine</finalName>
+        <finalName>execution-engine-exec</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
