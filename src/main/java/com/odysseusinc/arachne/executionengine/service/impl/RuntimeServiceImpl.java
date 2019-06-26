@@ -263,13 +263,18 @@ public class RuntimeServiceImpl implements RuntimeService {
         environment.put(RUNTIME_ENV_DRIVER_PATH, getDriversPath(dataSource));
         environment.put(RUNTIME_BQ_KEYFILE, getBigQueryKeyFile(dataSource));
         environment.put(RUNTIME_ENV_PATH_KEY, RUNTIME_ENV_PATH_VALUE);
-        environment.put(RUNTIME_ENV_HOME_KEY, RUNTIME_ENV_HOME_VALUE);
+        environment.put(RUNTIME_ENV_HOME_KEY, getUserHome());
         environment.put(RUNTIME_ENV_HOSTNAME_KEY, RUNTIME_ENV_HOSTNAME_VALUE);
         environment.put(RUNTIME_ENV_LANG_KEY, RUNTIME_ENV_LANG_VALUE);
         environment.put(RUNTIME_ENV_LC_ALL_KEY, RUNTIME_ENV_LC_ALL_VALUE);
 
         environment.values().removeIf(Objects::isNull);
         return environment;
+    }
+
+    private String getUserHome() {
+        String userHome = System.getProperty("user.home");
+        return StringUtils.defaultString(userHome, RUNTIME_ENV_HOME_VALUE);
     }
 
     private String getBigQueryKeyFile(DataSourceUnsecuredDTO dataSource) {
