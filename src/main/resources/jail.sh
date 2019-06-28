@@ -29,7 +29,7 @@ sudo cp /etc/R-with-krb.sh $JAIL/etc/R-with-krb.sh
 sudo cp -R /impala/. $JAIL/impala/
 sudo chmod +x $JAIL/etc/R-with-krb.sh
 
-echo -e "#!/usr/bin/env bash \n \
+sudo echo -e "#!/usr/bin/env bash \n \
     export DATA_SOURCE_NAME=\"$DATA_SOURCE_NAME\" \n \
     export DBMS_USERNAME=\"$DBMS_USERNAME\" \n \
     export DBMS_PASSWORD=\"$DBMS_PASSWORD\" \n \
