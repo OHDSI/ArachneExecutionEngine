@@ -43,7 +43,7 @@ sudo echo -e "#!/usr/bin/env bash \n \
     export PATH=\"$PATH\" \n \
     export HOME=\"$HOME\" \n \
     export JDBC_DRIVER_PATH=\"$JDBC_DRIVER_PATH\" \n \
-    $(tail --lines=+2 $JAIL/etc/R-with-krb.sh)" > $JAIL/etc/R-with-krb.sh
+    $(tail --lines=+2 $JAIL/etc/R-with-krb.sh)" | sudo tee -a $JAIL/etc/R-with-krb.sh > /dev/null
 
 sudo unshare --fork --pid -- chroot $JAIL /bin/bash -c " \
     mount -t proc proc /proc && \
