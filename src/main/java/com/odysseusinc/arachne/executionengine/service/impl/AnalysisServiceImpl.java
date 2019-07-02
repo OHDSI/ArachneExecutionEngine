@@ -23,13 +23,11 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.google.common.io.Files;
-import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
@@ -37,21 +35,23 @@ import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
+import com.odysseusinc.datasourcemanager.jdbc.auth.BigQueryAuthResolver;
+import com.odysseusinc.datasourcemanager.jdbc.auth.DataSourceAuthResolver;
+import com.odysseusinc.datasourcemanager.jdbc.auth.KerberosAuthResolver;
 import com.odysseusinc.datasourcemanager.krblogin.KerberosService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -84,6 +84,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     private int submissionUpdateInterval;
 
     private String driverPathExclusions;
+    private List<DataSourceAuthResolver> authResolvers;
 
     @Autowired
     public AnalysisServiceImpl(SQLService sqlService,
@@ -99,6 +100,14 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         this.cdmMetadataService = cdmMetadataService;
         this.callbackService = callbackService;
         this.kerberosService = kerberosService;
+        initAuthResolvers();
+    }
+
+    private void initAuthResolvers() {
+
+        this.authResolvers = new ArrayList<>();
+        authResolvers.add(new BigQueryAuthResolver());
+        authResolvers.add(new KerberosAuthResolver(kerberosService));
     }
 
     @Override
@@ -109,8 +118,17 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         Future executionFuture = null;
         try {
 
-            File keyFile = resolveBqAuth(analysis.getDataSource());
-            KrbConfig krbConfig = resolveKerberosAuth(analysis.getDataSource(), analysisDir);
+            File keystoreDir = new File(analysisDir, "keys");
+            keystoreDir.mkdirs();
+
+            DataSourceUnsecuredDTO dataSourceData = analysis.getDataSource();
+            List<Optional> results = authResolvers.stream().filter(r -> r.supports(dataSourceData))
+                    .map(r -> r.resolveAuth(dataSourceData, keystoreDir))
+                    .collect(Collectors.toList());
+            KrbConfig krbConfig = (KrbConfig) results.stream().filter(r -> r.isPresent() && r.get() instanceof KrbConfig)
+                    .findFirst()
+                    .orElse(Optional.empty())
+                    .get();
 
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
@@ -123,9 +141,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                     saveMetadata(analysis, resultDir);
                 }
                 resultCallback.execute(resultingStatus, stdout, resultDir, ex);
-                if (Objects.nonNull(keyFile)) {
-                    FileUtils.deleteQuietly(keyFile);
-                }
+                FileUtils.deleteQuietly(keystoreDir);
             };
 
             switch (fileExtension) {
@@ -155,22 +171,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         return new AnalysisRequestStatusDTO(analysis.getId(), status, executionFuture);
     }
 
-    private KrbConfig resolveKerberosAuth(DataSourceUnsecuredDTO dataSource, File analysisDir) throws IOException {
-
-        boolean useKerberos = dataSource.getUseKerberos();
-        KrbConfig krbConfig = new KrbConfig();
-        // We need to login to Kerberos regardless of current RuntimeServiceMode due to further detectCdmVersion()
-        if (useKerberos) {
-            krbConfig = kerberosService.runKinit(dataSource, runtimeService.getRuntimeServiceMode(), analysisDir);
-        }
-        return krbConfig;
-    }
-
-    private File resolveBqAuth(DataSourceUnsecuredDTO dataSource) throws IOException {
-
-        return Objects.equals(DBMSType.BIGQUERY, dataSource.getType()) ? prepareBQAuth(dataSource) : null;
-    }
-
     @Override
     @FileDescriptorCount
     public AnalysisRequestStatusDTO analyze(AnalysisRequestDTO analysis, File analysisDir, Boolean compressedResult,
@@ -194,23 +194,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         );
 
         return analyze(analysis, analysisDir, attachCdmMetadata, stdoutHandlerParams, resultCallback);
-    }
-
-    private File prepareBQAuth(DataSourceUnsecuredDTO dataSource) throws IOException {
-
-        byte[] keyFileData = dataSource.getKeyfile();
-        if (Objects.nonNull(keyFileData)) {
-            File keyFile = java.nio.file.Files.createTempFile("", ".json").toFile();
-            try (OutputStream out = new FileOutputStream(keyFile)) {
-                IOUtils.write(keyFileData, out);
-            }
-            String filePath = keyFile.getAbsolutePath();
-            String connStr = BigQueryUtils.replaceBigQueryKeyPath(dataSource.getConnectionString(), filePath);
-            dataSource.setConnectionString(connStr);
-            dataSource.setKrbRealm(filePath);
-            return keyFile;
-        }
-        return null;
     }
 
     @Override
