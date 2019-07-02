@@ -125,10 +125,13 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
             List<Optional> results = authResolvers.stream().filter(r -> r.supports(dataSourceData))
                     .map(r -> r.resolveAuth(dataSourceData, keystoreDir))
                     .collect(Collectors.toList());
-            KrbConfig krbConfig = (KrbConfig) results.stream().filter(r -> r.isPresent() && r.get() instanceof KrbConfig)
-                    .findFirst()
-                    .orElse(Optional.empty())
-                    .get();
+						KrbConfig krbConfig = new KrbConfig();
+						for(Optional val : results){
+							if (val.isPresent() && val.get() instanceof KrbConfig) {
+								krbConfig = (KrbConfig) val.get();
+								break;
+							}
+						}
 
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
