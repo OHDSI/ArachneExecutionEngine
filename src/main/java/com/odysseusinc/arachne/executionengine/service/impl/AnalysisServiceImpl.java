@@ -126,9 +126,8 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                     .map(r -> r.resolveAuth(dataSourceData, keystoreDir))
                     .collect(Collectors.toList());
             KrbConfig krbConfig = (KrbConfig) results.stream().filter(r -> r.isPresent() && r.get() instanceof KrbConfig)
-                    .findFirst()
-                    .orElse(Optional.empty())
-                    .get();
+                    .findFirst().map(v -> v.orElse(Optional.empty()))
+                    .orElse(new KrbConfig());
 
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
