@@ -23,13 +23,11 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.google.common.io.Files;
-import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
@@ -44,7 +42,6 @@ import com.odysseusinc.datasourcemanager.krblogin.KerberosService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -57,12 +54,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
@@ -122,8 +116,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         Future executionFuture = null;
         try {
-            File keyFile = Objects.equals(DBMSType.BIGQUERY, analysis.getDataSource().getType()) ? prepareBQAuth(analysis.getDataSource()) : null;
-
             File keystoreDir = new File(analysisDir, "keys");
             keystoreDir.mkdirs();
 
@@ -203,23 +195,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         );
 
         return analyze(analysis, analysisDir, attachCdmMetadata, stdoutHandlerParams, resultCallback);
-    }
-
-    private File prepareBQAuth(DataSourceUnsecuredDTO dataSource) throws IOException {
-
-        byte[] keyFileData = dataSource.getKeyfile();
-        if (Objects.nonNull(keyFileData)) {
-            File keyFile = java.nio.file.Files.createTempFile("", ".json").toFile();
-            try(OutputStream out = new FileOutputStream(keyFile)) {
-                IOUtils.write(keyFileData, out);
-            }
-            String filePath = keyFile.getAbsolutePath();
-            String connStr = BigQueryUtils.replaceBigQueryKeyPath(dataSource.getConnectionString(), filePath);
-            dataSource.setConnectionString(connStr);
-            dataSource.setKrbRealm(filePath);
-            return keyFile;
-        }
-        return null;
     }
 
     @Override
