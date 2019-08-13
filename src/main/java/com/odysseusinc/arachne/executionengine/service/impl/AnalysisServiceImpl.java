@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.google.common.io.Files;
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
@@ -117,6 +118,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         Future executionFuture = null;
         try {
+            File keyFile = Objects.equals(DBMSType.BIGQUERY, analysis.getDataSource().getType()) ? prepareBQAuth(analysis.getDataSource()) : null;
 
             File keystoreDir = new File(analysisDir, "keys");
             keystoreDir.mkdirs();
@@ -197,6 +199,23 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         );
 
         return analyze(analysis, analysisDir, attachCdmMetadata, stdoutHandlerParams, resultCallback);
+    }
+
+    private File prepareBQAuth(DataSourceUnsecuredDTO dataSource) throws IOException {
+
+        byte[] keyFileData = dataSource.getKeyfile();
+        if (Objects.nonNull(keyFileData)) {
+            File keyFile = java.nio.file.Files.createTempFile("", ".json").toFile();
+            try(OutputStream out = new FileOutputStream(keyFile)) {
+                IOUtils.write(keyFileData, out);
+            }
+            String filePath = keyFile.getAbsolutePath();
+            String connStr = BigQueryUtils.replaceBigQueryKeyPath(dataSource.getConnectionString(), filePath);
+            dataSource.setConnectionString(connStr);
+            dataSource.setKrbRealm(filePath);
+            return keyFile;
+        }
+        return null;
     }
 
     @Override
