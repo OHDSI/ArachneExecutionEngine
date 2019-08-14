@@ -1,4 +1,4 @@
-FROM odysseusinc/r-env:1.0.8
+FROM odysseusinc/r-env:1.0.9
 MAINTAINER alexandr.ryabokon@odysseusinc.com
 VOLUME /tmp
 VOLUME /libs-r
