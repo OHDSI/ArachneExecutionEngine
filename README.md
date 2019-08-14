@@ -4,7 +4,7 @@ Arachne Execution Engine is a component used to execute remote SQL or R code. It
 ## Build with Impala JDBC driver
 
 1. Download Cloudera JDBC Connector using the following link:
-https://www.cloudera.com/downloads/connectors/impala/jdbc/2-5-41.html
+https://www.cloudera.com/downloads/connectors/impala/jdbc/2-5-42.html
 
 1. unzip one with following jars:
    1. hive_metastore.jar
