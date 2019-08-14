@@ -226,7 +226,7 @@
                 </dependency>
                 <dependency>
                     <groupId>com.cloudera</groupId>
-                    <artifactId>ImpalaJDBC4</artifactId>
+                    <artifactId>ImpalaJDBC41</artifactId>
                     <version>2.5.42</version>
                 </dependency>
                 <dependency>
@@ -278,10 +278,10 @@
                                 </goals>
                                 <configuration>
                                     <groupId>com.cloudera</groupId>
-                                    <artifactId>ImpalaJDBC4</artifactId>
+                                    <artifactId>ImpalaJDBC41</artifactId>
                                     <version>2.5.42</version>
                                     <packaging>jar</packaging>
-                                    <file>${impala.classpath}/ImpalaJDBC4.jar</file>
+                                    <file>${impala.classpath}/ImpalaJDBC41.jar</file>
                                 </configuration>
                             </execution>
                             <execution>
