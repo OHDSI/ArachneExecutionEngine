@@ -183,7 +183,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
             if (ex == null) {
                 try {
                     callbackService.processAnalysisResult(analysis, resultingStatus, stdout, resultDir, compressedResult, chunkSize);
-                } catch (IOException | ZipException e) {
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             } else {

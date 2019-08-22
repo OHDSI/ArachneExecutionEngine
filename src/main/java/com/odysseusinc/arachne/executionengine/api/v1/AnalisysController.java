@@ -109,7 +109,7 @@ public class AnalisysController {
             final File analysisDir = AnalisysUtils.extractFiles(files, compressed);
             log.info("Extracted files for analysis ID = {}", analysisRequest.getId());
             return analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, attachCdmMetadata, chunkSize);
-        } catch (IOException | ZipException e) {
+        } catch (IOException e) {
             callbackService.sendFailedResult(analysisRequest, e, null, waitCompressedResult, chunkSize);
             throw e;
         }
