@@ -113,6 +113,8 @@ public class RuntimeServiceImpl implements RuntimeService {
     private String bqDriversLocation;
     @Value("${drivers.location.netezza}")
     private String netezzaDriversLocation;
+    @Value("${drivers.location.hive}")
+    private String hiveDriversLocation;
 
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
 
@@ -292,6 +294,8 @@ public class RuntimeServiceImpl implements RuntimeService {
                 return bqDriversLocation;
             case NETEZZA:
                 return netezzaDriversLocation;
+            case HIVE:
+                return hiveDriversLocation;
             default:
                 return null;
         }

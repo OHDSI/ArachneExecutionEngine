@@ -76,3 +76,4 @@ drivers:
     impala: /impala
     bq: /bigquery
     netezza: /netezza
+    hive: /hive
