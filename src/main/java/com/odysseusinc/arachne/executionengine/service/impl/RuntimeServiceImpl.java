@@ -25,15 +25,15 @@ package com.odysseusinc.arachne.executionengine.service.impl;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
-import com.odysseusinc.arachne.executionengine.util.FailedCallback;
+import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
-import com.odysseusinc.arachne.executionengine.util.ResultCallback;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
 import org.apache.commons.io.FileUtils;
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -58,6 +58,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
@@ -99,7 +100,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String RUNTIME_BQ_KEYFILE = "BQ_KEYFILE";
     private static final String RUNTIME_ANALYSIS_ID = "ANALYSIS_ID";
 
-    private final TaskExecutor taskExecutor;
+    private final ThreadPoolTaskExecutor taskExecutor;
     private final CallbackService callbackService;
     private final ResourceLoader resourceLoader;
 
@@ -118,7 +119,7 @@ public class RuntimeServiceImpl implements RuntimeService {
 
 
     @Autowired
-    public RuntimeServiceImpl(TaskExecutor taskExecutor, CallbackService callbackService, ResourceLoader resourceLoader, RIsolatedRuntimeProperties rIsolatedRuntimeProps) {
+    public RuntimeServiceImpl(ThreadPoolTaskExecutor taskExecutor, CallbackService callbackService, ResourceLoader resourceLoader, RIsolatedRuntimeProperties rIsolatedRuntimeProps) {
 
         this.taskExecutor = taskExecutor;
         this.callbackService = callbackService;
@@ -142,41 +143,28 @@ public class RuntimeServiceImpl implements RuntimeService {
         return StringUtils.isNotBlank(rIsolatedRuntimeProps.getArchive()) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
     }
 
-    private static String getStdoutDiff(InputStream stream) throws IOException {
-
-        int available = stream.available();
-        if (available > 0) {
-            byte[] buffer = new byte[available];
-            //noinspection ResultOfMethodCallIgnored
-            stream.read(buffer);
-            return new String(buffer);
-        }
-        return "";
-    }
-
     @Override
     @FileDescriptorCount
-    public void analyze(AnalysisRequestDTO analysis, File file, ResultCallback resultCallback, FailedCallback failedCallback, KrbConfig krbConfig) {
+    public Future analyze(AnalysisSyncRequestDTO analysis, File file, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback analysisCallback, KrbConfig krbConfig) {
 
-        taskExecutor.execute(() -> {
+        return taskExecutor.submit(() -> {
             try {
                 Long id = analysis.getId();
-                String callbackPassword = analysis.getCallbackPassword();
                 String executableFileName = analysis.getExecutableFileName();
-                String updateStatusCallback = analysis.getUpdateStatusCallback();
                 DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
                 RuntimeFinishStatus finishStatus;
                 try {
                     File runFile = prepareEnvironment();
                     try {
                         String[] command = buildRuntimeCommand(runFile, file, executableFileName);
+
                         final Map<String, String> envp = buildRuntimeEnvVariables(dataSource, krbConfig.getIsolatedRuntimeEnvs());
                         envp.put(RUNTIME_ANALYSIS_ID, analysis.getId().toString());
-                        finishStatus = runtime(command, envp, file, runtimeTimeOutSec, updateStatusCallback, id, callbackPassword);
+                        finishStatus = runtime(command, envp, file, runtimeTimeOutSec, id, stdoutHandlerParams);
                         AnalysisResultStatusDTO resultStatusDTO = finishStatus.exitCode == 0
                                 ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
                         cleanupEnvironment(file);
-                        resultCallback.execute(analysis, resultStatusDTO, finishStatus.stdout, file);
+                        analysisCallback.execute(resultStatusDTO, finishStatus.stdout, file, null);
                     } finally {
                         if (!isExternalJail()) {
                             FileUtils.deleteQuietly(runFile);
@@ -195,7 +183,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                 }
             } catch (Throwable t) {
                 LOGGER.error("Analysis with id={} failed to execute in Runtime Service", analysis.getId(), t);
-                failedCallback.execute(analysis, t, file);
+                analysisCallback.execute(null, null, file, t);
             }
         });
     }
@@ -276,13 +264,18 @@ public class RuntimeServiceImpl implements RuntimeService {
         environment.put(RUNTIME_ENV_DRIVER_PATH, getDriversPath(dataSource));
         environment.put(RUNTIME_BQ_KEYFILE, getBigQueryKeyFile(dataSource));
         environment.put(RUNTIME_ENV_PATH_KEY, RUNTIME_ENV_PATH_VALUE);
-        environment.put(RUNTIME_ENV_HOME_KEY, RUNTIME_ENV_HOME_VALUE);
+        environment.put(RUNTIME_ENV_HOME_KEY, getUserHome());
         environment.put(RUNTIME_ENV_HOSTNAME_KEY, RUNTIME_ENV_HOSTNAME_VALUE);
         environment.put(RUNTIME_ENV_LANG_KEY, RUNTIME_ENV_LANG_VALUE);
         environment.put(RUNTIME_ENV_LC_ALL_KEY, RUNTIME_ENV_LC_ALL_VALUE);
 
         environment.values().removeIf(Objects::isNull);
         return environment;
+    }
+
+    private String getUserHome() {
+        String userHome = System.getProperty("user.home");
+        return StringUtils.defaultString(userHome, RUNTIME_ENV_HOME_VALUE);
     }
 
     private String getBigQueryKeyFile(DataSourceUnsecuredDTO dataSource) {
@@ -309,9 +302,8 @@ public class RuntimeServiceImpl implements RuntimeService {
                                         Map<String, String> envp,
                                         File activeDir,
                                         int timeout,
-                                        String updateUrl,
                                         Long submissionId,
-                                        String password) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+                                        StdoutHandlerParams stdoutHandlerParams) throws IOException, InterruptedException, ExecutionException, TimeoutException {
 
         final ProcessBuilder processBuilder = new ProcessBuilder(command)
                 .directory(activeDir)
@@ -321,7 +313,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         try {
             process = processBuilder.start();
             final ExecutorService executorService = Executors.newSingleThreadExecutor();
-            final StdoutHandler stdoutHandler = new StdoutHandler(process, updateUrl, submissionId, password);
+            final StdoutHandler stdoutHandler = new StdoutHandler(process, stdoutHandlerParams);
             final Future<String> future = executorService.submit(stdoutHandler);
             StringBuilder commandBuilder = new StringBuilder();
             Arrays.stream(command).forEach(c -> commandBuilder.append(" ").append(c));
@@ -362,16 +354,14 @@ public class RuntimeServiceImpl implements RuntimeService {
     private class StdoutHandler implements Callable<String> {
 
         private final Process process;
-        private final String updateUrl;
-        private final long submissionId;
-        private final String password;
+        private final Integer submissionUpdateInterval;
+        private final Consumer<String> callback;
 
-        private StdoutHandler(Process process, String updateUrl, long submissionId, String password) {
+        private StdoutHandler(Process process, StdoutHandlerParams stdoutHandlerParams) {
 
             this.process = process;
-            this.updateUrl = updateUrl;
-            this.submissionId = submissionId;
-            this.password = password;
+            this.submissionUpdateInterval = stdoutHandlerParams.getSubmissionUpdateInterval();
+            this.callback = stdoutHandlerParams.getCallback();
         }
 
         @Override
@@ -384,7 +374,9 @@ public class RuntimeServiceImpl implements RuntimeService {
                     InputStream inputStream = process.getInputStream();
                     final String stdoutDiff = getStdoutDiff(inputStream);
                     stdout.append(stdoutDiff);
-                    callbackService.updateAnalysisStatus(updateUrl, submissionId, stdoutDiff, password);
+                    if (callback != null) {
+                        callback.accept(stdoutDiff);
+                    }
                     if (!stdoutDiff.isEmpty()) {
                         LOGGER.debug(STDOUT_LOG_DIFF, stdoutDiff);
                     }
@@ -393,6 +385,18 @@ public class RuntimeServiceImpl implements RuntimeService {
                 LOGGER.warn("Process was destroyed during attempt to write stdout");
             }
             return stdout.toString();
+        }
+
+        private String getStdoutDiff(InputStream stream) throws IOException {
+
+            int available = stream.available();
+            if (available > 0) {
+                byte[] buffer = new byte[available];
+                //noinspection ResultOfMethodCallIgnored
+                stream.read(buffer);
+                return new String(buffer);
+            }
+            return "";
         }
     }
 }
