@@ -32,7 +32,7 @@ apt-get update && apt-get install -y openjdk-8-jdk
 rm -f /usr/bin/java
 update-alternatives --config java
 
-apt-get update && apt-get install -y libpq-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user python3-dev python3-pip libgeos-dev libprotobuf-dev protobuf-compiler
+apt-get update && apt-get install -y libpq-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user python3-dev python3-venv python3-pip libgeos-dev libprotobuf-dev protobuf-compiler
 
 wget http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip \
         && echo "8021a28b8cac41b44f1421fd210a0a0822fcaf88d62d2e70a35b2ff628a8675a  ZuluJCEPolicies.zip" | sha256sum -c - \
