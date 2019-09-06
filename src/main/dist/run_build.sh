@@ -84,7 +84,7 @@ echo ""
 if [[ -f "libs.r" ]]; then
     rm -f "libs.r"
 fi
-curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs.r -o libs.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/SM-46/libs.r -o libs.r
 
 debootstrap --arch amd64 $DIST $BUILD_PATH http://ubuntu.cs.utah.edu/ubuntu/
 mount --bind /proc $BUILD_PATH/proc
