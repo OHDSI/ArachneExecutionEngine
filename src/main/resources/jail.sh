@@ -22,6 +22,7 @@ then
 fi
 if [ -n "$BQ_KEYFILE" ]
 then
+  sudo mkdir -p $(dirname $JAIL/$BQ_KEYFILE)
   sudo cp $BQ_KEYFILE $JAIL/$BQ_KEYFILE
 fi
 
