@@ -40,7 +40,6 @@ import com.odysseusinc.datasourcemanager.jdbc.auth.DataSourceAuthResolver;
 import com.odysseusinc.datasourcemanager.jdbc.auth.KerberosAuthResolver;
 import com.odysseusinc.datasourcemanager.krblogin.KerberosService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
-import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -141,8 +140,9 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                 if (attachCdmMetadata) {
                     saveMetadata(analysis, resultDir);
                 }
-                resultCallback.execute(resultingStatus, stdout, resultDir, ex);
+                // Keystore folder must be deleted before zipping results
                 FileUtils.deleteQuietly(keystoreDir);
+                resultCallback.execute(resultingStatus, stdout, resultDir, ex);
             };
 
             switch (fileExtension) {
