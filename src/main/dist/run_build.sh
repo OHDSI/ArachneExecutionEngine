@@ -90,7 +90,7 @@ debootstrap --arch amd64 $DIST $BUILD_PATH http://ubuntu.cs.utah.edu/ubuntu/
 mount --bind /proc $BUILD_PATH/proc
 
 cp $WS/install_packages.sh $BUILD_PATH/root/
-cp $WS/libs.r $BUILD_PATH/root/
+cp -r $WS/libs $BUILD_PATH/root
 #Impala drivers
 mkdir $BUILD_PATH/impala/
 cp $IMPALA_PATH/*.jar $BUILD_PATH/impala/

@@ -77,4 +77,9 @@ python3 -m pip install keras
 export USESPECIALPYTHONVERSION=python3.5
 
 R CMD javareconf
-Rscript /root/libs.r
+Rscript /root/libs/libs_1.r
+Rscript /root/libs/libs_2.r
+Rscript /root/libs/libs_3.r
+Rscript /root/libs/libs_4.r
+Rscript /root/libs/libs_5.r
+Rscript /root/libs/libs_6.r
