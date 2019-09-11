@@ -1,6 +1,4 @@
 library(devtools)
-
-install_version("drat", version="0.1.3", type="source")
 drat::addRepo(c("OHDSI","cloudyr"))
 
 install_github("OHDSI/CohortMethod", ref="v3.0.2")
