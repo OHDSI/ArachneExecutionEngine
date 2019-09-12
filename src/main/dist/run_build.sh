@@ -84,13 +84,20 @@ echo ""
 if [[ -f "libs.r" ]]; then
     rm -f "libs.r"
 fi
-curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs.r -o libs.r
+
+mkdir libs
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_1.r -o libs/libs_1.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_2.r -o libs/libs_2.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_3.r -o libs/libs_3.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_4.r -o libs/libs_4.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_5.r -o libs/libs_5.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_6.r -o libs/libs_6.r
 
 debootstrap --arch amd64 $DIST $BUILD_PATH http://ubuntu.cs.utah.edu/ubuntu/
 mount --bind /proc $BUILD_PATH/proc
 
 cp $WS/install_packages.sh $BUILD_PATH/root/
-cp $WS/libs.r $BUILD_PATH/root/
+cp -r $WS/libs $BUILD_PATH/root
 #Impala drivers
 mkdir $BUILD_PATH/impala/
 cp $IMPALA_PATH/*.jar $BUILD_PATH/impala/
