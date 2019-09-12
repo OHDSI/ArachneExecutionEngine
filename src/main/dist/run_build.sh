@@ -86,12 +86,12 @@ if [[ -f "libs.r" ]]; then
 fi
 
 mkdir libs
-curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/missing-versions/libs_1.r -o libs/libs_1.r
-curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/missing-versions/libs_2.r -o libs/libs_2.r
-curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/missing-versions/libs_3.r -o libs/libs_3.r
-curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/missing-versions/libs_4.r -o libs/libs_4.r
-curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/missing-versions/libs_5.r -o libs/libs_5.r
-curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/missing-versions/libs_6.r -o libs/libs_6.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/missing-versions/libs/libs_1.r -o libs/libs_1.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/missing-versions/libs/libs_2.r -o libs/libs_2.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/missing-versions/libs/libs_3.r -o libs/libs_3.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/missing-versions/libs/libs_4.r -o libs/libs_4.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/missing-versions/libs/libs_5.r -o libs/libs_5.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/missing-versions/libs/libs_6.r -o libs/libs_6.r
 
 debootstrap --arch amd64 $DIST $BUILD_PATH http://ubuntu.cs.utah.edu/ubuntu/
 mount --bind /proc $BUILD_PATH/proc
