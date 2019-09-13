@@ -73,7 +73,7 @@ SELECT TOP 1 specimen_id, person_id, specimen_concept_id, specimen_type_concept_
 FROM @cdm_schema.specimen;
 SELECT TOP 1 visit_detail_id, person_id, visit_detail_concept_id, visit_start_date, visit_start_datetime, visit_end_date, visit_end_datetime, visit_type_concept_id, provider_id, care_site_id, admitting_source_concept_id, discharge_to_concept_id, preceding_visit_detail_id, visit_source_value, visit_source_concept_id, admitting_source_value, discharge_to_source_value, visit_detail_parent_id, visit_occurrence_id
 FROM @cdm_schema.visit_detail;
-SELECT TOP 1 visit_occurrence_id, person_id, visit_concept_id, visit_start_date, visit_start_datetime, visit_end_date, visit_end_datetime, visit_type_concept_id, provider_id, care_site_id, visit_source_value, admitting_source_concept_id, admitting_source_value, discharge_to_concept_id, discharge_to_source_value, preceding_visit_occurrence_id
+SELECT TOP 1 visit_occurrence_id, person_id, visit_concept_id, visit_start_date, visit_start_datetime, visit_end_date, visit_end_datetime, visit_type_concept_id, provider_id, care_site_id, visit_source_value, visit_source_concept_id, admitting_source_concept_id, admitting_source_value, discharge_to_concept_id, discharge_to_source_value, preceding_visit_occurrence_id
 FROM @cdm_schema.visit_occurrence;
 SELECT TOP 1 vocabulary_id, vocabulary_name, vocabulary_reference, vocabulary_version, vocabulary_concept_id
 FROM @cdm_schema.vocabulary;
