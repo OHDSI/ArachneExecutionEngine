@@ -10,6 +10,10 @@ R_DIST_DIR=$3
 # sudo tar xzf $DIST_ARCHIVE -C $WORKDIR
 
 export R_HOME=/usr/lib/R
+
+sudo mkdir $WORKDIR/etc
+sudo mkdir $WORKDIR/impala
+
 sudo cp /etc/resolv.conf $WORKDIR/etc/resolv.conf
 
 if [ -n "$KRB_CONF" ]
