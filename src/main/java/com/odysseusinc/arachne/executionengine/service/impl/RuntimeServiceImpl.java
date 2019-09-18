@@ -39,6 +39,10 @@ import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.rauschig.jarchivelib.ArchiveFormat;
+import org.rauschig.jarchivelib.Archiver;
+import org.rauschig.jarchivelib.ArchiverFactory;
+import org.rauschig.jarchivelib.CompressionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +56,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -116,7 +121,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private String netezzaDriversLocation;
 
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
-
+    private File rDistDirectory;
 
     @Autowired
     public RuntimeServiceImpl(ThreadPoolTaskExecutor taskExecutor, CallbackService callbackService, ResourceLoader resourceLoader, RIsolatedRuntimeProperties rIsolatedRuntimeProps) {
@@ -128,10 +133,15 @@ public class RuntimeServiceImpl implements RuntimeService {
     }
 
     @PostConstruct
-    public void init() {
+    public void init() throws IOException {
 
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
             LOGGER.info("Runtime service running in ISOLATED environment mode");
+
+            Archiver archiver = ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP);
+            rDistDirectory = Files.createTempDirectory("rdist").toFile();
+            archiver.extract(new File(rIsolatedRuntimeProps.getArchive()), rDistDirectory);
+            rDistDirectory.deleteOnExit();
         } else {
             LOGGER.info("Runtime service running in SINGLE mode");
         }
@@ -242,7 +252,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
         String[] command;
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
-            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, rIsolatedRuntimeProps.getArchive()});
+            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, rDistDirectory.getAbsolutePath()});
         } else {
             command = new String[]{EXECUTION_COMMAND, fileName};
         }
