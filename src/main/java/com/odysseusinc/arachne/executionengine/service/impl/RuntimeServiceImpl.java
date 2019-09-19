@@ -195,7 +195,6 @@ public class RuntimeServiceImpl implements RuntimeService {
 
         final String DIR_PREFIX = "rdist";
 
-//        String tmpDir = MoreObjects.firstNonNull(System.getProperty("java.io.tmpdir"), "/tmp");
         File tmpDir = new File(CACHE_DIR);
         if (!tmpDir.exists() && !tmpDir.mkdirs()) {
             throw new BeanInitializationException(String.format("Failed to create cache directory %s", CACHE_DIR));
