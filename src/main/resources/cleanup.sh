@@ -7,5 +7,5 @@ dirs=( bin boot dev etc home impala lib lib64 libs.r media mnt opt proc root run
 
 for d in "${dirs[@]}"
 do
-    sudo rm -fr $jail/$d
+    sudo rm -fr $WORKDIR/$d
 done
