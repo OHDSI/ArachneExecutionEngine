@@ -7,8 +7,6 @@ ANALYSIS_FILE=$2 #time.R
 
 R_DIST_DIR=$3
 
-# sudo tar xzf $DIST_ARCHIVE -C $WORKDIR
-
 export R_HOME=/usr/lib/R
 
 sudo mkdir $WORKDIR/etc
