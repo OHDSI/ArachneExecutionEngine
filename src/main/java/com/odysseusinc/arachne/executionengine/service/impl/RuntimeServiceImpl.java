@@ -45,6 +45,7 @@ import org.rauschig.jarchivelib.ArchiverFactory;
 import org.rauschig.jarchivelib.CompressionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
@@ -133,15 +134,24 @@ public class RuntimeServiceImpl implements RuntimeService {
     }
 
     @PostConstruct
-    public void init() throws IOException {
+    public void init() throws IOException, InterruptedException {
 
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
             LOGGER.info("Runtime service running in ISOLATED environment mode");
 
-            Archiver archiver = ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP);
             rDistDirectory = Files.createTempDirectory("rdist").toFile();
-            archiver.extract(new File(rIsolatedRuntimeProps.getArchive()), rDistDirectory);
             rDistDirectory.deleteOnExit();
+
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command("sh", "-c", String.format("tar xfz %s -C %s", rIsolatedRuntimeProps.getArchive(), rDistDirectory.getAbsolutePath()));
+            builder.directory(new File("/tmp"));
+            Process process = builder.start();
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                LOGGER.info("Unpacked R dist to {}", rDistDirectory.getAbsolutePath());
+            } else {
+                throw new BeanInitializationException(String.format("Failed to unpack R dist to %s", rDistDirectory.getAbsolutePath()));
+            }
         } else {
             LOGGER.info("Runtime service running in SINGLE mode");
         }
