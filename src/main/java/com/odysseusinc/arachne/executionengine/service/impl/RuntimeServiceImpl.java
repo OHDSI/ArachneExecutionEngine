@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.executionengine.service.impl;
 
+import com.google.common.base.MoreObjects;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
@@ -53,6 +54,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -192,12 +194,21 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     private void prepareRDist() throws IOException, InterruptedException {
 
-        rDistDirectory = Files.createTempDirectory("rdist").toFile();
+        final String DIR_PREFIX = "rdist";
+
+        String tmpDir = MoreObjects.firstNonNull(System.getProperty("java.io.tmpdir"), "/tmp");
+        for (File f: new File(tmpDir).listFiles((dirname, fname) -> fname.startsWith(DIR_PREFIX))) {
+            if (f.isDirectory()) {
+                LOGGER.info("Removing previously unpacked R dist from {}", f.getAbsolutePath());
+                FileUtils.deleteDirectory(f);
+            }
+        }
+        rDistDirectory = Files.createTempDirectory(DIR_PREFIX).toFile();
         rDistDirectory.deleteOnExit();
 
         ProcessBuilder builder = new ProcessBuilder();
         builder.command("sh", "-c", String.format("tar xfz %s -C %s", rIsolatedRuntimeProps.getArchive(), rDistDirectory.getAbsolutePath()));
-        builder.directory(new File("/tmp"));
+        builder.directory(new File(tmpDir));
         Process process = builder.start();
         int exitCode = process.waitFor();
         if (exitCode == 0) {

@@ -4,6 +4,7 @@ WORKDIR=$1
 
 sudo umount $WORKDIR/proc
 sudo umount "$WORKDIR"_merged
+# TODO
 # sudo rm -rf "$WORKDIR"_overlay_work
 # sudo rm -rf "$WORKDIR"_overlay_merged
 
