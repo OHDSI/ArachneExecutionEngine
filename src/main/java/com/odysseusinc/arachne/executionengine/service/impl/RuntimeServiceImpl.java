@@ -22,7 +22,6 @@
 
 package com.odysseusinc.arachne.executionengine.service.impl;
 
-import com.google.common.base.MoreObjects;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
@@ -54,7 +53,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -102,6 +100,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String RUNTIME_ENV_DRIVER_PATH = "JDBC_DRIVER_PATH";
     private static final String RUNTIME_BQ_KEYFILE = "BQ_KEYFILE";
     private static final String RUNTIME_ANALYSIS_ID = "ANALYSIS_ID";
+    private static final String CACHE_DIR = "/var/arachne/engine/cache";
 
     private final ThreadPoolTaskExecutor taskExecutor;
     private final CallbackService callbackService;
@@ -196,19 +195,26 @@ public class RuntimeServiceImpl implements RuntimeService {
 
         final String DIR_PREFIX = "rdist";
 
-        String tmpDir = MoreObjects.firstNonNull(System.getProperty("java.io.tmpdir"), "/tmp");
-        for (File f: new File(tmpDir).listFiles((dirname, fname) -> fname.startsWith(DIR_PREFIX))) {
+//        String tmpDir = MoreObjects.firstNonNull(System.getProperty("java.io.tmpdir"), "/tmp");
+        File tmpDir = new File(CACHE_DIR);
+        if (!tmpDir.exists() && !tmpDir.mkdirs()) {
+            throw new BeanInitializationException(String.format("Failed to create cache directory %s", CACHE_DIR));
+        }
+        if (!tmpDir.isDirectory()) {
+            throw new BeanInitializationException(String.format("%s is not a directory", CACHE_DIR));
+        }
+        for (File f: tmpDir.listFiles((dirname, fname) -> fname.startsWith(DIR_PREFIX))) {
             if (f.isDirectory()) {
                 LOGGER.info("Removing previously unpacked R dist from {}", f.getAbsolutePath());
                 FileUtils.deleteDirectory(f);
             }
         }
-        rDistDirectory = Files.createTempDirectory(DIR_PREFIX).toFile();
+        rDistDirectory = Files.createTempDirectory(tmpDir.toPath(), DIR_PREFIX).toFile();
         rDistDirectory.deleteOnExit();
 
         ProcessBuilder builder = new ProcessBuilder();
-        builder.command("sh", "-c", String.format("tar xfz %s -C %s", rIsolatedRuntimeProps.getArchive(), rDistDirectory.getAbsolutePath()));
-        builder.directory(new File(tmpDir));
+        builder.command("sh", "-c", String.format("sudo tar xfz %s -C %s", rIsolatedRuntimeProps.getArchive(), rDistDirectory.getAbsolutePath()));
+        builder.directory(tmpDir);
         Process process = builder.start();
         int exitCode = process.waitFor();
         if (exitCode == 0) {
