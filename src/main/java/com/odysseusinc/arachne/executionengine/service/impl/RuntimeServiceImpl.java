@@ -138,20 +138,7 @@ public class RuntimeServiceImpl implements RuntimeService {
 
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
             LOGGER.info("Runtime service running in ISOLATED environment mode");
-
-            rDistDirectory = Files.createTempDirectory("rdist").toFile();
-            rDistDirectory.deleteOnExit();
-
-            ProcessBuilder builder = new ProcessBuilder();
-            builder.command("sh", "-c", String.format("tar xfz %s -C %s", rIsolatedRuntimeProps.getArchive(), rDistDirectory.getAbsolutePath()));
-            builder.directory(new File("/tmp"));
-            Process process = builder.start();
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                LOGGER.info("Unpacked R dist to {}", rDistDirectory.getAbsolutePath());
-            } else {
-                throw new BeanInitializationException(String.format("Failed to unpack R dist to %s", rDistDirectory.getAbsolutePath()));
-            }
+            prepareRDist();
         } else {
             LOGGER.info("Runtime service running in SINGLE mode");
         }
@@ -206,6 +193,23 @@ public class RuntimeServiceImpl implements RuntimeService {
                 analysisCallback.execute(null, null, file, t);
             }
         });
+    }
+
+    private void prepareRDist() throws IOException, InterruptedException {
+
+        rDistDirectory = Files.createTempDirectory("rdist").toFile();
+        rDistDirectory.deleteOnExit();
+
+        ProcessBuilder builder = new ProcessBuilder();
+        builder.command("sh", "-c", String.format("tar xfz %s -C %s", rIsolatedRuntimeProps.getArchive(), rDistDirectory.getAbsolutePath()));
+        builder.directory(new File("/tmp"));
+        Process process = builder.start();
+        int exitCode = process.waitFor();
+        if (exitCode == 0) {
+            LOGGER.info("Unpacked R dist to {}", rDistDirectory.getAbsolutePath());
+        } else {
+            throw new BeanInitializationException(String.format("Failed to unpack R dist to %s", rDistDirectory.getAbsolutePath()));
+        }
     }
 
     private File prepareEnvironment() throws IOException {
