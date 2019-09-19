@@ -22,8 +22,8 @@
 
 package com.odysseusinc.arachne.executionengine.service.impl;
 
+import com.google.common.base.MoreObjects;
 import com.odysseusinc.arachne.commons.types.DBMSType;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
@@ -41,6 +41,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
@@ -52,6 +53,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -116,7 +119,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private String netezzaDriversLocation;
 
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
-
+    private File rDistDirectory;
 
     @Autowired
     public RuntimeServiceImpl(ThreadPoolTaskExecutor taskExecutor, CallbackService callbackService, ResourceLoader resourceLoader, RIsolatedRuntimeProperties rIsolatedRuntimeProps) {
@@ -128,10 +131,11 @@ public class RuntimeServiceImpl implements RuntimeService {
     }
 
     @PostConstruct
-    public void init() {
+    public void init() throws IOException, InterruptedException {
 
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
             LOGGER.info("Runtime service running in ISOLATED environment mode");
+            prepareRDist();
         } else {
             LOGGER.info("Runtime service running in SINGLE mode");
         }
@@ -188,6 +192,32 @@ public class RuntimeServiceImpl implements RuntimeService {
         });
     }
 
+    private void prepareRDist() throws IOException, InterruptedException {
+
+        final String DIR_PREFIX = "rdist";
+
+        String tmpDir = MoreObjects.firstNonNull(System.getProperty("java.io.tmpdir"), "/tmp");
+        for (File f: new File(tmpDir).listFiles((dirname, fname) -> fname.startsWith(DIR_PREFIX))) {
+            if (f.isDirectory()) {
+                LOGGER.info("Removing previously unpacked R dist from {}", f.getAbsolutePath());
+                FileUtils.deleteDirectory(f);
+            }
+        }
+        rDistDirectory = Files.createTempDirectory(DIR_PREFIX).toFile();
+        rDistDirectory.deleteOnExit();
+
+        ProcessBuilder builder = new ProcessBuilder();
+        builder.command("sh", "-c", String.format("tar xfz %s -C %s", rIsolatedRuntimeProps.getArchive(), rDistDirectory.getAbsolutePath()));
+        builder.directory(new File(tmpDir));
+        Process process = builder.start();
+        int exitCode = process.waitFor();
+        if (exitCode == 0) {
+            LOGGER.info("Unpacked R dist to {}", rDistDirectory.getAbsolutePath());
+        } else {
+            throw new BeanInitializationException(String.format("Failed to unpack R dist to %s", rDistDirectory.getAbsolutePath()));
+        }
+    }
+
     private File prepareEnvironment() throws IOException {
 
         return isExternalJail()
@@ -242,7 +272,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
         String[] command;
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
-            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, rIsolatedRuntimeProps.getArchive()});
+            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, rDistDirectory.getAbsolutePath()});
         } else {
             command = new String[]{EXECUTION_COMMAND, fileName};
         }
