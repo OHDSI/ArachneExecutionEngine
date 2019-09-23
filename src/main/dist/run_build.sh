@@ -117,7 +117,6 @@ umount $BUILD_PATH/proc
 sudo rm -f $BUILD_PATH/root/install_packages.sh
 sudo rm -f $BUILD_PATH/root/libs.r
 
-
 # To prevent unexpected package updates
 sudo cp $WS/.Rprofile $BUILD_PATH/root/
 
