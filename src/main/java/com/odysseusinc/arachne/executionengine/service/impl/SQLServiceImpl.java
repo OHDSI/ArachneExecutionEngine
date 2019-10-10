@@ -97,8 +97,9 @@ public class SQLServiceImpl implements SQLService {
                         try {
                             SqlExecutor sqlExecutor;
 
-                            if (analysis.getDataSource().getType().equals(DBMSType.ORACLE)) {
-                                sqlExecutor = new OracleSqlExecutor();
+                            if (analysis.getDataSource().getType().equals(DBMSType.ORACLE) ||
+                                    analysis.getDataSource().getType().equals(DBMSType.BIGQUERY)) {
+                                sqlExecutor = new SingleStatementSqlExecutor();
                             } else {
                                 sqlExecutor = new DefaultSqlExecutor();
                             }
@@ -184,6 +185,8 @@ public class SQLServiceImpl implements SQLService {
         }
     }
 
+
+
     public class DefaultSqlExecutor extends SqlExecutor {
 
         public List<Path> runSql(Connection conn, File sqlFile) throws SQLException, IOException {
@@ -191,7 +194,7 @@ public class SQLServiceImpl implements SQLService {
             List<Path> resultFileList = new ArrayList<>();
             try (OutputStream outputStream = new ByteArrayOutputStream()) {
                 Files.copy(sqlFile.toPath(), outputStream);
-                try (Statement statement = conn.createStatement();) {
+                try (Statement statement = conn.createStatement()) {
                     boolean hasMoreResultSets = statement.execute(outputStream.toString());
                     int resultIdx = 0;
                     while (hasMoreResultSets || statement.getUpdateCount() != -1) {
@@ -210,7 +213,7 @@ public class SQLServiceImpl implements SQLService {
         }
     }
 
-    public class OracleSqlExecutor extends SqlExecutor {
+    public class SingleStatementSqlExecutor extends SqlExecutor {
 
         public List<Path> runSql(Connection conn, File sqlFile) throws SQLException, IOException {
 
