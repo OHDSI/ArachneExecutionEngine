@@ -16,14 +16,14 @@ function print_help {
 	echo -e "  -d DIST_NAME \t\tUbuntu distribution name, e.g. trusty or xenial, default is trusty"
 	echo -e "  -b BUILDDIR \t\tDirectory where distribution build would be running"
 	echo -e "  -f FILE \t\tOutput archive filename"
-	echo -e "  -bq PATH \t\tPath to BigQuery drivers"
-	echo -e "  -impala PATH \t\tPath to Impala drivers"
-	echo -e "  -netezza PATH \t\tPath to Netezza drivers"
+	echo -e "  -g PATH \t\tPath to BigQuery drivers"
+	echo -e "  -i PATH \t\tPath to Impala drivers"
+	echo -e "  -n PATH \t\tPath to Netezza drivers"
 	echo -e "  -h \t\t\tPrints this"
 }
 
 OPTIND=1
-while getopts ":a:d:b:f:h:bq:impala:netezza" opt; do
+while getopts ":a:d:b:f:h:g:i:n" opt; do
 	case $opt in 
 		a)
 			ARCH=$OPTARG
@@ -41,13 +41,13 @@ while getopts ":a:d:b:f:h:bq:impala:netezza" opt; do
 			print_help
 			exit 0
 			;;
-		bq)
+		g)
 		    BQ_PATH=$OPTARG
 		    ;;
-		impala)
+		i)
 		    IMPALA_PATH=$OPTARG
 		    ;;
-		netezza)
+		n)
 		    NETEZZA_PATH=$OPTARG
 		    ;;
 		\?)
@@ -80,11 +80,30 @@ echo "Build dir: $BUILD_PATH"
 echo "Output file: $ARCHIVE"
 echo ""
 
+# Download libs.r from GitHub repo
+if [[ -f "libs/libs_1.r" ]]; then
+    rm -f "libs/libs*.r"
+fi
+
+mkdir libs
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_1.r -o libs/libs_1.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_2.r -o libs/libs_2.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_3.r -o libs/libs_3.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_4.r -o libs/libs_4.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_5.r -o libs/libs_5.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_6.r -o libs/libs_6.r
+
 debootstrap --arch amd64 $DIST $BUILD_PATH http://ubuntu.cs.utah.edu/ubuntu/
 mount --bind /proc $BUILD_PATH/proc
 
 cp $WS/install_packages.sh $BUILD_PATH/root/
-cp $WS/libs.r $BUILD_PATH/root/
+cp -r $WS/libs $BUILD_PATH/root
+
+# Authorization token
+if [[ -a "$HOME/.Renviron" ]]; then
+    sudo cp $HOME/.Renviron $BUILD_PATH/root/
+fi
+
 #Impala drivers
 mkdir $BUILD_PATH/impala/
 cp $IMPALA_PATH/*.jar $BUILD_PATH/impala/
@@ -102,12 +121,12 @@ sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $DIST
 
 umount $BUILD_PATH/proc
-rm $BUILD_PATH/root/install_packages.sh
-rm $BUILD_PATH/root/libs.r
-cd $BUILD_PATH
-
+sudo rm -f $BUILD_PATH/root/install_packages.sh
+sudo rm -f $BUILD_PATH/root/libs.r
+sudo rm -f $BUILD_PATH/root/.Renviron
 # To prevent unexpected package updates
-cp $WS/.Rprofile $BUILD_PATH/root/
+sudo cp $WS/.Rprofile $BUILD_PATH/root/
 
+cd $BUILD_PATH
 tar czf $ARCHIVE .
 echo "Distribution Archive built and available at $ARCHIVE"
