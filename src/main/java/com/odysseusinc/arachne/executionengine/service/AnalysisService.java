@@ -24,9 +24,15 @@ package com.odysseusinc.arachne.executionengine.service;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
+import com.odysseusinc.arachne.executionengine.service.impl.StdoutHandlerParams;
+import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
+
 import java.io.File;
 
 public interface AnalysisService {
+
+    AnalysisRequestStatusDTO analyze(AnalysisSyncRequestDTO analysis, File analysisDir, Boolean attachCdmMetadata, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback resultCallback);
 
     AnalysisRequestStatusDTO analyze(AnalysisRequestDTO analysis, File analysisDir, Boolean compressedResult, Boolean attachCdmMetadata, Long chunkSize);
 
