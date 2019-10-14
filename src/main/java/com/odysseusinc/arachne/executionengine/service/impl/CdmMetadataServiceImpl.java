@@ -95,6 +95,7 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
     public final static ConcurrentHashMap<Integer, String> detectorSqlMap = new ConcurrentHashMap<>();
 
     static {
+        V5_VERSIONS.add(CommonCDMVersionDTO.V5_3_1);
         V5_VERSIONS.add(CommonCDMVersionDTO.V5_3);
         V5_VERSIONS.add(CommonCDMVersionDTO.V5_2);
         V5_VERSIONS.add(CommonCDMVersionDTO.V5_1);

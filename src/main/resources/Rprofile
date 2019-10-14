@@ -1,0 +1,15 @@
+#.First <- function() {
+
+  writeLines("Applying project Rprofile")
+
+  # Setting default locale for ojdbc
+  library(rJava)
+  library(DatabaseConnector)
+  tz <- J("java.util.TimeZone", "getTimeZone", "UTC")
+  J("java.util.TimeZone", "setDefault", tz)
+
+  user_profile = path.expand(file.path("~", ".Rprofile"))
+  if (file.exists(user_profile)){
+    source(user_profile)
+  }
+#}
