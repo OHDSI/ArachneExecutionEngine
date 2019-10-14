@@ -9,7 +9,6 @@ FROM @cdm_schema.cohort;
 SELECT TOP 1 cohort_definition_id, subject_id, cohort_start_date, cohort_end_date, attribute_definition_id, value_as_number, value_as_concept_id
 FROM @cdm_schema.cohort_attribute;
 SELECT TOP 1 cohort_definition_id, cohort_definition_name, cohort_definition_description, definition_type_concept_id, cohort_definition_syntax, subject_concept_id
--- , cohort_initiation_date -- due to unclarity in https://github.com/OHDSI/CommonDataModel/issues/178
 FROM @cdm_schema.cohort_definition;
 SELECT TOP 1 concept_id, concept_name, domain_id, vocabulary_id, concept_class_id, standard_concept, concept_code, valid_start_date, valid_end_date, invalid_reason
 FROM @cdm_schema.concept;
@@ -26,7 +25,6 @@ FROM @cdm_schema.condition_era;
 SELECT TOP 1 condition_occurrence_id, person_id, condition_concept_id, condition_start_date, condition_start_datetime, condition_end_date, condition_end_datetime, condition_type_concept_id, stop_reason, provider_id, visit_occurrence_id, visit_detail_id, condition_source_value, condition_source_concept_id, condition_status_source_value, condition_status_concept_id
 FROM @cdm_schema.condition_occurrence;
 SELECT TOP 1 cost_id, cost_event_id, cost_domain_id, cost_type_concept_id, currency_concept_id, total_charge, total_cost, total_paid, paid_by_payer, paid_by_patient, paid_patient_copay, paid_patient_coinsurance, paid_patient_deductible, paid_by_primary, paid_ingredient_cost, paid_dispensing_fee, payer_plan_period_id, amount_allowed, revenue_code_concept_id, drg_concept_id, drg_source_value
--- ,reveue_code_source_value
 FROM @cdm_schema.cost;
 SELECT TOP 1 person_id, death_date, death_datetime, death_type_concept_id, cause_concept_id, cause_source_value, cause_source_concept_id
 FROM @cdm_schema.death;
@@ -72,7 +70,7 @@ SELECT TOP 1 source_code, source_concept_id, source_vocabulary_id, source_code_d
 FROM @cdm_schema.source_to_concept_map;
 SELECT TOP 1 specimen_id, person_id, specimen_concept_id, specimen_type_concept_id, specimen_date, specimen_datetime, quantity, unit_concept_id, anatomic_site_concept_id, disease_status_concept_id, specimen_source_id, specimen_source_value, unit_source_value, anatomic_site_source_value, disease_status_source_value
 FROM @cdm_schema.specimen;
-SELECT TOP 1 visit_detail_id, person_id, visit_detail_concept_id, visit_start_date, visit_start_datetime, visit_end_date, visit_end_datetime, visit_type_concept_id, provider_id, care_site_id, admitting_source_concept_id, discharge_to_concept_id, preceding_visit_detail_id, visit_source_value, visit_source_concept_id, admitting_source_value, discharge_to_source_value, visit_detail_parent_id, visit_occurrence_id
+SELECT TOP 1  visit_detail_id, person_id, visit_detail_concept_id, visit_detail_start_date, visit_detail_start_datetime, visit_detail_end_date, visit_detail_end_datetime, visit_detail_type_concept_id, provider_id, care_site_id, admitting_source_concept_id, discharge_to_concept_id, preceding_visit_detail_id, visit_detail_source_value, visit_detail_source_concept_id, admitting_source_value, discharge_to_source_value, visit_detail_parent_id, visit_occurrence_id
 FROM @cdm_schema.visit_detail;
 SELECT TOP 1 visit_occurrence_id, person_id, visit_concept_id, visit_start_date, visit_start_datetime, visit_end_date, visit_end_datetime, visit_type_concept_id, provider_id, care_site_id, visit_source_value, visit_source_concept_id, admitting_source_concept_id, admitting_source_value, discharge_to_concept_id, discharge_to_source_value, preceding_visit_occurrence_id
 FROM @cdm_schema.visit_occurrence;
