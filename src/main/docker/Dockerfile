@@ -1,4 +1,4 @@
-FROM odysseusinc/r-env:1.0.11-hive_gs
+FROM odysseusinc/r-env:1.0.10
 MAINTAINER alexandr.ryabokon@odysseusinc.com
 VOLUME /tmp
 VOLUME /libs-r
@@ -14,8 +14,6 @@ ADD execution-engine-exec.jar /execution-engine.jar
 RUN mkdir /impala
 ADD Cloudera_ImpalaJDBC4_2.5.41.zip /impala/impala-jdbc.zip
 RUN cd /impala && unzip impala-jdbc.zip && rm -f impala-jdbc.zip
-RUN mkdir /hive
-COPY hive-jdbc-standalone.jar /hive/
 EXPOSE 8888
 COPY run.sh /run.sh
 RUN dos2unix /run.sh

@@ -545,22 +545,6 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>hive</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.hive</groupId>
-                    <artifactId>hive-jdbc</artifactId>
-                    <version>3.1.0</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.eclipse.jetty</groupId>
-                            <artifactId>*</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-            </dependencies>
-        </profile>
     </profiles>
 
     <build>
@@ -575,19 +559,17 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
-<!--        there is a problem: currently Spring Boot doesn't support Zip64 archives (see comments here: https://github.com/spring-projects/spring-boot/issues/9861)
-            here temporary solution was proposed (to use maven-shade-plugin): https://github.com/spring-projects/spring-boot/issues/2895 -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>1.5.0.RELEASE</version>
                 <executions>
                     <execution>
                         <goals>
-                            <goal>shade</goal>
+                            <goal>repackage</goal>
                         </goals>
                         <configuration>
-                            <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <finalName>execution-engine-exec</finalName>
+                            <classifier>exec</classifier>
                         </configuration>
                     </execution>
                 </executions>
