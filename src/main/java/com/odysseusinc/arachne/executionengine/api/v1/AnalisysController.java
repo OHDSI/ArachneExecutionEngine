@@ -32,7 +32,6 @@ import com.odysseusinc.arachne.executionengine.service.impl.StdoutHandlerParams;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import net.lingala.zip4j.exception.ZipException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,14 +101,14 @@ public class AnalisysController {
             @RequestHeader(value = "arachne-waiting-compressed-result", defaultValue = "false") Boolean waitCompressedResult,
             @RequestHeader(value = "arachne-attach-cdm-metadata", defaultValue = "true") Boolean attachCdmMetadata,
             @RequestHeader(value = "arachne-result-chunk-size-mb", defaultValue = "10485760") Long chunkSize
-    ) throws IOException, ZipException {
+    ) throws IOException {
 
         try {
             log.info("Started processing request for analysis ID = {}", analysisRequest.getId());
             final File analysisDir = AnalisysUtils.extractFiles(files, compressed);
             log.info("Extracted files for analysis ID = {}", analysisRequest.getId());
             return analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, attachCdmMetadata, chunkSize);
-        } catch (IOException | ZipException e) {
+        } catch (IOException e) {
             callbackService.sendFailedResult(analysisRequest, e, null, waitCompressedResult, chunkSize);
             throw e;
         }
@@ -124,7 +123,7 @@ public class AnalisysController {
     public ResponseEntity analyzeSync(
             @RequestPart("analysisRequest") AnalysisSyncRequestDTO analysisRequest,
             @RequestPart("file") List<MultipartFile> files
-    ) throws IOException, InterruptedException, ZipException {
+    ) throws IOException, InterruptedException {
 
         log.info("Started processing request for synchronous analysis ID = {}", analysisRequest.getId());
         final File analysisDir = AnalisysUtils.extractFiles(files, false);

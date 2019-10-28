@@ -35,7 +35,7 @@ import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.VOCAB
 import static com.odysseusinc.arachne.executionengine.util.DateUtil.defaultFormat;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonCDMVersionDTO;
+import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
@@ -95,6 +95,7 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
     public final static ConcurrentHashMap<Integer, String> detectorSqlMap = new ConcurrentHashMap<>();
 
     static {
+        V5_VERSIONS.add(CommonCDMVersionDTO.V5_3_1);
         V5_VERSIONS.add(CommonCDMVersionDTO.V5_3);
         V5_VERSIONS.add(CommonCDMVersionDTO.V5_2);
         V5_VERSIONS.add(CommonCDMVersionDTO.V5_1);
