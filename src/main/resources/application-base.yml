@@ -10,7 +10,8 @@ server:
   port: 8888
 
 logging:
-  level: info
+  level:
+    root: info
   descriptor:
     count:
       enabled: false
