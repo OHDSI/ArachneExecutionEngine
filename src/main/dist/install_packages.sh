@@ -32,7 +32,7 @@ apt-get update && apt-get install -y openjdk-8-jdk
 rm -f /usr/bin/java
 update-alternatives --config java
 
-apt-get update && apt-get install -y libpq-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user python3-dev python3-pip libgeos-dev libprotobuf-dev protobuf-compiler
+apt-get update && apt-get install -y libpq-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user python3-dev virtualenv python3-venv python3-pip libgeos-dev libprotobuf-dev protobuf-compiler
 
 wget http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip \
         && echo "8021a28b8cac41b44f1421fd210a0a0822fcaf88d62d2e70a35b2ff628a8675a  ZuluJCEPolicies.zip" | sha256sum -c - \
@@ -55,7 +55,7 @@ gpg -a --export E084DAB9 | sudo apt-key add -
 #gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
 #gpg -a --export E084DAB9 | sudo apt-key add -
 
-apt-get update && apt-get -y install r-base
+apt-get update && apt-get -y --allow-unauthenticated install r-base
 
 cat >> /etc/R/Rprofile.site <<_EOF_
 local({ 
