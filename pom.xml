@@ -48,7 +48,7 @@
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-common-types</artifactId>
-            <version>${project.version}</version>
+            <version>1.14.1-alpha3</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
