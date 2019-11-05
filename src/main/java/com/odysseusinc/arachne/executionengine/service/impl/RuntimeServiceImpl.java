@@ -22,6 +22,8 @@
 
 package com.odysseusinc.arachne.executionengine.service.impl;
 
+import static org.apache.commons.io.IOUtils.closeQuietly;
+
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
@@ -36,7 +38,27 @@ import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
+import javax.annotation.PostConstruct;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -46,21 +68,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.*;
-import java.util.function.Consumer;
-
-import static org.apache.commons.io.IOUtils.closeQuietly;
 
 @Service
 public class RuntimeServiceImpl implements RuntimeService {
@@ -165,6 +172,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                 RuntimeFinishStatus finishStatus;
                 try {
                     File runFile = prepareEnvironment();
+                    prepareRprofile(file);
                     try {
                         String[] command = buildRuntimeCommand(runFile, file, executableFileName);
 
@@ -196,6 +204,14 @@ public class RuntimeServiceImpl implements RuntimeService {
                 analysisCallback.execute(null, null, file, t);
             }
         });
+    }
+
+    private void prepareRprofile(File workDir) throws IOException {
+
+        try(InputStream is = resourceLoader.getResource("classpath:/Rprofile").getInputStream();
+            FileOutputStream out = new FileOutputStream(new File(workDir, ".Rprofile"))) {
+            IOUtils.copy(is, out);
+        }
     }
 
     private File prepareEnvironment() throws IOException {
