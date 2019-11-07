@@ -35,9 +35,9 @@ while getopts ":a:d:b:f:h:g:i:n" opt; do
 		d)	
 			DIST=$OPTARG
 			;;
-        r)
-            CRAN_DIST=$OPTARG
-            ;;
+		r)
+			CRAN_DIST=$OPTARG
+			;;
 		b)
 			BUILD_PATH=$OPTARG
 			;;
