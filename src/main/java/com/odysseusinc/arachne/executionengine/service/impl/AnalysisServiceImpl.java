@@ -180,6 +180,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         AnalysisCallback resultCallback = (resultingStatus, stdout, resultDir, ex) -> {
             if (ex == null) {
                 try {
+                    logger.info("EMPTY_STDOUT_RESULT_CALLBACK: analysis_id={}, processAnalysisResult ", analysis.getId());
                     callbackService.processAnalysisResult(analysis, resultingStatus, stdout, resultDir, compressedResult, chunkSize);
                 } catch (IOException e) {
                     throw new RuntimeException(e);

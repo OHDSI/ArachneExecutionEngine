@@ -55,6 +55,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -155,22 +156,35 @@ public class RuntimeServiceImpl implements RuntimeService {
 
         return taskExecutor.submit(() -> {
             try {
+
+
                 Long id = analysis.getId();
+                LOGGER.info("EMPTY_STDOUT: analysis_id={}, start", id);
                 String executableFileName = analysis.getExecutableFileName();
+                LOGGER.info("EMPTY_STDOUT: analysis_id={}, executable file {}", id, executableFileName);
                 DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
+                LOGGER.info("EMPTY_STDOUT: analysis_id={}, executable dataSource {}", id, dataSource);
                 RuntimeFinishStatus finishStatus;
                 try {
                     File runFile = prepareEnvironment();
+                    LOGGER.info("EMPTY_STDOUT: analysis_id={}, get run file path:{}, name:{}", id, runFile.getAbsolutePath(), runFile.getName());
                     prepareRprofile(file);
+                    LOGGER.info("EMPTY_STDOUT: analysis_id={}, Rprofile is prepared", id);
                     try {
                         String[] command = buildRuntimeCommand(runFile, file, executableFileName);
+                        LOGGER.info("EMPTY_STDOUT: analysis_id={}, execut command", id, Arrays.stream(command).collect(Collectors.joining("; ")));
 
                         final Map<String, String> envp = buildRuntimeEnvVariables(dataSource, krbConfig.getIsolatedRuntimeEnvs());
+                        LOGGER.info("EMPTY_STDOUT: analysis_id={}, execut command", id, Arrays.stream(command).collect(Collectors.joining("; ")));
                         envp.put(RUNTIME_ANALYSIS_ID, analysis.getId().toString());
+                        LOGGER.info("EMPTY_STDOUT: analysis_id={}, envp", envp.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue() + ";"));
                         finishStatus = runtime(command, envp, file, runtimeTimeOutSec, id, stdoutHandlerParams);
+                        LOGGER.info("EMPTY_STDOUT: analysis_id={}, finish status exit code",id,  finishStatus.exitCode);
+                        LOGGER.info("EMPTY_STDOUT: analysis_id={}, finish status stdout ",id,  finishStatus.stdout);
                         AnalysisResultStatusDTO resultStatusDTO = finishStatus.exitCode == 0
                                 ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
                         cleanupEnvironment(file);
+                        LOGGER.info("EMPTY_STDOUT: analysis_id={}, clean up env ", id);
                         analysisCallback.execute(resultStatusDTO, finishStatus.stdout, file, null);
                     } finally {
                         if (!isExternalJail()) {
@@ -323,28 +337,37 @@ public class RuntimeServiceImpl implements RuntimeService {
         final ProcessBuilder processBuilder = new ProcessBuilder(command)
                 .directory(activeDir)
                 .redirectErrorStream(true);
-        processBuilder.environment().putAll(envp);
+        processBuilder
+                .environment()
+                .putAll(envp);
         Process process = null;
         try {
+            LOGGER.info("EMPTY_STDOUT: analysis_id={}, start R script ", submissionId);
             process = processBuilder.start();
+
             final ExecutorService executorService = Executors.newSingleThreadExecutor();
-            final StdoutHandler stdoutHandler = new StdoutHandler(process, stdoutHandlerParams);
+            final StdoutHandler stdoutHandler = new StdoutHandler(submissionId, process, stdoutHandlerParams);
+            LOGGER.info("EMPTY_STDOUT: analysis_id={}, stdout handler was created ", submissionId);
             final Future<String> future = executorService.submit(stdoutHandler);
+
             StringBuilder commandBuilder = new StringBuilder();
             Arrays.stream(command).forEach(c -> commandBuilder.append(" ").append(c));
+            LOGGER.info("EMPTY_STDOUT: analysis_id={}, executed command: {}", submissionId,  commandBuilder.toString());
             LOGGER.info(EXECUTING_LOG, commandBuilder.toString());
+            LOGGER.info("EMPTY_STDOUT: analysis_id={}, we are going to wait {} seconds", submissionId,  timeout);
             process.waitFor(timeout, TimeUnit.SECONDS);
             if (process.isAlive()) {
+                LOGGER.info("EMPTY_STDOUT: analysis_id={}, process is alive lets kill it.", submissionId,  timeout);
                 process.destroy();
                 LOGGER.warn(DESTROYING_PROCESS_LOG);
             }
             final String stdout = future.get(submissionUpdateInterval * 2, TimeUnit.MILLISECONDS);
             if (process.exitValue() == 0) {
-                LOGGER.info(EXECUTION_SUCCESS_LOG, submissionId, process.exitValue());
+                LOGGER.info("EMPTY_STDOUT: analysis_id=" + submissionId + " " +EXECUTION_SUCCESS_LOG, submissionId, process.exitValue());
             } else {
-                LOGGER.warn(EXECUTION_FAILURE_LOG, submissionId, process.exitValue());
+                LOGGER.info("EMPTY_STDOUT: analysis_id=" + submissionId + " " +EXECUTION_FAILURE_LOG, submissionId, process.exitValue());
             }
-            LOGGER.debug(STDOUT_LOG, stdout);
+            LOGGER.info("EMPTY_STDOUT: analysis_id=" + submissionId + " " +STDOUT_LOG, stdout);
             return new RuntimeFinishStatus(process.exitValue(), stdout);
         } finally {
             if (Objects.nonNull(process)) {
@@ -368,12 +391,14 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     private class StdoutHandler implements Callable<String> {
 
+        private Long submissionId;
         private final Process process;
         private final Integer submissionUpdateInterval;
         private final Consumer<String> callback;
 
-        private StdoutHandler(Process process, StdoutHandlerParams stdoutHandlerParams) {
+        private StdoutHandler(Long submissionId, Process process, StdoutHandlerParams stdoutHandlerParams) {
 
+            this.submissionId = submissionId;
             this.process = process;
             this.submissionUpdateInterval = stdoutHandlerParams.getSubmissionUpdateInterval();
             this.callback = stdoutHandlerParams.getCallback();
@@ -385,11 +410,14 @@ public class RuntimeServiceImpl implements RuntimeService {
             StringBuilder stdout = new StringBuilder();
             try {
                 do {
+                    LOGGER.info("EMPTY_STDOUT_HANDLER: analysis_id={}, handler are sleeping for {}", submissionId,  submissionUpdateInterval);
                     Thread.sleep(submissionUpdateInterval);
                     InputStream inputStream = process.getInputStream();
                     final String stdoutDiff = getStdoutDiff(inputStream);
+                    LOGGER.info("EMPTY_STDOUT_HANDLER: analysis_id={}, stdout diff {}", submissionId,  stdoutDiff);
                     stdout.append(stdoutDiff);
                     if (callback != null) {
+                        LOGGER.info("EMPTY_STDOUT_HANDLER: analysis_id={}, callback is not null", submissionId);
                         callback.accept(stdoutDiff);
                     }
                     if (!stdoutDiff.isEmpty()) {
@@ -397,7 +425,8 @@ public class RuntimeServiceImpl implements RuntimeService {
                     }
                 } while (process.isAlive());
             } catch (IOException e) {
-                LOGGER.warn("Process was destroyed during attempt to write stdout");
+                LOGGER.info("EMPTY_STDOUT_HANDLER: analysis_id={}, Process was destroyed during attempt to write stdout", submissionId, e);
+                LOGGER.info("Process was destroyed during attempt to write stdout", e);
             }
             return stdout.toString();
         }

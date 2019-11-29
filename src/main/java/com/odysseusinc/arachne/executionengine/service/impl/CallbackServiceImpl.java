@@ -91,6 +91,7 @@ public class CallbackServiceImpl implements CallbackService {
             outSented.put(submissionId, current);
         }
         if ((sentedAt.getTime() + submissionUpdateInterval) < current.getTime()) {
+            log.info("EMPTY_STDOUT_UPDATE_STATUS: " + SENDING_STDOUT_TO_CENTRAL_LOG, submissionId);
             log.info(SENDING_STDOUT_TO_CENTRAL_LOG, submissionId);
             AnalysisExecutionStatusDTO status = new AnalysisExecutionStatusDTO(submissionId, out, current);
             HttpEntity<AnalysisExecutionStatusDTO> entity = new HttpEntity<>(status);
@@ -103,7 +104,7 @@ public class CallbackServiceImpl implements CallbackService {
                         submissionId,
                         password);
             } catch (RestClientException ex) {
-                log.info(UPDATE_STATUS_FAILED_LOG, submissionId, ex);
+                log.info("EMPTY_STDOUT_UPDATE_STATUS: "+UPDATE_STATUS_FAILED_LOG, submissionId, ex);
             }
             outSented.replace(submissionId, current);
         }
@@ -127,7 +128,7 @@ public class CallbackServiceImpl implements CallbackService {
             result.setRequested(analysis.getRequested());
             result.setStdout(stdout);
             result.setStatus(status);
-
+            log.info("EMPTY_STDOUT_RESULT_CALLBACK: analysis_id={}, stdout {} ", analysis.getId(), stdout);
             int resultFilesCnt = AnalisysUtils.getDirectoryItems(resultDir).size();
             log.info(EXECUTION_RESULT_FILES_COUNT_LOG, analysis.getId(), resultFilesCnt);
 
@@ -175,6 +176,7 @@ public class CallbackServiceImpl implements CallbackService {
         HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(multipartRequest, headers);
         Long submissionId = analysisResult.getId();
         try {
+            log.info("EMPTY_STDOUT_RESULT_CALLBACK: analysis_id={}, send analysis results ", analysisResult.getId());
             nodeRestTemplate.exchange(
                     resultURL,
                     HttpMethod.POST,
@@ -183,6 +185,7 @@ public class CallbackServiceImpl implements CallbackService {
                     submissionId,
                     password);
         } catch (RestClientException ex) {
+            log.info("EMPTY_STDOUT_RESULT_CALLBACK: analysis_id={},{} ", analysisResult.getId(), SEND_RESULT_FAILED_LOG, ex);
             log.info(SEND_RESULT_FAILED_LOG, submissionId, ex);
         }
     }

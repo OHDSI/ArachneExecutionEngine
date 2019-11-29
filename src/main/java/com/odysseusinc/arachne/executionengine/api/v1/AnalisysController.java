@@ -22,9 +22,12 @@
 
 package com.odysseusinc.arachne.executionengine.api.v1;
 
+import com.google.common.io.Files;
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.client.FeignSpringFormEncoder;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
@@ -32,6 +35,8 @@ import com.odysseusinc.arachne.executionengine.service.impl.StdoutHandlerParams;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.util.Date;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,6 +118,46 @@ public class AnalisysController {
             throw e;
         }
     }
+
+
+    @RequestMapping(value = "/empty-stdout",
+            method = RequestMethod.GET
+    )
+    public AnalysisRequestStatusDTO emptyStdout() {
+
+        File originalAnalyse  = new File("/home/ymolodkov/data/1573647566136-0");
+        File tempAnalyse = Files.createTempDir();
+        try {
+            FileUtils.copyDirectory(originalAnalyse, tempAnalyse);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        DataSourceUnsecuredDTO dataSource = new DataSourceUnsecuredDTO();
+        dataSource.setName("SynPUF 110k");
+        dataSource.setConnectionString("jdbc:postgresql://odysseusovh02.odysseusinc.com:5432/cdm_v500_synpuf_v101_110k");
+        dataSource.setType(DBMSType.POSTGRESQL);
+        dataSource.setCdmSchema("public");
+        dataSource.setUsername("ohdsi");
+        dataSource.setPassword("ohdsi");
+        dataSource.setTargetSchema("public");
+        dataSource.setResultSchema("public");
+        dataSource.setCohortTargetTable("cohort");
+        dataSource.setUseKerberos(false);
+
+        AnalysisRequestDTO analysisRequestDTO = new AnalysisRequestDTO();
+        analysisRequestDTO.setCallbackPassword("2627e1e3ded84fad91b1df8bb55ac562");
+        analysisRequestDTO.setUpdateStatusCallback("https://localhost:8880/api/v1/submissions/{id}/update/{password}");
+        analysisRequestDTO.setResultCallback("https://localhost:8880/api/v1/submissions/{id}/result/{password}");
+        analysisRequestDTO.setId(17L);
+        analysisRequestDTO.setExecutableFileName("runAnalysis.R");
+        //get from db
+        analysisRequestDTO.setDataSource(dataSource);
+        analysisRequestDTO.setRequested(new Date());
+
+        return analysisService.analyze(analysisRequestDTO, tempAnalyse, true, true, 10485760L);
+    }
+
 
     @ApiOperation(value = "Execute analysis synchronously")
     @RequestMapping(value = "/analyze/sync",
