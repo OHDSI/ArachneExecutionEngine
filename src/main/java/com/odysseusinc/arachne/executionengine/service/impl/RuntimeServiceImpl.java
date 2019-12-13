@@ -427,7 +427,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                         LOGGER.debug(STDOUT_LOG_DIFF, stdoutDiff);
                     }
                 } while (process.isAlive());
-                LOGGER.debug("EMPTY_STDOUT_HANDLER: analysis_id={}, exit value code {}", submissionId, process.exitValue());
+                LOGGER.info("EMPTY_STDOUT_HANDLER: analysis_id={}, exit value code {}", submissionId, process.exitValue());
             } catch (IOException e) {
                 LOGGER.info("EMPTY_STDOUT_HANDLER: analysis_id={}, Process was destroyed during attempt to write stdout", submissionId, e);
                 LOGGER.info("Process was destroyed during attempt to write stdout", e);
