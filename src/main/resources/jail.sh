@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+echo ` df -h`
+
 #JAIL=/tmp/jail-dir
 JAIL=$1
 #rm -fr $JAIL/*
@@ -63,10 +65,20 @@ sudo echo -e "#!/usr/bin/env bash \n \
 
 echo "jail echo "
 
+echo "DEBUG_1"
+lsblk
+echo "---------------------------------------"
+dmesg
+echo "---------------------------------------"
 sudo unshare --fork --pid -- chroot $JAIL /bin/bash -c " \
     mount -t proc proc /proc && \
     ./etc/R-with-krb.sh \"$KINIT_PARAMS\" \"$ANALYSIS_FILE\" \"$KRB_PASSWORD\" \
 "
+echo "DEBUG_1"
+lsblk
+echo "---------------------------------------"
+dmesg
+echo "---------------------------------------"
 
 echo "jail ushare "
 
