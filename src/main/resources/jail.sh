@@ -68,7 +68,7 @@ echo "jail echo "
 echo "DEBUG_1"
 lsblk
 echo "---------------------------------------"
-dmesg
+#dmesg
 echo "---------------------------------------"
 sudo unshare --fork --pid -- chroot $JAIL /bin/bash -c " \
     mount -t proc proc /proc && \
@@ -77,7 +77,7 @@ sudo unshare --fork --pid -- chroot $JAIL /bin/bash -c " \
 echo "DEBUG_1"
 lsblk
 echo "---------------------------------------"
-dmesg
+#dmesg
 echo "---------------------------------------"
 
 echo "jail ushare "
