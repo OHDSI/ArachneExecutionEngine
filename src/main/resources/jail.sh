@@ -16,6 +16,8 @@ echo "jail $DIST_ARCHIVE "
 sudo tar xzf $DIST_ARCHIVE -C $JAIL
 
 export R_HOME=/usr/lib/R
+#sudo mkdir $JAIL/etc/
+
 sudo cp /etc/resolv.conf $JAIL/etc/resolv.conf
 
 echo "jail coped  $JAIL/etc/resolv.conf"
@@ -65,18 +67,25 @@ sudo echo -e "#!/usr/bin/env bash \n \
 
 echo "jail echo "
 
-echo "DEBUG_1"
-lsblk
 echo "---------------------------------------"
+echo "DEBUG_0"
+lsblk
+
 #dmesg
 echo "---------------------------------------"
-sudo unshare --fork --pid -- chroot $JAIL /bin/bash -c " \
+sudo unshare -r --fork --pid -- chroot $JAIL /bin/bash -c " \
     mount -t proc proc /proc && \
     ./etc/R-with-krb.sh \"$KINIT_PARAMS\" \"$ANALYSIS_FILE\" \"$KRB_PASSWORD\" \
 "
+
+if [ $? -ne 0 ]
+  echo exit code $?
+fi
+
+echo $?
+echo "---------------------------------------"
 echo "DEBUG_1"
 lsblk
-echo "---------------------------------------"
 #dmesg
 echo "---------------------------------------"
 
