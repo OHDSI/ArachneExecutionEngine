@@ -22,12 +22,20 @@
 
 package com.odysseusinc.arachne.executionengine.util;
 
+import java.time.Duration;
 import java.util.Date;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 
 public class DateUtil {
 
     public static String defaultFormat(String format, Date date) {
 
         return date != null ? String.format(format, date) : "";
+    }
+
+    public static String formatDuration(Duration duration) {
+
+        return duration.toMillis() < 1000 ? String.format("%d ms", duration.toMillis()) :
+                DurationFormatUtils.formatDurationWords(duration.toMillis(), true, true);
     }
 }

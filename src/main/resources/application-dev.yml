@@ -1,5 +1,6 @@
 logging:
-  level: debug
+  level:
+    root: debug
 executor:
   queueCapacity: 200
 submission:

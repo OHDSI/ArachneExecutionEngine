@@ -20,7 +20,7 @@ function print_help {
 	echo -e "  -g PATH \t\tPath to BigQuery drivers"
 	echo -e "  -i PATH \t\tPath to Impala drivers"
 	echo -e "  -n PATH \t\tPath to Netezza drivers"
-	echo -e "  -hive PATH \t\tPath to Hive drivers"
+	echo -e "  -v PATH \t\tPath to Hive drivers"
 	echo -e "  -h \t\t\tPrints this"
 }
 
