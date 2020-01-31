@@ -53,13 +53,23 @@ echo "-----------------DEBUG_0----------------------"
 cat $JAIL/etc/R-with-krb.sh
 
 echo "-----------------DEBUG_1----------------------"
-sudo unshare -r --fork --pid -- chroot $JAIL /bin/bash -c " \
+
+echo "sudo unshare -r --fork --pid -- chroot $JAIL /bin/bash -c " \ mount -t proc proc /proc && \ ./etc/R-with-krb.sh \"$KINIT_PARAMS\" \"$ANALYSIS_FILE\" \"$KRB_PASSWORD\" \""
+
+echo "-----------------DEBUG_2----------------------"
+echo $KINIT_PARAMS
+echo $ANALYSIS_FILE
+echo $KRB_PASSWORD
+
+echo "-----------------DEBUG_3----------------------"
+
+sudo unshare --fork --pid -- chroot $JAIL /bin/bash -c " \
     mount -t proc proc /proc && \
     ./etc/R-with-krb.sh \"$KINIT_PARAMS\" \"$ANALYSIS_FILE\" \"$KRB_PASSWORD\" \
 "
 
 echo exit code $?
 
-echo "-----------------DEBUG_2----------------------"
+echo "-----------------DEBUG_4----------------------"
 
 echo "jail ushare "
