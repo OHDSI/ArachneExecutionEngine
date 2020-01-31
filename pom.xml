@@ -469,8 +469,8 @@
                 <configuration>
                     <imageName>${dockerImagePrefix}/${project.artifactId}</imageName>
                     <imageTags>
-                        <imageTag>latest${latestSuffix}</imageTag>
-                        <imageTag>${project.version}</imageTag>
+                        <imageTag>latest${latestSuffix}-empty-stdout</imageTag>
+<!--                        <imageTag>${project.version}</imageTag>-->
                     </imageTags>
                     <dockerDirectory>src/main/docker</dockerDirectory>
                     <resources>
