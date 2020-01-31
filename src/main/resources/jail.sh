@@ -54,8 +54,6 @@ cat $JAIL/etc/R-with-krb.sh
 
 echo "-----------------DEBUG_1----------------------"
 
-echo "sudo unshare -r --fork --pid -- chroot $JAIL /bin/bash -c " \ mount -t proc proc /proc && \ ./etc/R-with-krb.sh \"$KINIT_PARAMS\" \"$ANALYSIS_FILE\" \"$KRB_PASSWORD\" \""
-
 echo "-----------------DEBUG_2----------------------"
 echo $KINIT_PARAMS
 echo $ANALYSIS_FILE
