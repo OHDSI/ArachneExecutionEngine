@@ -80,3 +80,16 @@ drivers:
     impala: /impala
     bq: /bigquery
     netezza: /netezza
+    hive: /hive
+bulkload:
+  enableMPP: false
+  hive:
+    host:
+    ssh:
+      port: 2222
+      username:
+      password:
+      keyfile:
+    hadoop:
+      port: 8020
+      username:
