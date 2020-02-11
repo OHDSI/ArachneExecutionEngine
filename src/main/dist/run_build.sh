@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 DIST=trusty
-CRAN_DIST=
 ARCH=amd64
 BUILD_PATH=./dist
 WS=`dirname $0`
@@ -9,32 +8,30 @@ WS=`dirname $0`
 BQ_PATH=../extras/bigquery/
 IMPALA_PATH=../extras/impala/
 NETEZZA_PATH=../extras/netezza/
+HIVE_PATH=../extras/hive/
 
 function print_help {
 	echo "Usage: run_build.sh [OPTIONS]"
 	echo "Available options are:"
 	echo -e "  -a i386|amd64 \tDistribution architecture, default is amd64"
 	echo -e "  -d DIST_NAME \t\tUbuntu distribution name, e.g. trusty or xenial, default is trusty"
-	echo -e "  -r R_DIST_NAME \t\tUbuntu distribution name from cran with R packages, default is the same as used for DIST_NAME"
 	echo -e "  -b BUILDDIR \t\tDirectory where distribution build would be running"
 	echo -e "  -f FILE \t\tOutput archive filename"
 	echo -e "  -g PATH \t\tPath to BigQuery drivers"
 	echo -e "  -i PATH \t\tPath to Impala drivers"
 	echo -e "  -n PATH \t\tPath to Netezza drivers"
+	echo -e "  -v PATH \t\tPath to Hive drivers"
 	echo -e "  -h \t\t\tPrints this"
 }
 
 OPTIND=1
-while getopts ":a:d:r:b:f:h:g:i:n" opt; do
+while getopts ":a:d:b:f:h:g:i:n" opt; do
 	case $opt in 
 		a)
 			ARCH=$OPTARG
 			;;
 		d)	
 			DIST=$OPTARG
-			;;
-		r)
-			CRAN_DIST=$OPTARG
 			;;
 		b)
 			BUILD_PATH=$OPTARG
@@ -65,10 +62,6 @@ while getopts ":a:d:r:b:f:h:g:i:n" opt; do
 			;;
 	esac
 done
-
-if [[ -z $CRAN_DIST ]]; then
-  CRAN_DIST=$DIST
-fi
 
 if [[ -z $ARCHIVE ]]; then
 	ARCHIVE=../r_base_${DIST}_${ARCH}.tar.gz
@@ -126,8 +119,12 @@ cp $BQ_PATH/*.jar $BUILD_PATH/bigquery/
 mkdir $BUILD_PATH/netezza/
 cp $NETEZZA_PATH/*.jar $BUILD_PATH/netezza/
 
+# Hive drivers
+mkdir $BUILD_PATH/hive/
+cp $HIVE_PATH/*.jar $BUILD_PATH/hive/
+
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
-sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST
+sudo chroot $BUILD_PATH /root/install_packages.sh $DIST
 
 umount $BUILD_PATH/proc
 sudo rm -f $BUILD_PATH/root/install_packages.sh
