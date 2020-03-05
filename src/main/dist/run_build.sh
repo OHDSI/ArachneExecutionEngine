@@ -8,6 +8,7 @@ WS=`dirname $0`
 BQ_PATH=../extras/bigquery/
 IMPALA_PATH=../extras/impala/
 NETEZZA_PATH=../extras/netezza/
+HIVE_PATH=../extras/hive/
 
 function print_help {
 	echo "Usage: run_build.sh [OPTIONS]"
@@ -19,6 +20,7 @@ function print_help {
 	echo -e "  -g PATH \t\tPath to BigQuery drivers"
 	echo -e "  -i PATH \t\tPath to Impala drivers"
 	echo -e "  -n PATH \t\tPath to Netezza drivers"
+	echo -e "  -v PATH \t\tPath to Hive drivers"
 	echo -e "  -h \t\t\tPrints this"
 }
 
@@ -116,6 +118,10 @@ cp $BQ_PATH/*.jar $BUILD_PATH/bigquery/
 # Netezza drivers
 mkdir $BUILD_PATH/netezza/
 cp $NETEZZA_PATH/*.jar $BUILD_PATH/netezza/
+
+# Hive drivers
+mkdir $BUILD_PATH/hive/
+cp $HIVE_PATH/*.jar $BUILD_PATH/hive/
 
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $DIST
