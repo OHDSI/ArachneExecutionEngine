@@ -83,9 +83,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
 
-    @Value("${submission.update.interval}")
-    private int submissionUpdateInterval;
-
     private String driverPathExclusions;
     private List<DataSourceAuthResolver> authResolvers;
 
