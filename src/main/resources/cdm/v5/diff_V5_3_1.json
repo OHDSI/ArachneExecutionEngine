@@ -1,0 +1,19 @@
+{
+  "condition_occurrence" : [ "condition_start_datetime", "condition_end_datetime", "visit_detail_id", "condition_status_source_value", "condition_status_concept_id" ],
+  "cost" : [ "cost_id", "cost_event_id", "cost_domain_id", "cost_type_concept_id", "currency_concept_id", "total_charge", "total_cost", "total_paid", "paid_by_payer", "paid_by_patient", "paid_patient_copay", "paid_patient_coinsurance", "paid_patient_deductible", "paid_by_primary", "paid_ingredient_cost", "paid_dispensing_fee", "payer_plan_period_id", "amount_allowed", "revenue_code_concept_id", "reveue_code_source_value", "drg_concept_id", "drg_source_value" ],
+  "death" : [ "death_datetime" ],
+  "device_exposure" : [ "device_exposure_start_datetime", "device_exposure_end_datetime", "visit_detail_id" ],
+  "drug_exposure" : [ "drug_exposure_start_datetime", "drug_exposure_end_datetime", "verbatim_end_date", "visit_detail_id" ],
+  "drug_strength" : [ "denominator_value", "box_size" ],
+  "measurement" : [ "measurement_datetime", "measurement_time", "visit_detail_id" ],
+  "metadata" : [ "metadata_concept_id", "metadata_type_concept_id", "name", "value_as_string", "value_as_concept_id", "metadata_date", "metadata_datetime" ],
+  "note" : [ "note_datetime", "note_class_concept_id", "note_title", "encoding_concept_id", "language_concept_id", "visit_detail_id" ],
+  "note_nlp" : [ "note_nlp_id", "note_id", "section_concept_id", "snippet", "offset", "lexical_variant", "note_nlp_concept_id", "note_nlp_source_concept_id", "nlp_system", "nlp_date", "nlp_datetime", "term_exists", "term_temporal", "term_modifiers" ],
+  "observation" : [ "observation_datetime", "visit_detail_id" ],
+  "payer_plan_period" : [ "payer_concept_id", "payer_source_concept_id", "plan_concept_id", "plan_source_concept_id", "sponsor_concept_id", "sponsor_source_value", "sponsor_source_concept_id", "stop_reason_concept_id", "stop_reason_source_value", "stop_reason_source_concept_id" ],
+  "person" : [ "birth_datetime" ],
+  "procedure_occurrence" : [ "procedure_datetime", "visit_detail_id", "modifier_source_value" ],
+  "specimen" : [ "specimen_datetime" ],
+  "visit_detail" : [ "visit_detail_id", "person_id", "visit_detail_concept_id", "visit_detail_start_date", "visit_detail_start_datetime", "visit_detail_end_date", "visit_detail_end_datetime", "visit_detail_type_concept_id", "provider_id", "care_site_id", "admitting_source_concept_id", "discharge_to_concept_id", "preceding_visit_detail_id", "visit_detail_source_value", "visit_detail_source_concept_id", "admitting_source_value", "discharge_to_source_value", "visit_detail_parent_id", "visit_occurrence_id" ],
+  "visit_occurrence" : [ "visit_start_datetime", "visit_end_datetime", "admitting_source_concept_id", "admitting_source_value", "discharge_to_concept_id", "discharge_to_source_value", "preceding_visit_occurrence_id" ]
+}
