@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -139,9 +140,9 @@ public class AnalysysControllerTest {
     private void AssertStates() {
 
         try {
-            latch.await(120, TimeUnit.SECONDS);
+            latch.await(10, TimeUnit.SECONDS);
             Assert.assertTrue(updateStatusIsOk.get());
-            latch.await(120, TimeUnit.SECONDS);
+            latch.await(10, TimeUnit.SECONDS);
             Assert.assertTrue(resultIsOk.get());
         } catch (InterruptedException e) {
             log.error("", e);
@@ -156,6 +157,7 @@ public class AnalysysControllerTest {
         analysis.setCallbackPassword("password");
         analysis.setUpdateStatusCallback(BASE_URL + ":" + serverPort + "/submissions/{id}/update/{password}");
         analysis.setResultCallback(BASE_URL + ":" + serverPort + "/submissions/{id}/result/{password}");
+        analysis.setRequested(new Date());
         DataSourceUnsecuredDTO dataSource = new DataSourceUnsecuredDTO();
         dataSource.setType(DBMSType.POSTGRESQL);
         dataSource.setConnectionString("");
