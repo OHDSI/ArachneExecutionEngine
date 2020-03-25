@@ -104,7 +104,7 @@ curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_4.
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_5.r -o libs/libs_5.r
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_6.r -o libs/libs_6.r
 
-debootstrap --arch amd64 $DIST $BUILD_PATH http://ubuntu.cs.utah.edu/ubuntu/
+debootstrap --arch amd64 $DIST $BUILD_PATH http://ubuntu-cd.mirror.iweb.ca/ # http://ubuntu.cs.utah.edu/ubuntu/
 mount --bind /proc $BUILD_PATH/proc
 
 cp $WS/install_packages.sh $BUILD_PATH/root/
