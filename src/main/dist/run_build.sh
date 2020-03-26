@@ -102,7 +102,7 @@ curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_2.
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_3.r -o libs/libs_3.r
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_4.r -o libs/libs_4.r
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_5.r -o libs/libs_5.r
-curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/master/libs/libs_6.r -o libs/libs_6.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/fix-sqlrender-bigquery/libs/libs_6.r -o libs/libs_6.r
 
 debootstrap --arch amd64 $DIST $BUILD_PATH http://archive.ubuntu.com/ubuntu/ # http://ubuntu.cs.utah.edu/ubuntu/
 mount --bind /proc $BUILD_PATH/proc
