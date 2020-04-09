@@ -76,6 +76,7 @@ python3 -m pip install -U NumPy
 python3 -m pip install -U SciPy
 python3 -m pip install -U scikit-learn
 python3 -m pip install -U torch
+python3 -m pip install -U joblib
 python3 -m pip install --upgrade tensorflow
 python3 -m pip install keras
 
