@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
+# DIST - Ubuntu Dist
+# CRAN_URL - CRAN Mirror (eg https://cran.asia/)
+
 DIST=$1
+CRAN_URL=$2
 
 HOME=/root
 
@@ -62,7 +66,7 @@ cat >> /etc/R/Rprofile.site <<_EOF_
 local({ 
   # add MASS to the default packages, set a CRAN mirror  
   old <- getOption("defaultPackages"); r <- getOption("repos") 
-  r["CRAN"] <- "https://cran.mtu.edu/"
+  r["CRAN"] <- "$CRAN_URL
   options(defaultPackages = c(old, "MASS"), repos = r) 
 })
 _EOF_
