@@ -66,7 +66,7 @@ cat >> /etc/R/Rprofile.site <<_EOF_
 local({ 
   # add MASS to the default packages, set a CRAN mirror  
   old <- getOption("defaultPackages"); r <- getOption("repos") 
-  r["CRAN"] <- "$CRAN_URL
+  r["CRAN"] <- "$CRAN_URL"
   options(defaultPackages = c(old, "MASS"), repos = r) 
 })
 _EOF_
