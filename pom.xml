@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.16.0-SNAPSHOT</version>
+    <version>1.16.1-QA</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -24,6 +24,7 @@
         <jtds.version>1.3.1</jtds.version>
         <mysql.version>5.1.30</mysql.version>
         <tomcat.version>9.0.27</tomcat.version>
+        <guava.verson>29.0-jre</guava.verson>
     </properties>
 
     <parent>
@@ -73,6 +74,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-logging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.verson}</version>
         </dependency>
 
         <dependency>
