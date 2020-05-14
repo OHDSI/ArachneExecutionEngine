@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2019 Odysseus Data Services, inc.
+ * Copyright 2020 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,19 +15,31 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Yaroslav Molodkov, Alexander Cumarav
- * Created: October 17, 2019
+ * Authors: Vitaly Koulakov, Anastasiia Klochkova, Yaroslav Molodkov, Alexander Cumarav
+ * Created: May 13, 2020
  *
  */
 
-package com.odysseusinc.arachne.executionengine.service;
+package com.odysseusinc.arachne.executionengine.exceptions;
 
-import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import java.io.IOException;
-import java.sql.SQLException;
+public class ExecutionEngineRuntimeException extends RuntimeException {
 
-public interface VersionDetectionService {
+    public ExecutionEngineRuntimeException() {
 
-    CommonCDMVersionDTO detectCDMVersion(DataSourceUnsecuredDTO dataSource) throws SQLException, IOException;
+    }
+
+    public ExecutionEngineRuntimeException(String message) {
+
+        super(message);
+    }
+
+    public ExecutionEngineRuntimeException(String message, Throwable cause) {
+
+        super(message, cause);
+    }
+
+    public ExecutionEngineRuntimeException(Throwable cause) {
+
+        super(cause);
+    }
 }
