@@ -9,7 +9,6 @@
   "note" : [ "note_datetime", "note_class_concept_id", "note_title", "encoding_concept_id", "language_concept_id" ],
   "note_nlp" : [ "note_nlp_id", "note_id", "section_concept_id", "snippet", "offset", "lexical_variant", "note_nlp_concept_id", "note_nlp_source_concept_id", "nlp_system", "nlp_date", "nlp_datetime", "term_exists", "term_temporal", "term_modifiers" ],
   "observation" : [ "observation_datetime" ],
-  "observation_period" : [ "observation_period_start_datetime", "observation_period_end_datetime" ],
   "person" : [ "birth_datetime" ],
   "procedure_occurrence" : [ "procedure_datetime", "qualifier_source_value" ],
   "specimen" : [ "specimen_datetime" ],
