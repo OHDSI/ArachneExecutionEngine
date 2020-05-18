@@ -81,6 +81,7 @@ public class DefaultVersionDetectionService extends BaseVersionDetectionService 
                 }
                 foundDiffs.put(versionEntry.getKey().name(), diff);
             }
+            foundDiffs.put("V5_COMMONS", v5BaseDiff);
         }
         log.debug("CDM version was not detected on datasource: {}", datasourceName);
         for (Map.Entry<String, Map<String, List<String>>> versionEntry : foundDiffs.entrySet()) {
