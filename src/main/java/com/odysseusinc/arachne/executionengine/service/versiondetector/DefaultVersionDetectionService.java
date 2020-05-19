@@ -26,8 +26,6 @@ import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.util.SQLUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -45,6 +43,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+
+import static java.lang.String.join;
 
 @Service
 public class DefaultVersionDetectionService extends BaseVersionDetectionService implements VersionDetectionService {
@@ -69,7 +69,7 @@ public class DefaultVersionDetectionService extends BaseVersionDetectionService 
                 if (diff.isEmpty()) {
                     final String optionalColumns = String.format(SCHEMA_TMPL_OPTIONAL, version.name());
                     final Map<String, List<String>> optionalDiff = calcDifference(optionalColumns, databaseSchema);
-                    return Pair.of(version, buildOptionalMessage(optionalDiff));
+                    return Pair.of(version, buildOptionalMessage(version, optionalDiff));
                 }
                 foundDiffs.put(version.name(), diff);
             }
@@ -83,21 +83,26 @@ public class DefaultVersionDetectionService extends BaseVersionDetectionService 
             }
             foundDiffs.put("V5_COMMONS", v5BaseDiff);
         }
+        final String errorsReport = formatDiffsReport(foundDiffs, true);
         log.debug("CDM version was not detected on datasource: {}", datasourceName);
-        for (Map.Entry<String, Map<String, List<String>>> versionEntry : foundDiffs.entrySet()) {
-            final Map<String, List<String>> diffs = versionEntry.getValue();
-            diffs.forEach((table, columns) -> log.debug("[{}] Database table {}  missed fields: {}", versionEntry.getKey(), table, String.join(", ", columns)));
-        }
-        return Pair.of(null, toPrettyJSONString(foundDiffs));
+        log.debug(errorsReport);
+        return Pair.of(null, errorsReport);
     }
 
-    private String toPrettyJSONString(Map<String, ? extends Object> map) {
-        JSONObject jsonReport = new JSONObject(map);
-        try {
-            return jsonReport.toString(4);
-        } catch (JSONException e) {
-            return jsonReport.toString();
+    private String formatDiffsReport(Map<String, Map<String, List<String>>> foundDiffs, boolean isMandatory) {
+
+        StringBuilder messageBuilder = new StringBuilder();
+        String strictnessType = isMandatory ? "mandatory" : "optional";
+        for (Map.Entry<String, Map<String, List<String>>> versionEntry : foundDiffs.entrySet()) {
+            final Map<String, List<String>> diffs = versionEntry.getValue();
+            diffs.forEach((table, columns) -> appendLine(messageBuilder, String.format("[%s] Database table %s  missed %s fields: %s", versionEntry.getKey(), table, strictnessType, join(", ", columns))));
         }
+        return messageBuilder.toString();
+    }
+
+    private void appendLine(StringBuilder builder, String line) {
+        builder.append(line);
+        builder.append(System.lineSeparator());
     }
 
     private Map<String, List<String>> calcDifference(String expectedSchemaResource, Map<String, List<String>> databaseSchema) {
@@ -124,10 +129,10 @@ public class DefaultVersionDetectionService extends BaseVersionDetectionService 
         return Collections.unmodifiableMap(diff);
     }
 
-    private String buildOptionalMessage(Map<String, List<String>> optionalDiff) {
+    private String buildOptionalMessage(CommonCDMVersionDTO version, Map<String, List<String>> optionalDiff) {
 
         if (optionalDiff == null || !optionalDiff.isEmpty()) {
-            return toPrettyJSONString(optionalDiff);
+            return formatDiffsReport(Collections.singletonMap(version.name(), optionalDiff), false);
         }
         return null;
     }
