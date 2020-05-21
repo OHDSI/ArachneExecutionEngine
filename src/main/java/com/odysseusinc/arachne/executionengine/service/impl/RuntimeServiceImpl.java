@@ -279,7 +279,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, Map<String, String> krbProps) {
 
         Map<String, String> environment = new HashMap<>(krbProps);
-        environment.put(RUNTIME_ENV_DATA_SOURCE_NAME, CommonFilenameUtils.sanitizeFilename(dataSource.getName()));
+        environment.put(RUNTIME_ENV_DATA_SOURCE_NAME, dataSource.getName());
         environment.put(RUNTIME_ENV_DBMS_USERNAME, dataSource.getUsername());
         environment.put(RUNTIME_ENV_DBMS_PASSWORD, dataSource.getPassword());
         environment.put(RUNTIME_ENV_DBMS_TYPE, dataSource.getType().getOhdsiDB());
