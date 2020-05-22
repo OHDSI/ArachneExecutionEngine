@@ -3,6 +3,7 @@ package com.odysseusinc.arachne.executionengine.service.versiondetector;
 import com.google.common.collect.ImmutableMap;
 import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,6 +86,19 @@ public class DefaultVersionDetectionServiceTest {
         assertThat(result.getKey()).isNull();
         assertThat(result.getValue()).contains("[V4_0]", "[V5_COMMONS]", "[V6_0]");
         assertThat(result.getValue()).doesNotContain("[V5_3_1]", "[V5_3]", "[V5_2]", "[V5_1]", "[V5_0_1]", "[V5_0]");
+    }
+
+    @Test
+    public void shouldReportCDMDetectionDiffsSortedByVersion() throws SQLException {
+
+        when(metadataProvider.extractMetadata(dataSource)).thenReturn(test_wrong_schema);
+
+        final Pair<CommonCDMVersionDTO, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
+
+        final String[] ordereredVersions = result.getValue().replaceAll("]\\s.*", "").split("\n");
+
+        assertThat(ordereredVersions)
+                .containsExactly("[V4_0", "[V5_COMMONS", "[V6_0");
     }
 
     @Test

@@ -33,10 +33,10 @@ import javax.inject.Inject;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import static java.lang.String.join;
@@ -65,7 +65,7 @@ public class DefaultVersionDetectionService extends BaseVersionDetectionService 
 
     private Pair<CommonCDMVersionDTO, String> doDetectVersion(Map<String, List<String>> databaseSchema, String datasourceName) {
 
-        Map<String, Map<String, List<String>>> foundDiffs = new LinkedHashMap<>();
+        Map<String, Map<String, List<String>>> foundDiffs = new TreeMap<>();
         final Map<String, List<String>> expectedCommonCDM = cdmSchemaProvider.loadMandatorySchemaJson(COMMONS_SCHEMA);
         final Map<String, List<String>> v5BaseDiff = calculateSchemasDiff(expectedCommonCDM, databaseSchema);
         if (v5BaseDiff.isEmpty()) {//V5 base found
