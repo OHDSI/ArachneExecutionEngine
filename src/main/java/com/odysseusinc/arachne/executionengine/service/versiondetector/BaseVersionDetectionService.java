@@ -22,16 +22,10 @@
 
 package com.odysseusinc.arachne.executionengine.service.versiondetector;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
-import com.odysseusinc.arachne.executionengine.exceptions.ExecutionEngineRuntimeException;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -46,14 +40,12 @@ import static com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO.V6_0;
 
 public abstract class BaseVersionDetectionService implements VersionDetectionService {
 
-    protected static final String CDM_V5_RESOURCES = "/cdm/v5/";
-    protected static final String SCHEMA_TMPL = CDM_V5_RESOURCES + "diff_%s.json";
-    protected static final String SCHEMA_TMPL_OPTIONAL = CDM_V5_RESOURCES + "optional_diff_%s.json";
+    private static final String CDM_V5_RESOURCES = "/cdm/v5/";
+    private static final String SCHEMA_TMPL = CDM_V5_RESOURCES + "diff_%s.json";
     protected static final String COMMONS_SCHEMA = CDM_V5_RESOURCES + "cdm_commons.json";
     protected static final String CDM_V4_SCHEMA = "/cdm/v4/cdm_V4_0.json";
     protected static final String CDM_V6_SCHEMA = "/cdm/v6/cdm_V6_0.json";
-    private static final TypeReference<TreeMap<String, ArrayList<String>>> TREE_MAP_TYPE_REFERENCE = new TypeReference<TreeMap<String, ArrayList<String>>>() {
-    };
+
     protected static Collection<CommonCDMVersionDTO> V5_VERSIONS = new ArrayList<>(6);
     protected static Map<CommonCDMVersionDTO, String> OTHER_VERSIONS = new TreeMap<>();
 
@@ -71,13 +63,8 @@ public abstract class BaseVersionDetectionService implements VersionDetectionSer
         OTHER_VERSIONS.put(V4_0, CDM_V4_SCHEMA);
     }
 
-    protected Map<String, List<String>> parseSchemaJson(String resource) {
+    protected static String buildResourcePath(CommonCDMVersionDTO version){
 
-        ObjectMapper mapper = new ObjectMapper();
-        try (Reader reader = new InputStreamReader(getClass().getResourceAsStream(resource))) {
-            return mapper.readValue(reader, TREE_MAP_TYPE_REFERENCE);
-        } catch (Exception e) {
-            throw new ExecutionEngineRuntimeException("Cannot load resource: " + resource, e);
-        }
+        return String.format(SCHEMA_TMPL, version.name());
     }
 }

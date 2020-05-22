@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.inject.Inject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -48,6 +49,14 @@ public class ImpalaVersionDetectionService extends BaseVersionDetectionService i
     private static final Logger log = LoggerFactory.getLogger(ImpalaVersionDetectionService.class);
 
     private static String[] CTE_PARAMS = new String[]{ "table", "cdmDatabaseSchema", "fields" };
+
+    private final CDMSchemaProvider cdmSchemaProvider;
+
+    @Inject
+    public ImpalaVersionDetectionService(CDMSchemaProvider cdmSchemaProvider) {
+
+        this.cdmSchemaProvider = cdmSchemaProvider;
+    }
 
     @Override
     public Pair<CommonCDMVersionDTO,String> detectCDMVersion(DataSourceUnsecuredDTO dataSource) {
@@ -65,10 +74,10 @@ public class ImpalaVersionDetectionService extends BaseVersionDetectionService i
     private CommonCDMVersionDTO doDetectVersion(Predicate<Map<String, List<String>>> schemaPredicate) {
 
         CommonCDMVersionDTO result = null;
-        Map<String, List<String>> commonsSchema = parseSchemaJson(COMMONS_SCHEMA);
+        Map<String, List<String>> commonsSchema = cdmSchemaProvider.loadMandatorySchemaJson(COMMONS_SCHEMA);
         if (schemaPredicate.test(commonsSchema)) { //checks is it V5
             for(CommonCDMVersionDTO version : V5_VERSIONS) {
-                Map<String, List<String>> mandatorySubversionColumns = parseSchemaJson(String.format(SCHEMA_TMPL, version.name()));
+                Map<String, List<String>> mandatorySubversionColumns = cdmSchemaProvider.loadMandatorySchemaJson(buildResourcePath(version));
                 if (schemaPredicate.test(mandatorySubversionColumns)) {
                     result = version;
                     break;
@@ -76,7 +85,7 @@ public class ImpalaVersionDetectionService extends BaseVersionDetectionService i
             }
         } else {
             for(CommonCDMVersionDTO version : OTHER_VERSIONS.keySet()) {
-                Map<String, List<String>> cdmSchema = parseSchemaJson(OTHER_VERSIONS.get(version));
+                Map<String, List<String>> cdmSchema = cdmSchemaProvider.loadMandatorySchemaJson(OTHER_VERSIONS.get(version));
                 if (schemaPredicate.test(cdmSchema)) {
                     result = version;
                     break;
