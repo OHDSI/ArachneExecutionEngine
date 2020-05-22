@@ -20,39 +20,79 @@
  *
  */
 
-package com.odysseusinc.arachne.executionengine.service.impl;
+package com.odysseusinc.arachne.executionengine.service.versiondetector;
 
 import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import com.odysseusinc.arachne.executionengine.service.VersionDetectionService;
+import com.odysseusinc.arachne.executionengine.exceptions.ExecutionEngineRuntimeException;
 import com.odysseusinc.arachne.executionengine.util.SQLUtils;
-import java.io.IOException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.ohdsi.sql.SqlRender;
+import org.ohdsi.sql.SqlTranslate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.ohdsi.sql.SqlRender;
-import org.ohdsi.sql.SqlTranslate;
-import org.springframework.stereotype.Service;
 
 @Service
 public class ImpalaVersionDetectionService extends BaseVersionDetectionService implements VersionDetectionService {
 
+    private static final Logger log = LoggerFactory.getLogger(ImpalaVersionDetectionService.class);
+
     private static String[] CTE_PARAMS = new String[]{ "table", "cdmDatabaseSchema", "fields" };
 
-    @Override
-    public CommonCDMVersionDTO detectCDMVersion(DataSourceUnsecuredDTO dataSource) throws SQLException, IOException {
+    private final CDMSchemaProvider cdmSchemaProvider;
 
-        return doDetectVersion(schema -> {
+    @Autowired
+    public ImpalaVersionDetectionService(CDMSchemaProvider cdmSchemaProvider) {
+
+        this.cdmSchemaProvider = cdmSchemaProvider;
+    }
+
+    @Override
+    public Pair<CommonCDMVersionDTO,String> detectCDMVersion(DataSourceUnsecuredDTO dataSource) {
+
+        final CommonCDMVersionDTO version = doDetectVersion(schema -> {
             try {
                 return checkSchema(dataSource, schema);
             } catch (SQLException e) {
-                throw new RuntimeException(e);
+                throw new ExecutionEngineRuntimeException(e);
             }
         });
+        return Pair.of(version,null);
+    }
+
+    private CommonCDMVersionDTO doDetectVersion(Predicate<Map<String, List<String>>> schemaPredicate) {
+
+        CommonCDMVersionDTO result = null;
+        Map<String, List<String>> commonsSchema = cdmSchemaProvider.loadMandatorySchemaJson(COMMONS_SCHEMA);
+        if (schemaPredicate.test(commonsSchema)) { //checks is it V5
+            for(CommonCDMVersionDTO version : V5_VERSIONS) {
+                Map<String, List<String>> mandatorySubversionColumns = cdmSchemaProvider.loadMandatorySchemaJson(buildResourcePath(version));
+                if (schemaPredicate.test(mandatorySubversionColumns)) {
+                    result = version;
+                    break;
+                }
+            }
+        } else {
+            for(CommonCDMVersionDTO version : OTHER_VERSIONS.keySet()) {
+                Map<String, List<String>> cdmSchema = cdmSchemaProvider.loadMandatorySchemaJson(OTHER_VERSIONS.get(version));
+                if (schemaPredicate.test(cdmSchema)) {
+                    result = version;
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     private boolean checkSchema(DataSourceUnsecuredDTO dataSource, Map<String, List<String>> schema) throws SQLException {
@@ -73,12 +113,11 @@ public class ImpalaVersionDetectionService extends BaseVersionDetectionService i
         String sql = SqlRender.renderSql("with @cteTables, cte_all as (@cteAll) select tablename from cte_all;",
                 new String[]{ "cteTables", "cteAll" }, values);
         sql = SqlTranslate.translateSql(sql, DBMSType.IMPALA.getOhdsiDB());
-        try(Connection c  = SQLUtils.getConnection(dataSource)) {
-            try {
-                PreparedStatement query = c.prepareStatement(sql);
+        try (Connection c = SQLUtils.getConnection(dataSource)) {
+            try (PreparedStatement query = c.prepareStatement(sql)) {
                 query.executeQuery();
-            }catch (SQLException e) {
-                LOGGER.debug("DBMS: {} detection error: {}", dataSource.getType(), e.getMessage());
+            } catch (SQLException e) {
+                log.debug("DBMS: {} detection error: {}", dataSource.getType(), e.getMessage());
                 return false;
             }
         }
