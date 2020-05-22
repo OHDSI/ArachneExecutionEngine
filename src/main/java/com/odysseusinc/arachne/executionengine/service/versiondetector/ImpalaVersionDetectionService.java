@@ -32,9 +32,9 @@ import org.ohdsi.sql.SqlRender;
 import org.ohdsi.sql.SqlTranslate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.inject.Inject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -52,7 +52,7 @@ public class ImpalaVersionDetectionService extends BaseVersionDetectionService i
 
     private final CDMSchemaProvider cdmSchemaProvider;
 
-    @Inject
+    @Autowired
     public ImpalaVersionDetectionService(CDMSchemaProvider cdmSchemaProvider) {
 
         this.cdmSchemaProvider = cdmSchemaProvider;
