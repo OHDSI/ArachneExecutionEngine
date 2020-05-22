@@ -27,9 +27,9 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnse
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.inject.Inject;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,7 +49,7 @@ public class DefaultVersionDetectionService extends BaseVersionDetectionService 
     private final CDMSchemaProvider cdmSchemaProvider;
     private final MetadataProvider metadataProvider;
 
-    @Inject
+    @Autowired
     public DefaultVersionDetectionService(CDMSchemaProvider cdmSchemaProvider, MetadataProvider metadataProvider) {
 
         this.cdmSchemaProvider = cdmSchemaProvider;

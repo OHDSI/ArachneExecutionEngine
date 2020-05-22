@@ -3,7 +3,6 @@ package com.odysseusinc.arachne.executionengine.service.versiondetector;
 import com.google.common.collect.ImmutableMap;
 import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
