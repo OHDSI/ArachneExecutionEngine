@@ -12,13 +12,13 @@ RUN update-rc.d cron defaults && update-rc.d rsyslog defaults
 ENV R_INSTALL_SCRIPT=libs.r
 ADD execution-engine-exec.jar /execution-engine.jar
 
-#Copy driver
+#Copy drivers
 RUN mkdir /impala
-ADD src/main/extras/impala/*.jar /impala/
+ADD extras/impala /impala/
 RUN mkdir /bigquery
-ADD src/main/extras/bigquery/*.jar /bigquery/
+ADD extras/bigquery /bigquery/
 RUN mkdir /netezza
-ADD src/main/extras/drivers/netezza/*.jar /netezza/
+ADD extras/netezza /netezza/
 
 EXPOSE 8888
 COPY run.sh /run.sh
