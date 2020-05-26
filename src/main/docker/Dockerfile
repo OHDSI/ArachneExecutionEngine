@@ -11,9 +11,15 @@ RUN ln -fs /usr/share/zoneinfo/Etc/GMT /etc/localtime && dpkg-reconfigure -f non
 RUN update-rc.d cron defaults && update-rc.d rsyslog defaults
 ENV R_INSTALL_SCRIPT=libs.r
 ADD execution-engine-exec.jar /execution-engine.jar
+
+#Copy driver
 RUN mkdir /impala
-ADD Cloudera_ImpalaJDBC4_2.5.41.zip /impala/impala-jdbc.zip
-RUN cd /impala && unzip impala-jdbc.zip && rm -f impala-jdbc.zip
+ADD src/main/extras/impala/*.jar /impala/
+RUN mkdir /bigquery
+ADD src/main/extras/bigquery/*.jar /bigquery/
+RUN mkdir /netezza
+ADD src/main/extras/drivers/netezza/*.jar /netezza/
+
 EXPOSE 8888
 COPY run.sh /run.sh
 RUN dos2unix /run.sh
