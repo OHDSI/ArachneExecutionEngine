@@ -16,16 +16,19 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Yaroslav Molodkov, Alexander Cumarav
- * Created: October 21, 2019
+ * Created: October 17, 2019
  *
  */
 
-package com.odysseusinc.arachne.executionengine.service;
+package com.odysseusinc.arachne.executionengine.service.versiondetector;
 
-import com.odysseusinc.arachne.commons.types.DBMSType;
-import com.odysseusinc.arachne.executionengine.service.versiondetector.VersionDetectionService;
+import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import org.apache.commons.lang3.tuple.Pair;
 
-public interface VersionDetectionServiceFactory {
+import java.sql.SQLException;
 
-    VersionDetectionService getService(DBMSType dbmsType);
+public interface VersionDetectionService {
+
+    Pair<CommonCDMVersionDTO,String> detectCDMVersion(DataSourceUnsecuredDTO dataSource) throws SQLException;
 }
