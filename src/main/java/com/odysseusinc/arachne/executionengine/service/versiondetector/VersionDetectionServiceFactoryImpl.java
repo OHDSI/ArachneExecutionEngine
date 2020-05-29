@@ -20,13 +20,13 @@
  *
  */
 
-package com.odysseusinc.arachne.executionengine.service.impl;
+package com.odysseusinc.arachne.executionengine.service.versiondetector;
 
 import com.odysseusinc.arachne.commons.types.DBMSType;
-import com.odysseusinc.arachne.executionengine.service.VersionDetectionService;
 import com.odysseusinc.arachne.executionengine.service.VersionDetectionServiceFactory;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
