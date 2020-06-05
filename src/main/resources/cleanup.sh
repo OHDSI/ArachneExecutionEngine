@@ -2,7 +2,7 @@
 
 jail=$1
 sudo umount $jail/proc
-dirs=( bin boot dev etc home impala lib lib64 libs.r media mnt opt proc root run sbin srv sys tmp usr var .Rhistory )
+dirs=( bin bigquery boot dev etc home hive impala lib lib64 libs.r media mnt netezza opt proc root run sbin srv sys tmp usr var .Rhistory )
 
 for d in "${dirs[@]}"
 do
