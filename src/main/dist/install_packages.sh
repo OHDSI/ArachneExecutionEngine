@@ -78,7 +78,9 @@ ln -s /usr/bin/python3.6 /usr/bin/python3
 python3 -m pip install --upgrade pip
 python3 -m pip install -U NumPy
 python3 -m pip install -U SciPy
-python3 -m pip install -U scikit-learn
+# Installs specific version due to issue in the PatientLevelPrediction package
+# that uses deprecated sklearn.externals.joblib
+python3 -m pip install -Iv scikit-learn==0.22.2.post1
 python3 -m pip install -U torch
 python3 -m pip install -U joblib
 python3 -m pip install --upgrade tensorflow
