@@ -23,12 +23,12 @@
 package com.odysseusinc.arachne.executionengine.api.v1;
 
 import com.odysseusinc.arachne.commons.types.DBMSType;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
-import com.odysseusinc.arachne.executionengine.ExecutionEngineStarter;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.executionengine.ExecutionEngineStarter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
@@ -70,6 +70,8 @@ public class AnalysysControllerTest {
     private Integer serverPort;
     @Value("${cdm.dbms}")
     private String cdmDbms;
+    @Value("${cdm.name}")
+    private String name;
     @Value("${cdm.jdbc_url}")
     private String cdmJdbcUrl;
     @Value("${cdm.username}")
@@ -176,6 +178,7 @@ public class AnalysysControllerTest {
         analysis.setResultCallback(BASE_URL + ":" + serverPort + "/submissions/{id}/result/{password}");
         analysis.setRequested(new Date());
         DataSourceUnsecuredDTO dataSource = new DataSourceUnsecuredDTO();
+        dataSource.setName(name);
         dataSource.setType(dbmsType);
         dataSource.setConnectionString(cdmJdbcUrl);
         dataSource.setUsername(cdmUsername);
