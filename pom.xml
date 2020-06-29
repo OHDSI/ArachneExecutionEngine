@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.16.0-SNAPSHOT</version>
+    <version>1.16.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -148,7 +148,7 @@
         <dependency>
             <groupId>org.ohdsi.sql</groupId>
             <artifactId>SqlRender</artifactId>
-            <version>1.6.3</version>
+            <version>1.6.3-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -166,6 +166,18 @@
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>2.7.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.odysseusinc</groupId>
+            <artifactId>data-source-manager</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
 
     </dependencies>
@@ -248,6 +260,99 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>hive</id>
+            <properties>
+                <hive-jdbc.version>3.1.2</hive-jdbc.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.hive</groupId>
+                    <artifactId>hive-jdbc</artifactId>
+                    <version>${hive-jdbc.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.apache.tomcat</groupId>
+                            <artifactId>*</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.eclipse.jetty</groupId>
+                            <artifactId>*</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <artifactId>slf4j-log4j12</artifactId>
+                            <groupId>org.slf4j</groupId>
+                        </exclusion>
+                        <exclusion>
+                            <artifactId>log4j</artifactId>
+                            <groupId>log4j</groupId>
+                        </exclusion>
+                        <exclusion>
+                            <artifactId>servlet-api</artifactId>
+                            <groupId>javax.servlet</groupId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.zaxxer</groupId>
+                            <artifactId>HikariCP</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.zaxxer</groupId>
+                            <artifactId>HikariCP-java7</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>javax.ws.rs</groupId>
+                            <artifactId>javax.ws.rs-api</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.sun.jersey</groupId>
+                            <artifactId>jersey-server</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.sun.jersey</groupId>
+                            <artifactId>jersey-core</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.sun.jersey</groupId>
+                            <artifactId>jersey-client</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.sun.jersey</groupId>
+                            <artifactId>jersey-json</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.tdunning</groupId>
+                            <artifactId>json</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-server</artifactId>
+                    <version>1.19.4</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-core</artifactId>
+                    <version>1.19.4</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>javax.ws.rs</groupId>
+                            <artifactId>jsr311-api</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-client</artifactId>
+                    <version>1.19.4</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-json</artifactId>
+                    <version>1.19.4</version>
+                </dependency>
+            </dependencies>
         </profile>
         <profile>
             <id>bigquery</id>

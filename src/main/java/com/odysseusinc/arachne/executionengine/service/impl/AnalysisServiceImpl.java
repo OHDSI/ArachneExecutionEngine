@@ -77,6 +77,8 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     private String bqDriversLocation;
     @Value("${drivers.location.netezza}")
     private String netezzaDriversLocation;
+    @Value("${drivers.location.hive}")
+    private String hiveDriversLocation;
 
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
@@ -122,13 +124,13 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
             List<Optional> results = authResolvers.stream().filter(r -> r.supports(dataSourceData))
                     .map(r -> r.resolveAuth(dataSourceData, keystoreDir))
                     .collect(Collectors.toList());
-						KrbConfig krbConfig = new KrbConfig();
-						for(Optional val : results){
-							if (val.isPresent() && val.get() instanceof KrbConfig) {
-								krbConfig = (KrbConfig) val.get();
-								break;
-							}
-						}
+            KrbConfig krbConfig = new KrbConfig();
+            for(Optional val : results){
+                if (val.isPresent() && val.get() instanceof KrbConfig) {
+                    krbConfig = (KrbConfig) val.get();
+                    break;
+                }
+            }
 
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
@@ -215,7 +217,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
 
-        driverPathExclusions = Stream.of(impalaDriversLocation, bqDriversLocation, netezzaDriversLocation)
+        driverPathExclusions = Stream.of(impalaDriversLocation, bqDriversLocation, netezzaDriversLocation, hiveDriversLocation)
                 .filter(StringUtils::isNotBlank)
                 .map(path -> path.startsWith("/") ? path.substring(1) : path)
                 .map(path -> path + "/**/*")

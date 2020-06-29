@@ -25,11 +25,13 @@ package com.odysseusinc.arachne.executionengine.service.impl;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
 import com.odysseusinc.arachne.commons.types.DBMSType;
+import com.odysseusinc.arachne.commons.utils.CommonFilenameUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
+import com.odysseusinc.arachne.executionengine.config.properties.HiveBulkLoadProperties;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
@@ -120,16 +122,26 @@ public class RuntimeServiceImpl implements RuntimeService {
     private String bqDriversLocation;
     @Value("${drivers.location.netezza}")
     private String netezzaDriversLocation;
+    @Value("${drivers.location.hive}")
+    private String hiveDriversLocation;
+    @Value("${bulkload.enableMPP}")
+    private Boolean enableMPP;
+    private final HiveBulkLoadProperties hiveBulkLoadProperties;
 
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
 
 
     @Autowired
-    public RuntimeServiceImpl(ThreadPoolTaskExecutor taskExecutor, CallbackService callbackService, ResourceLoader resourceLoader, RIsolatedRuntimeProperties rIsolatedRuntimeProps) {
+    public RuntimeServiceImpl(ThreadPoolTaskExecutor taskExecutor,
+                              CallbackService callbackService,
+                              ResourceLoader resourceLoader,
+                              HiveBulkLoadProperties hiveBulkLoadProperties,
+                              RIsolatedRuntimeProperties rIsolatedRuntimeProps) {
 
         this.taskExecutor = taskExecutor;
         this.callbackService = callbackService;
         this.resourceLoader = resourceLoader;
+        this.hiveBulkLoadProperties = hiveBulkLoadProperties;
         this.rIsolatedRuntimeProps = rIsolatedRuntimeProps;
     }
 
@@ -267,7 +279,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, Map<String, String> krbProps) {
 
         Map<String, String> environment = new HashMap<>(krbProps);
-        environment.put(RUNTIME_ENV_DATA_SOURCE_NAME, dataSource.getName());
+        environment.put(RUNTIME_ENV_DATA_SOURCE_NAME, CommonFilenameUtils.sanitizeFilename(dataSource.getName()));
         environment.put(RUNTIME_ENV_DBMS_USERNAME, dataSource.getUsername());
         environment.put(RUNTIME_ENV_DBMS_PASSWORD, dataSource.getPassword());
         environment.put(RUNTIME_ENV_DBMS_TYPE, dataSource.getType().getOhdsiDB());
@@ -284,8 +296,28 @@ public class RuntimeServiceImpl implements RuntimeService {
         environment.put(RUNTIME_ENV_LANG_KEY, RUNTIME_ENV_LANG_VALUE);
         environment.put(RUNTIME_ENV_LC_ALL_KEY, RUNTIME_ENV_LC_ALL_VALUE);
 
+        if (enableMPP) {
+            exposeMPPEnvironmentVariables(environment);
+        }
+
         environment.values().removeIf(Objects::isNull);
         return environment;
+    }
+
+    private void exposeMPPEnvironmentVariables(Map<String, String> environment) {
+
+        environment.put("USE_MPP_BULK_LOAD", Boolean.toString(enableMPP));
+        environment.put("HIVE_NODE_HOST", hiveBulkLoadProperties.getHost());
+        environment.put("HIVE_SSH_USER", hiveBulkLoadProperties.getSsh().getUsername());
+        environment.put("HIVE_SSH_PORT", Integer.toString(hiveBulkLoadProperties.getSsh().getPort()));
+        environment.put("HIVE_SSH_PASSWORD", hiveBulkLoadProperties.getSsh().getPassword());
+        if (StringUtils.isNotBlank(hiveBulkLoadProperties.getSsh().getKeyfile())) {
+            environment.put("HIVE_KEYFILE", hiveBulkLoadProperties.getSsh().getKeyfile());
+        }
+        if (StringUtils.isNotBlank(hiveBulkLoadProperties.getHadoop().getUsername())) {
+            environment.put("HADOOP_USER_NAME", hiveBulkLoadProperties.getHadoop().getUsername());
+        }
+        environment.put("HIVE_NODE_PORT", Integer.toString(hiveBulkLoadProperties.getHadoop().getPort()));
     }
 
     private String getUserHome() {
@@ -308,6 +340,8 @@ public class RuntimeServiceImpl implements RuntimeService {
                 return bqDriversLocation;
             case NETEZZA:
                 return netezzaDriversLocation;
+            case HIVE:
+                return hiveDriversLocation;
             default:
                 return null;
         }
