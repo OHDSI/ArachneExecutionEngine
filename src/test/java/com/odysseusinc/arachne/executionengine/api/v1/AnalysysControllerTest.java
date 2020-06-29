@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.executionengine.api.v1;
 
 import com.odysseusinc.arachne.commons.types.DBMSType;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.executionengine.ExecutionEngineStarter;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
@@ -30,6 +31,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,6 +68,14 @@ public class AnalysysControllerTest {
     public ExpectedException thrown = ExpectedException.none();
     @Value("${server.port}")
     private Integer serverPort;
+    @Value("${cdm.dbms}")
+    private String cdmDbms;
+    @Value("${cdm.jdbc_url}")
+    private String cdmJdbcUrl;
+    @Value("${cdm.username}")
+    private String cdmUsername;
+    @Value("${cdm.password}")
+    private String cdmPassword;
     private static RestTemplate restTemplate;
 
     private static final String BASE_URL = "http://localhost";
@@ -73,6 +83,8 @@ public class AnalysysControllerTest {
     static volatile AtomicBoolean updateStatusIsOk;
     static volatile AtomicBoolean resultIsOk;
     static CountDownLatch latch;
+
+    private DBMSType dbmsType = DBMSType.POSTGRESQL;
 
     @BeforeClass
     public static void getRestTemplate() {
@@ -88,13 +100,18 @@ public class AnalysysControllerTest {
         latch = new CountDownLatch(2);
         updateStatusIsOk = new AtomicBoolean(false);
         resultIsOk = new AtomicBoolean(false);
+        for(DBMSType type : DBMSType.values()) {
+            if (Objects.equals(type.getOhdsiDB(), cdmDbms)) {
+                dbmsType = type;
+            }
+        }
     }
 
     @Test
     public void test01AnalysisController_Analyze() {
 
         String URL = BASE_URL + ":" + serverPort + AnalisysController.REST_API_MAIN + AnalisysController.REST_API_ANALYZE;
-        AnalysisRequestDTO analysis = getAnalysis();
+        AnalysisSyncRequestDTO analysis = getAnalysis();
         analysis.setExecutableFileName("MainAnalysis.R");
         analysis.setId(1L);
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity(analysis, getRFiles());
@@ -159,20 +176,20 @@ public class AnalysysControllerTest {
         analysis.setResultCallback(BASE_URL + ":" + serverPort + "/submissions/{id}/result/{password}");
         analysis.setRequested(new Date());
         DataSourceUnsecuredDTO dataSource = new DataSourceUnsecuredDTO();
-        dataSource.setType(DBMSType.POSTGRESQL);
-        dataSource.setConnectionString("");
-        dataSource.setUsername("postgres");
-        dataSource.setPassword("postgres");
-        dataSource.setCdmSchema("V4_0");
+        dataSource.setType(dbmsType);
+        dataSource.setConnectionString(cdmJdbcUrl);
+        dataSource.setUsername(cdmUsername);
+        dataSource.setPassword(cdmPassword);
+        dataSource.setCdmSchema("V5_0");
         analysis.setDataSource(dataSource);
         return analysis;
     }
 
-    private static HttpEntity<LinkedMultiValueMap<String, Object>> getRequestEntity(AnalysisRequestDTO analysis, ClassPathResource... files) {
+    private static HttpEntity<LinkedMultiValueMap<String, Object>> getRequestEntity(AnalysisSyncRequestDTO analysis, ClassPathResource... files) {
 
         HttpHeaders jsonHeader = new HttpHeaders();
         jsonHeader.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<AnalysisRequestDTO> analysisRequestHttpEntity = new HttpEntity<>(analysis, jsonHeader);
+        HttpEntity<AnalysisSyncRequestDTO> analysisRequestHttpEntity = new HttpEntity<>(analysis, jsonHeader);
         LinkedMultiValueMap<String, Object> multipartRequest = new LinkedMultiValueMap<>();
         multipartRequest.add("analysisRequest", analysisRequestHttpEntity);
         if (files != null) {
@@ -180,6 +197,7 @@ public class AnalysysControllerTest {
         }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.add("arachne-attach-cdm-metadata", "false");
         return new HttpEntity<>(multipartRequest, headers);
     }
 

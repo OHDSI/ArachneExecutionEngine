@@ -17,8 +17,8 @@ renderStudySpecificSql <- function(studyName, minCellCount, cdmSchema, resultsSc
     outputFile <- paste("TxPath autoTranslate ", dbms," ", studyName, ".sql",sep="")
 
     parameterizedSql <- readSql(inputFile)
-    renderedSql <- renderSql(parameterizedSql, cdmSchema=cdmSchema, resultsSchema=resultsSchema, studyName = studyName, sourceName=sourceName, txlist=TxList, dxlist=DxList, excludedxlist=ExcludeDxList, smallcellcount = minCellCount)$sql
-    translatedSql <- translateSql(renderedSql, sourceDialect = "sql server", targetDialect = dbms)$sql
+    renderedSql <- render(parameterizedSql, cdmSchema=cdmSchema, resultsSchema=resultsSchema, studyName = studyName, sourceName=sourceName, txlist=TxList, dxlist=DxList, excludedxlist=ExcludeDxList, smallcellcount = minCellCount)
+    translatedSql <- translate(renderedSql, dbms)
     writeSql(translatedSql,outputFile)
     writeLines(paste("Created file '",outputFile,"'",sep=""))
     return(outputFile)
@@ -26,8 +26,8 @@ renderStudySpecificSql <- function(studyName, minCellCount, cdmSchema, resultsSc
 
 extractAndWriteToFile <- function(connection, tableName, resultsSchema, sourceName, studyName, dbms){
     parameterizedSql <- "SELECT * FROM @resultsSchema.dbo.@studyName_@sourceName_@tableName"
-    renderedSql <- renderSql(parameterizedSql, cdmSchema=cdmSchema, resultsSchema=resultsSchema, studyName=studyName, sourceName=sourceName, tableName=tableName)$sql
-    translatedSql <- translateSql(renderedSql, sourceDialect = "sql server", targetDialect = dbms)$sql
+    renderedSql <- render(parameterizedSql, cdmSchema=cdmSchema, resultsSchema=resultsSchema, studyName=studyName, sourceName=sourceName, tableName=tableName)
+    translatedSql <- translate(renderedSql, dbms)
     data <- querySql(connection, translatedSql)
     outputFile <- paste(studyName,"_",sourceName,"_",tableName,".csv",sep='')
     write.csv(data,file=outputFile)
