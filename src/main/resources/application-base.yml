@@ -10,15 +10,18 @@ server:
   port: 8888
 
 logging:
-  level: info
+  level:
+    root: info
   descriptor:
     count:
       enabled: false
 spring:
-  http:
+  jmx:
+    unique-names: true
+  servlet:
     multipart:
-      max-request-size: 256MB
-      max-file-size: 256MB
+      max-file-size: 1024MB
+      max-request-size: 1024MB
 
 executor:
   corePoolSize: 4
@@ -46,15 +49,16 @@ swagger:
 csv:
   separator: ','
 
-endpoints:
-  jolokia:
-    enabled: true
-    path: /jolokia
-  jmx:
-    unique-names: true
-
 management:
-  port: 9999
+  endpoint:
+    jolokia:
+      enabled: true
+  server:
+    port: 9999
+  endpoints:
+    web:
+      path-mapping:
+        jolokia: /jolokia
 
 runtimeservice:
   dist:
@@ -76,3 +80,16 @@ drivers:
     impala: /impala
     bq: /bigquery
     netezza: /netezza
+    hive: /hive
+bulkload:
+  enableMPP: false
+  hive:
+    host:
+    ssh:
+      port: 2222
+      username:
+      password:
+      keyfile:
+    hadoop:
+      port: 8020
+      username:

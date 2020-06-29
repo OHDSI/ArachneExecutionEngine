@@ -27,11 +27,18 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
-import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
+import org.ohdsi.sql.SqlSplit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
+
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -53,14 +60,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-
-import org.ohdsi.sql.SqlSplit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Service;
 
 
 @Service
@@ -98,8 +97,9 @@ public class SQLServiceImpl implements SQLService {
                         try {
                             SqlExecutor sqlExecutor;
 
-                            if (analysis.getDataSource().getType().equals(DBMSType.ORACLE)) {
-                                sqlExecutor = new OracleSqlExecutor();
+                            if (analysis.getDataSource().getType().equals(DBMSType.ORACLE) ||
+                                    analysis.getDataSource().getType().equals(DBMSType.BIGQUERY)) {
+                                sqlExecutor = new SingleStatementSqlExecutor();
                             } else {
                                 sqlExecutor = new DefaultSqlExecutor();
                             }
@@ -185,6 +185,8 @@ public class SQLServiceImpl implements SQLService {
         }
     }
 
+
+
     public class DefaultSqlExecutor extends SqlExecutor {
 
         public List<Path> runSql(Connection conn, File sqlFile) throws SQLException, IOException {
@@ -192,7 +194,7 @@ public class SQLServiceImpl implements SQLService {
             List<Path> resultFileList = new ArrayList<>();
             try (OutputStream outputStream = new ByteArrayOutputStream()) {
                 Files.copy(sqlFile.toPath(), outputStream);
-                try (Statement statement = conn.createStatement();) {
+                try (Statement statement = conn.createStatement()) {
                     boolean hasMoreResultSets = statement.execute(outputStream.toString());
                     int resultIdx = 0;
                     while (hasMoreResultSets || statement.getUpdateCount() != -1) {
@@ -211,7 +213,7 @@ public class SQLServiceImpl implements SQLService {
         }
     }
 
-    public class OracleSqlExecutor extends SqlExecutor {
+    public class SingleStatementSqlExecutor extends SqlExecutor {
 
         public List<Path> runSql(Connection conn, File sqlFile) throws SQLException, IOException {
 

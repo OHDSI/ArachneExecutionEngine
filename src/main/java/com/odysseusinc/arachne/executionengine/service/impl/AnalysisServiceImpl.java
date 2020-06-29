@@ -23,13 +23,11 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.google.common.io.Files;
-import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
@@ -37,21 +35,12 @@ import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
+import com.odysseusinc.datasourcemanager.jdbc.auth.BigQueryAuthResolver;
+import com.odysseusinc.datasourcemanager.jdbc.auth.DataSourceAuthResolver;
+import com.odysseusinc.datasourcemanager.jdbc.auth.KerberosAuthResolver;
 import com.odysseusinc.datasourcemanager.krblogin.KerberosService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Objects;
-import java.util.concurrent.Future;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -62,6 +51,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
@@ -79,11 +77,14 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     private String bqDriversLocation;
     @Value("${drivers.location.netezza}")
     private String netezzaDriversLocation;
+    @Value("${drivers.location.hive}")
+    private String hiveDriversLocation;
 
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
 
     private String driverPathExclusions;
+    private List<DataSourceAuthResolver> authResolvers;
 
     @Autowired
     public AnalysisServiceImpl(SQLService sqlService,
@@ -99,6 +100,14 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         this.cdmMetadataService = cdmMetadataService;
         this.callbackService = callbackService;
         this.kerberosService = kerberosService;
+        initAuthResolvers();
+    }
+
+    private void initAuthResolvers() {
+
+        this.authResolvers = new ArrayList<>();
+        authResolvers.add(new BigQueryAuthResolver());
+        authResolvers.add(new KerberosAuthResolver(kerberosService));
     }
 
     @Override
@@ -108,9 +117,20 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         Future executionFuture = null;
         try {
+            File keystoreDir = new File(analysisDir, "keys");
+            keystoreDir.mkdirs();
 
-            File keyFile = resolveBqAuth(analysis.getDataSource());
-            KrbConfig krbConfig = resolveKerberosAuth(analysis.getDataSource(), analysisDir);
+            DataSourceUnsecuredDTO dataSourceData = analysis.getDataSource();
+            List<Optional> results = authResolvers.stream().filter(r -> r.supports(dataSourceData))
+                    .map(r -> r.resolveAuth(dataSourceData, keystoreDir))
+                    .collect(Collectors.toList());
+            KrbConfig krbConfig = new KrbConfig();
+            for(Optional val : results){
+                if (val.isPresent() && val.get() instanceof KrbConfig) {
+                    krbConfig = (KrbConfig) val.get();
+                    break;
+                }
+            }
 
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
@@ -122,10 +142,9 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                 if (attachCdmMetadata) {
                     saveMetadata(analysis, resultDir);
                 }
+                // Keystore folder must be deleted before zipping results
+                FileUtils.deleteQuietly(keystoreDir);
                 resultCallback.execute(resultingStatus, stdout, resultDir, ex);
-                if (Objects.nonNull(keyFile)) {
-                    FileUtils.deleteQuietly(keyFile);
-                }
             };
 
             switch (fileExtension) {
@@ -155,22 +174,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         return new AnalysisRequestStatusDTO(analysis.getId(), status, executionFuture);
     }
 
-    private KrbConfig resolveKerberosAuth(DataSourceUnsecuredDTO dataSource, File analysisDir) throws IOException {
-
-        boolean useKerberos = dataSource.getUseKerberos();
-        KrbConfig krbConfig = new KrbConfig();
-        // We need to login to Kerberos regardless of current RuntimeServiceMode due to further detectCdmVersion()
-        if (useKerberos) {
-            krbConfig = kerberosService.runKinit(dataSource, runtimeService.getRuntimeServiceMode(), analysisDir);
-        }
-        return krbConfig;
-    }
-
-    private File resolveBqAuth(DataSourceUnsecuredDTO dataSource) throws IOException {
-
-        return Objects.equals(DBMSType.BIGQUERY, dataSource.getType()) ? prepareBQAuth(dataSource) : null;
-    }
-
     @Override
     @FileDescriptorCount
     public AnalysisRequestStatusDTO analyze(AnalysisRequestDTO analysis, File analysisDir, Boolean compressedResult,
@@ -180,7 +183,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
             if (ex == null) {
                 try {
                     callbackService.processAnalysisResult(analysis, resultingStatus, stdout, resultDir, compressedResult, chunkSize);
-                } catch (IOException | ZipException e) {
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             } else {
@@ -194,23 +197,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         );
 
         return analyze(analysis, analysisDir, attachCdmMetadata, stdoutHandlerParams, resultCallback);
-    }
-
-    private File prepareBQAuth(DataSourceUnsecuredDTO dataSource) throws IOException {
-
-        byte[] keyFileData = dataSource.getKeyfile();
-        if (Objects.nonNull(keyFileData)) {
-            File keyFile = java.nio.file.Files.createTempFile("", ".json").toFile();
-            try (OutputStream out = new FileOutputStream(keyFile)) {
-                IOUtils.write(keyFileData, out);
-            }
-            String filePath = keyFile.getAbsolutePath();
-            String connStr = BigQueryUtils.replaceBigQueryKeyPath(dataSource.getConnectionString(), filePath);
-            dataSource.setConnectionString(connStr);
-            dataSource.setKrbRealm(filePath);
-            return keyFile;
-        }
-        return null;
     }
 
     @Override
@@ -231,7 +217,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
 
-        driverPathExclusions = Stream.of(impalaDriversLocation, bqDriversLocation, netezzaDriversLocation)
+        driverPathExclusions = Stream.of(impalaDriversLocation, bqDriversLocation, netezzaDriversLocation, hiveDriversLocation)
                 .filter(StringUtils::isNotBlank)
                 .map(path -> path.startsWith("/") ? path.substring(1) : path)
                 .map(path -> path + "/**/*")

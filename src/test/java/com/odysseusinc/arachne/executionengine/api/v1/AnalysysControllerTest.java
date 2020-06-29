@@ -159,9 +159,9 @@ public class AnalysysControllerTest {
     private void AssertStates() {
 
         try {
-            latch.await(120, TimeUnit.SECONDS);
+            latch.await(10, TimeUnit.SECONDS);
             Assert.assertTrue(updateStatusIsOk.get());
-            latch.await(120, TimeUnit.SECONDS);
+            latch.await(10, TimeUnit.SECONDS);
             Assert.assertTrue(resultIsOk.get());
         } catch (InterruptedException e) {
             log.error("", e);

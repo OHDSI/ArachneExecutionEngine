@@ -1,0 +1,74 @@
+{
+  "mandatory_columns": {
+    "condition_occurrence": [
+      "condition_start_datetime",
+      "condition_end_datetime"
+    ],
+    "cost": [
+      "cost_id",
+      "cost_event_id",
+      "cost_domain_id",
+      "cost_type_concept_id",
+      "currency_concept_id",
+      "total_charge",
+      "total_cost",
+      "total_paid",
+      "paid_by_payer",
+      "paid_by_patient",
+      "paid_patient_copay",
+      "paid_patient_coinsurance",
+      "paid_patient_deductible",
+      "paid_by_primary",
+      "paid_ingredient_cost",
+      "paid_dispensing_fee",
+      "payer_plan_period_id",
+      "amount_allowed",
+      "revenue_code_concept_id",
+      "reveue_code_source_value"
+    ],
+    "death": [
+      "death_datetime"
+    ],
+    "device_exposure": [
+      "device_exposure_start_datetime",
+      "device_exposure_end_datetime"
+    ],
+    "drug_exposure": [
+      "drug_exposure_start_datetime",
+      "drug_exposure_end_datetime",
+      "effective_drug_dose",
+      "dose_unit_concept_id"
+    ],
+    "drug_strength": [
+      "denominator_value",
+      "box_size"
+    ],
+    "measurement": [
+      "measurement_datetime"
+    ],
+    "note": [
+      "note_datetime"
+    ],
+    "observation": [
+      "observation_datetime"
+    ],
+    "observation_period": [
+      "observation_period_start_datetime",
+      "observation_period_end_datetime"
+    ],
+    "person": [
+      "birth_datetime"
+    ],
+    "procedure_occurrence": [
+      "procedure_datetime",
+      "qualifier_source_value"
+    ],
+    "specimen": [
+      "specimen_datetime"
+    ],
+    "visit_occurrence": [
+      "visit_start_datetime",
+      "visit_end_datetime"
+    ]
+  }
+}

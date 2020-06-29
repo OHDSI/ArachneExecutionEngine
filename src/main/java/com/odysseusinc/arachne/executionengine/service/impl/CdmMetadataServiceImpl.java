@@ -22,6 +22,43 @@
 
 package com.odysseusinc.arachne.executionengine.service.impl;
 
+import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
+import com.odysseusinc.arachne.executionengine.model.CdmSource;
+import com.odysseusinc.arachne.executionengine.model.Vocabulary;
+import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
+import com.odysseusinc.arachne.executionengine.service.VersionDetectionServiceFactory;
+import com.odysseusinc.arachne.executionengine.service.sql.SqlMetadataService;
+import com.odysseusinc.arachne.executionengine.service.sql.SqlMetadataServiceFactory;
+import com.odysseusinc.arachne.executionengine.util.DateUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.sql.SQLException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeSet;
+import java.util.concurrent.Callable;
+
 import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.CDM_ETL_REFERENCE;
 import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.CDM_HOLDER;
 import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.CDM_RELEASE_DATE;
@@ -33,68 +70,24 @@ import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.SOURC
 import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.SOURCE_RELEASE_DATE;
 import static com.odysseusinc.arachne.executionengine.util.CdmSourceFields.VOCABULARY_VERSION;
 import static com.odysseusinc.arachne.executionengine.util.DateUtil.defaultFormat;
+import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 import static org.apache.commons.lang3.StringUtils.defaultString;
-
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonCDMVersionDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
-import com.odysseusinc.arachne.executionengine.model.CdmSource;
-import com.odysseusinc.arachne.executionengine.model.Vocabulary;
-import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
-import com.odysseusinc.arachne.executionengine.service.sql.SqlMetadataService;
-import com.odysseusinc.arachne.executionengine.service.sql.SqlMetadataServiceFactory;
-import com.odysseusinc.arachne.executionengine.util.SQLUtils;
-import com.odysseusinc.arachne.executionengine.util.exception.StatementSQLException;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UncheckedIOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrSubstitutor;
-import org.ohdsi.sql.SqlRender;
-import org.ohdsi.sql.SqlSplit;
-import org.ohdsi.sql.SqlTranslate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Service
 public class CdmMetadataServiceImpl implements CdmMetadataService {
 
+    private static final Logger log = LoggerFactory.getLogger(CdmMetadataServiceImpl.class);
+
     private static final String COMMENT = "CDM database ${database}";
     private static final String PROPERTIES_FILE_NAME = "cdm_version.txt";
+    private static final String DETECTION_REMARKS_NAME = "cdm_detection_notes.txt";
     private static final Logger LOGGER = LoggerFactory.getLogger(CdmMetadataService.class);
-    private final static String RES_TABLE_CHECK_V4 = "/cdm/v4/tableCheck.sql";
-    private final static String RES_TABLE_CHECK_V5 = "/cdm/v5/tableCheck_%s.sql";
     private final static CommonCDMVersionDTO V_5_INIT = CommonCDMVersionDTO.V5_0;
     private final static List<CommonCDMVersionDTO> V5_VERSIONS = new ArrayList<>();
-    public static final String VAR_CDM_SCHEMA = "cdm_schema";
-    public final static ConcurrentHashMap<Integer, String> detectorSqlMap = new ConcurrentHashMap<>();
 
     static {
+        V5_VERSIONS.add(CommonCDMVersionDTO.V5_3_1);
         V5_VERSIONS.add(CommonCDMVersionDTO.V5_3);
         V5_VERSIONS.add(CommonCDMVersionDTO.V5_2);
         V5_VERSIONS.add(CommonCDMVersionDTO.V5_1);
@@ -103,15 +96,15 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
     }
 
     private final SqlMetadataServiceFactory sqlMetadataServiceFactory;
-    private final ResourceLoader resourceLoader;
-    private final String REGEX_V5 = "^V5.*";
+    private final VersionDetectionServiceFactory versionDetectionServiceFactory;
+    private final String REGEX_V5 = "^V(5+|6+)_.*";
 
     @Autowired
     public CdmMetadataServiceImpl(SqlMetadataServiceFactory sqlMetadataServiceFactory,
-                                  ResourceLoader resourceLoader) {
+                                  VersionDetectionServiceFactory versionDetectionServiceFactory) {
 
         this.sqlMetadataServiceFactory = sqlMetadataServiceFactory;
-        this.resourceLoader = resourceLoader;
+        this.versionDetectionServiceFactory = versionDetectionServiceFactory;
     }
 
     @Override
@@ -120,8 +113,27 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
 
         try {
             SqlMetadataService metadataService = sqlMetadataServiceFactory.getMetadataService(dataSource);
-            String cdmVersion = detectCdmVersion(dataSource, metadataService);
-            List<Vocabulary> vocabularies = metadataService.getVocabularyVersions(cdmVersion);
+            CommonCDMVersionDTO cdmVersion = null;
+            try {
+                final Pair<CommonCDMVersionDTO, String> versionDetectionResult = logTime(
+                        String.format("[%s] CDM Version detection", dataSource.getType()),
+                        () -> detectCdmVersion(dataSource));
+
+                cdmVersion = versionDetectionResult.getKey();
+                writeVersionDetectionRemarks(dir, versionDetectionResult);
+            } catch (Exception e) {
+                LOGGER.error("Failed to detect CDM Version, {}", e.getMessage());
+            }
+            LOGGER.debug(String.format("[{}] CDM version: {}", dataSource.getType(), firstNonNull(cdmVersion, "not detected")));
+            final String cdmVersionName = cdmVersion != null ? cdmVersion.name() : "";
+            List<Vocabulary> vocabularies = Collections.emptyList();
+
+            try {
+                vocabularies = logTime(String.format("[%s] vocabulary versions resolving", dataSource.getType()),
+                        () -> metadataService.getVocabularyVersions(cdmVersionName));
+            } catch (Exception e) {
+                LOGGER.error("Failed to get metadata, {}", e.getMessage());
+            }
 
             Properties properties = new Properties() {
                 @Override
@@ -130,9 +142,9 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
                     return Collections.enumeration(new TreeSet<>(super.keySet()));
                 }
             };
-            properties.setProperty("cdm_version", cdmVersion);
+            properties.setProperty("cdm_version", cdmVersionName);
 
-            if (cdmVersion.matches(REGEX_V5)) {
+            if (cdmVersionName.matches(REGEX_V5)) {
                 List<CdmSource> cdmSources = metadataService.getCdmSources();
                 for (int i = 0; i < cdmSources.size(); i++) {
                     String index = String.format("cdm_source.%03d.", i);
@@ -160,18 +172,32 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
                     properties.setProperty(index + "version", vocabulary.getVersion());
                 }
             }
-            File file = new File(dir, PROPERTIES_FILE_NAME);
-            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file)) {
-                @Override
-                public void newLine() throws IOException {
-
-                    write("\r\n"); //To make file readable in Windows Notepad
-                }
-            }) {
-                properties.store(bufferedWriter, composeComment(dataSource));
-            }
+            writeCDMVersionFile(dataSource, dir, properties);
         } catch (IllegalArgumentException e) {
             LOGGER.warn("Could not extract CDM metadata", e);
+        }
+    }
+
+    private void writeVersionDetectionRemarks(File dir, Pair<CommonCDMVersionDTO, String> versionDetectionResult) {
+        if (versionDetectionResult != null && isNotBlank(versionDetectionResult.getValue())) {
+            try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(dir.getPath(), DETECTION_REMARKS_NAME))) {
+                writer.write(versionDetectionResult.getValue());
+            } catch (IOException ex) {
+                log.error("cannot write to file: {}/{}", dir, DETECTION_REMARKS_NAME);
+            }
+        }
+    }
+
+    private void writeCDMVersionFile(DataSourceUnsecuredDTO dataSource, File dir, Properties properties) throws IOException {
+        File file = new File(dir, PROPERTIES_FILE_NAME);
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file)) {
+            @Override
+            public void newLine() throws IOException {
+
+                write("\r\n"); //To make file readable in Windows Notepad
+            }
+        }) {
+            properties.store(bufferedWriter, composeComment(dataSource));
         }
     }
 
@@ -182,66 +208,20 @@ public class CdmMetadataServiceImpl implements CdmMetadataService {
         return new StrSubstitutor(values).replace(COMMENT);
     }
 
-    private String detectCdmVersion(DataSourceUnsecuredDTO dataSource, SqlMetadataService metadataService) throws SQLException {
+    private Pair<CommonCDMVersionDTO, String> detectCdmVersion(DataSourceUnsecuredDTO dataSource) throws SQLException {
 
-        CommonCDMVersionDTO version = null;
-        try {
-            for (CommonCDMVersionDTO v : V5_VERSIONS) {
-                try {
-                    checkCdmTables(dataSource, RES_TABLE_CHECK_V5, v.name());
-                    version = v;
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Detected CDM version for {} is {}", dataSource.getConnectionStringForLogging(), version);
-                    }
-                    break;
-                } catch (StatementSQLException e) {
-                    LOGGER.debug("Failed CDM version check for {} as {} with message: {},\nstatement: {}", dataSource.getConnectionStringForLogging(), v, e.getMessage(), e.getStatement());
-                } catch (SQLException e) {
-                    LOGGER.debug("Failed CDM version check for {} as {} with message: {}", dataSource.getConnectionStringForLogging(), v, e.getMessage());
-                }
-            }
-            if (Objects.isNull(version)) {
-                checkCdmTables(dataSource, RES_TABLE_CHECK_V4, "");
-            }
-        } catch (IOException e) {
-            LOGGER.error("Failed to determine CDM version", e);
-            version = null;
-        }
-        return Objects.isNull(version) ? null : version.name();
+        return versionDetectionServiceFactory.getService(dataSource.getType()).detectCDMVersion(dataSource);
     }
 
-    private void checkCdmTables(DataSourceUnsecuredDTO dataSource, String pattern, String version) throws SQLException, IOException {
+    private <V> V logTime(String actionName, Callable<V> statement) throws Exception {
 
-        String sql = detectorSqlMap.computeIfAbsent(
-                Objects.hash(dataSource.getType().getOhdsiDB(), pattern, version),
-                (key) -> {
-                    Resource queryFile = resourceLoader.getResource(ResourceUtils.CLASSPATH_URL_PREFIX + String.format(pattern, version));
-                    try (Reader r = new InputStreamReader(queryFile.getInputStream())) {
-                        return SqlTranslate.translateSql(IOUtils.toString(r), dataSource.getType().getOhdsiDB());
-                    } catch (IOException ex) {
-                        throw new UncheckedIOException(ex);
-                    }
-                }
-        );
-
-        String[] params = new String[]{VAR_CDM_SCHEMA};
-        String[] values = new String[]{dataSource.getCdmSchema()};
-        sql = SqlRender.renderSql(sql, params, values);
-
-        String[] statements = SqlSplit.splitSql(sql);
-
-        try (Connection c = SQLUtils.getConnection(dataSource)) {
-            for (String query : statements) {
-                if (StringUtils.isNotBlank(query)) {
-                    try (PreparedStatement stmt = c.prepareStatement(query)) {
-                        stmt.setMaxRows(1);
-                        try (final ResultSet resultSet = stmt.executeQuery()) {
-                        }
-                    } catch (SQLException e) {
-                        throw new StatementSQLException(e.getMessage(), e, query);
-                    }
-                }
-            }
+        LocalDateTime start = LocalDateTime.now();
+        try {
+            return statement.call();
+        } finally {
+            LocalDateTime finish = LocalDateTime.now();
+            Duration timeElapsed = Duration.between(start, finish);
+            LOGGER.debug(String.format("Execution of %s took: %s", actionName, DateUtil.formatDuration(timeElapsed)));
         }
     }
 

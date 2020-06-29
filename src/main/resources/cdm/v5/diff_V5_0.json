@@ -1,0 +1,87 @@
+{
+  "mandatory_columns": {
+    "device_cost": [
+      "device_cost_id",
+      "device_exposure_id",
+      "currency_concept_id",
+      "paid_copay",
+      "paid_coinsurance",
+      "paid_toward_deductible",
+      "paid_by_payer",
+      "paid_by_coordination_benefits",
+      "total_out_of_pocket",
+      "total_paid",
+      "payer_plan_period_id"
+    ],
+    "drug_cost": [
+      "drug_cost_id",
+      "drug_exposure_id",
+      "currency_concept_id",
+      "paid_copay",
+      "paid_coinsurance",
+      "paid_toward_deductible",
+      "paid_by_payer",
+      "paid_by_coordination_benefits",
+      "total_out_of_pocket",
+      "total_paid",
+      "ingredient_cost",
+      "dispensing_fee",
+      "average_wholesale_price",
+      "payer_plan_period_id"
+    ],
+    "drug_exposure": [
+      "effective_drug_dose",
+      "dose_unit_concept_id"
+    ],
+    "measurement": [
+      "measurement_time"
+    ],
+    "note": [
+      "note_time"
+    ],
+    "observation": [
+      "observation_time"
+    ],
+    "person": [
+      "time_of_birth"
+    ],
+    "procedure_cost": [
+      "procedure_cost_id",
+      "procedure_occurrence_id",
+      "currency_concept_id",
+      "paid_copay",
+      "paid_coinsurance",
+      "paid_toward_deductible",
+      "paid_by_payer",
+      "paid_by_coordination_benefits",
+      "total_out_of_pocket",
+      "total_paid",
+      "revenue_code_concept_id",
+      "payer_plan_period_id",
+      "revenue_code_source_value"
+    ],
+    "procedure_occurrence": [
+      "qualifier_source_value"
+    ],
+    "specimen": [
+      "specimen_time"
+    ],
+    "visit_cost": [
+      "visit_cost_id",
+      "visit_occurrence_id",
+      "currency_concept_id",
+      "paid_copay",
+      "paid_coinsurance",
+      "paid_toward_deductible",
+      "paid_by_payer",
+      "paid_by_coordination_benefits",
+      "total_out_of_pocket",
+      "total_paid",
+      "payer_plan_period_id"
+    ],
+    "visit_occurrence": [
+      "visit_start_time",
+      "visit_end_time"
+    ]
+  }
+}

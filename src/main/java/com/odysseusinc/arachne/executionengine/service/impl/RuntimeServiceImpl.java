@@ -22,12 +22,16 @@
 
 package com.odysseusinc.arachne.executionengine.service.impl;
 
+import static org.apache.commons.io.IOUtils.closeQuietly;
+
 import com.odysseusinc.arachne.commons.types.DBMSType;
+import com.odysseusinc.arachne.commons.utils.CommonFilenameUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
+import com.odysseusinc.arachne.executionengine.config.properties.HiveBulkLoadProperties;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
@@ -35,7 +39,27 @@ import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
+import javax.annotation.PostConstruct;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -45,21 +69,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.*;
-import java.util.function.Consumer;
-
-import static org.apache.commons.io.IOUtils.closeQuietly;
 
 @Service
 public class RuntimeServiceImpl implements RuntimeService {
@@ -113,16 +122,26 @@ public class RuntimeServiceImpl implements RuntimeService {
     private String bqDriversLocation;
     @Value("${drivers.location.netezza}")
     private String netezzaDriversLocation;
+    @Value("${drivers.location.hive}")
+    private String hiveDriversLocation;
+    @Value("${bulkload.enableMPP}")
+    private Boolean enableMPP;
+    private final HiveBulkLoadProperties hiveBulkLoadProperties;
 
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
 
 
     @Autowired
-    public RuntimeServiceImpl(ThreadPoolTaskExecutor taskExecutor, CallbackService callbackService, ResourceLoader resourceLoader, RIsolatedRuntimeProperties rIsolatedRuntimeProps) {
+    public RuntimeServiceImpl(ThreadPoolTaskExecutor taskExecutor,
+                              CallbackService callbackService,
+                              ResourceLoader resourceLoader,
+                              HiveBulkLoadProperties hiveBulkLoadProperties,
+                              RIsolatedRuntimeProperties rIsolatedRuntimeProps) {
 
         this.taskExecutor = taskExecutor;
         this.callbackService = callbackService;
         this.resourceLoader = resourceLoader;
+        this.hiveBulkLoadProperties = hiveBulkLoadProperties;
         this.rIsolatedRuntimeProps = rIsolatedRuntimeProps;
     }
 
@@ -154,6 +173,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                 RuntimeFinishStatus finishStatus;
                 try {
                     File runFile = prepareEnvironment();
+                    prepareRprofile(file);
                     try {
                         String[] command = buildRuntimeCommand(runFile, file, executableFileName);
 
@@ -185,6 +205,14 @@ public class RuntimeServiceImpl implements RuntimeService {
                 analysisCallback.execute(null, null, file, t);
             }
         });
+    }
+
+    private void prepareRprofile(File workDir) throws IOException {
+
+        try(InputStream is = resourceLoader.getResource("classpath:/Rprofile").getInputStream();
+            FileOutputStream out = new FileOutputStream(new File(workDir, ".Rprofile"))) {
+            IOUtils.copy(is, out);
+        }
     }
 
     private File prepareEnvironment() throws IOException {
@@ -251,7 +279,7 @@ public class RuntimeServiceImpl implements RuntimeService {
     private Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, Map<String, String> krbProps) {
 
         Map<String, String> environment = new HashMap<>(krbProps);
-        environment.put(RUNTIME_ENV_DATA_SOURCE_NAME, dataSource.getName());
+        environment.put(RUNTIME_ENV_DATA_SOURCE_NAME, CommonFilenameUtils.sanitizeFilename(dataSource.getName()));
         environment.put(RUNTIME_ENV_DBMS_USERNAME, dataSource.getUsername());
         environment.put(RUNTIME_ENV_DBMS_PASSWORD, dataSource.getPassword());
         environment.put(RUNTIME_ENV_DBMS_TYPE, dataSource.getType().getOhdsiDB());
@@ -263,13 +291,38 @@ public class RuntimeServiceImpl implements RuntimeService {
         environment.put(RUNTIME_ENV_DRIVER_PATH, getDriversPath(dataSource));
         environment.put(RUNTIME_BQ_KEYFILE, getBigQueryKeyFile(dataSource));
         environment.put(RUNTIME_ENV_PATH_KEY, RUNTIME_ENV_PATH_VALUE);
-        environment.put(RUNTIME_ENV_HOME_KEY, RUNTIME_ENV_HOME_VALUE);
+        environment.put(RUNTIME_ENV_HOME_KEY, getUserHome());
         environment.put(RUNTIME_ENV_HOSTNAME_KEY, RUNTIME_ENV_HOSTNAME_VALUE);
         environment.put(RUNTIME_ENV_LANG_KEY, RUNTIME_ENV_LANG_VALUE);
         environment.put(RUNTIME_ENV_LC_ALL_KEY, RUNTIME_ENV_LC_ALL_VALUE);
 
+        if (enableMPP) {
+            exposeMPPEnvironmentVariables(environment);
+        }
+
         environment.values().removeIf(Objects::isNull);
         return environment;
+    }
+
+    private void exposeMPPEnvironmentVariables(Map<String, String> environment) {
+
+        environment.put("USE_MPP_BULK_LOAD", Boolean.toString(enableMPP));
+        environment.put("HIVE_NODE_HOST", hiveBulkLoadProperties.getHost());
+        environment.put("HIVE_SSH_USER", hiveBulkLoadProperties.getSsh().getUsername());
+        environment.put("HIVE_SSH_PORT", Integer.toString(hiveBulkLoadProperties.getSsh().getPort()));
+        environment.put("HIVE_SSH_PASSWORD", hiveBulkLoadProperties.getSsh().getPassword());
+        if (StringUtils.isNotBlank(hiveBulkLoadProperties.getSsh().getKeyfile())) {
+            environment.put("HIVE_KEYFILE", hiveBulkLoadProperties.getSsh().getKeyfile());
+        }
+        if (StringUtils.isNotBlank(hiveBulkLoadProperties.getHadoop().getUsername())) {
+            environment.put("HADOOP_USER_NAME", hiveBulkLoadProperties.getHadoop().getUsername());
+        }
+        environment.put("HIVE_NODE_PORT", Integer.toString(hiveBulkLoadProperties.getHadoop().getPort()));
+    }
+
+    private String getUserHome() {
+        String userHome = System.getProperty("user.home");
+        return StringUtils.defaultString(userHome, RUNTIME_ENV_HOME_VALUE);
     }
 
     private String getBigQueryKeyFile(DataSourceUnsecuredDTO dataSource) {
@@ -287,6 +340,8 @@ public class RuntimeServiceImpl implements RuntimeService {
                 return bqDriversLocation;
             case NETEZZA:
                 return netezzaDriversLocation;
+            case HIVE:
+                return hiveDriversLocation;
             default:
                 return null;
         }
