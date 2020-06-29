@@ -148,7 +148,7 @@
         <dependency>
             <groupId>org.ohdsi.sql</groupId>
             <artifactId>SqlRender</artifactId>
-            <version>1.6.3-SNAPSHOT</version>
+            <version>1.6.4-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -552,9 +552,7 @@
                 <version>${spring.boot.version}</version>
                 <executions>
                     <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
+                        <id>repackage</id>
                         <configuration>
                             <classifier>exec</classifier>
                             <requiresUnpack>
