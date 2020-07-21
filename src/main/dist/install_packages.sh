@@ -37,7 +37,7 @@ rm -f /usr/bin/java
 update-alternatives --config java
 
 sudo add-apt-repository -y ppa:deadsnakes/ppa
-apt-get update && apt-get install -y libpq-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user python3.6 python3.6-dev virtualenv python3.6-venv libgeos-dev libprotobuf-dev protobuf-compiler
+apt-get update && apt-get install -y libpq-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user python3.8 python3.8-dev virtualenv python3.8-venv libgeos-dev libprotobuf-dev protobuf-compiler
 
 wget http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip \
         && echo "8021a28b8cac41b44f1421fd210a0a0822fcaf88d62d2e70a35b2ff628a8675a  ZuluJCEPolicies.zip" | sha256sum -c - \
@@ -71,9 +71,9 @@ local({
 })
 _EOF_
 
-curl https://bootstrap.pypa.io/get-pip.py | sudo -H python3.6
+curl https://bootstrap.pypa.io/get-pip.py | sudo -H python3.8
 rm -f /usr/bin/python3
-ln -s /usr/bin/python3.6 /usr/bin/python3
+ln -s /usr/bin/python3.8 /usr/bin/python3
 
 python3 -m pip install --upgrade pip
 python3 -m pip install -U NumPy
@@ -86,7 +86,7 @@ python3 -m pip install -U joblib
 python3 -m pip install --upgrade tensorflow
 python3 -m pip install keras
 
-export USESPECIALPYTHONVERSION=python3.6
+export USESPECIALPYTHONVERSION=python3.8
 
 R CMD javareconf
 Rscript /root/libs/libs_1.r
