@@ -53,14 +53,14 @@ add-apt-repository -y ppa:opencpu/jq
 apt-get update
 apt-get -y install libjq-dev
 
-add-apt-repository "deb http://cran.rstudio.com/bin/linux/ubuntu $DIST/"
+add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $DIST-cran40/"
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
 gpg -a --export E084DAB9 | sudo apt-key add -
 #sudo sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu $DIST/" >> /etc/apt/sources.list.d/rstudio.list'
 #gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
 #gpg -a --export E084DAB9 | sudo apt-key add -
 
-apt-get update && apt-get -y --allow-unauthenticated install r-base
+apt-get update && apt-get -y --allow-unauthenticated install r-base r-base-dev
 
 cat >> /etc/R/Rprofile.site <<_EOF_
 local({ 
