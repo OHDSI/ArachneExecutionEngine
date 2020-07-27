@@ -1,0 +1,30 @@
+Executing SQL took 2.16 secs
+
+  |
+  |                                                                      |   0%
+  |
+  |===================================                                   |  50%
+  |
+  |======================================================================| 100%
+Executing SQL took 4.9 secs
+
+  |
+  |                                                                      |   0%
+  |
+  |=                                                                     |   2%
+  |
+  |==                                                                    |   4%
+  |
+  |====                                                                  |   5%
+  |
+  |=====                                                                 |   7%
+  |
+  |======                                                                |   9%
+  |
+  |========                                                              |  11%
+  |
+  |=========                                                             |  12%Error: Error executing SQL:
+java.sql.SQLSyntaxErrorException: ORA-00904: "DATEDIFF": invalid identifier
+
+An error report has been created at  /tmp/1594230588095-0/errorReport.txt
+Execution halted
