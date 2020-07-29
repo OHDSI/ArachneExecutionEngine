@@ -27,14 +27,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Component
 public class ResultStatusEvaluator {
 
-    public static final String EXECUTION_HALTED = "Execution halted";
-    public static final Pattern ERROR_REPORT_REGEX = Pattern.compile("An error report has been created at .*\\/errorReport\\.txt", Pattern.CASE_INSENSITIVE);
 
     public AnalysisResultStatusDTO evaluateResultStatus(RuntimeFinishState finishState) {
 
@@ -46,15 +42,6 @@ public class ResultStatusEvaluator {
             return AnalysisResultStatusDTO.FAILED;
         }
 
-        if (StringUtils.endsWithIgnoreCase(stdout, EXECUTION_HALTED)) {
-            return AnalysisResultStatusDTO.FAILED;
-        }
-
-        Matcher matcher = ERROR_REPORT_REGEX.matcher(stdout);
-        boolean errorFound = matcher.find();
-        if (errorFound) {
-            return AnalysisResultStatusDTO.FAILED;
-        }
         return AnalysisResultStatusDTO.EXECUTED;
     }
 }
