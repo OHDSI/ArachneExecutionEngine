@@ -23,7 +23,6 @@
 package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
-import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,32 +49,23 @@ public class ResultStatusEvaluatorTest {
     }
 
     @Test
-    public void shouldPassAnalysesWithZeroExitCodeAndCleanStdout() {
+    public void shouldPassAnalysesWithZeroExitCodeAndStdout() {
 
         final AnalysisResultStatusDTO analysisResult = resultStatusEvaluator.evaluateResultStatus(new RuntimeFinishState(0, "OK"));
         assertThat(analysisResult).isEqualTo(AnalysisResultStatusDTO.EXECUTED);
     }
 
     @Test
+    public void shouldFailAnalysesWithNonZeroExitCode() {
+
+        final AnalysisResultStatusDTO analysisResult = resultStatusEvaluator.evaluateResultStatus(new RuntimeFinishState(-1, "OK"));
+        assertThat(analysisResult).isEqualTo(AnalysisResultStatusDTO.FAILED);
+    }
+
+    @Test
     public void shouldFailOnEmptyStdout() {
 
         final AnalysisResultStatusDTO analysisResult = resultStatusEvaluator.evaluateResultStatus(new RuntimeFinishState(0, StringUtils.EMPTY));
-        assertThat(analysisResult).isEqualTo(AnalysisResultStatusDTO.FAILED);
-    }
-
-    @Test
-    public void shouldFailOnErrorReportFile() {
-
-        final String output = FileResourceUtils.loadStringResource("/com/odysseusinc/arachne/executionengine/service/failed_stdout_one.txt");
-        final AnalysisResultStatusDTO analysisResult = resultStatusEvaluator.evaluateResultStatus(new RuntimeFinishState(0, output));
-        assertThat(analysisResult).isEqualTo(AnalysisResultStatusDTO.FAILED);
-    }
-
-    @Test
-    public void shouldFailOnErrorReportFileCreated() {
-
-        final String output = FileResourceUtils.loadStringResource("/com/odysseusinc/arachne/executionengine/service/failed_stdout_two.txt");
-        final AnalysisResultStatusDTO analysisResult = resultStatusEvaluator.evaluateResultStatus(new RuntimeFinishState(0, output));
         assertThat(analysisResult).isEqualTo(AnalysisResultStatusDTO.FAILED);
     }
 }
