@@ -4,7 +4,7 @@
 # CRAN_URL - CRAN Mirror (eg https://cran.asia/)
 # LIBS_BRANCH - branch for R packages list in repo: https://github.com/odysseusinc/DockerEnv
 
-DIST=trusty
+DIST=focal
 CRAN_DIST=
 ARCH=amd64
 BUILD_PATH=./dist
@@ -21,7 +21,7 @@ function print_help {
 	echo "Usage: run_build.sh [OPTIONS]"
 	echo "Available options are:"
 	echo -e "  -a i386|amd64 \tDistribution architecture, default is amd64"
-	echo -e "  -d DIST_NAME \t\tUbuntu distribution name, e.g. trusty or xenial, default is trusty"
+	echo -e "  -d DIST_NAME \t\tUbuntu distribution name, e.g. trusty or xenial, default is focal"
 	echo -e "  -r R_DIST_NAME \t\tUbuntu distribution name from cran with R packages, default is the same as used for DIST_NAME"
 	echo -e "  -b BUILDDIR \t\tDirectory where distribution build would be running"
 	echo -e "  -c CRAN_URL \t\tCRAN Mirror (eg https://cran.asia/)"
@@ -83,7 +83,7 @@ while getopts ":a:d:r:c:l:b:f:h:g:i:n" opt; do
 done
 
 if [[ -z $CRAN_DIST ]]; then
-  CRAN_DIST=$DIST
+  CRAN_DIST=$DIST-cran40
 fi
 
 if [[ -z $ARCHIVE ]]; then
@@ -166,6 +166,6 @@ sudo rm -f $BUILD_PATH/root/.Renviron
 # To prevent unexpected package updates
 sudo cp $WS/.Rprofile $BUILD_PATH/root/
 
-cd $BUILD_PATH
+cd $BUILD_PATH || exit 1
 tar czf $ARCHIVE .
 echo "Distribution Archive built and available at $ARCHIVE"
