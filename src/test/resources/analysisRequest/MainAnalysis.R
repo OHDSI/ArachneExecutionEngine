@@ -19,7 +19,6 @@
 # Load libraries
 library(SqlRender)
 library(DatabaseConnector)
-library(RODBC)
 
 ###########################################################
 # Parameters: Please change these to the correct values:  #
@@ -39,15 +38,13 @@ dbms          = Sys.getenv("DBMS_TYPE") # Should be "sql server", "oracle", "pos
 
 user <- Sys.getenv("DBMS_USERNAME")
 pw <- Sys.getenv("DBMS_PASSWORD")
-server <- Sys.getenv("DBMS_URL")
-port <- Sys.getenv("DBMS_PORT")
+connectionString <- Sys.getenv("CONNECTION_STRING")
 
 connectionDetails <- createConnectionDetails(dbms=dbms,
-server=server,
-port=port,
-user=user,
-password=pw,
-schema=cdmSchema)
+  connectionString = connectionString,
+  user=user,
+  password=pw,
+  schema=cdmSchema)
 
 
 ###########################################################
