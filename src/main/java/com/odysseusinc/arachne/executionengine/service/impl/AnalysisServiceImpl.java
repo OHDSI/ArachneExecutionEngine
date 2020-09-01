@@ -131,6 +131,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                     break;
                 }
             }
+
             String executableFileName = analysis.getExecutableFileName();
             String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
 
