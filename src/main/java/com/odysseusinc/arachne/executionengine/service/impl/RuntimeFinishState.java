@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2019 Odysseus Data Services, inc.
+ * Copyright 2020 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,17 +15,31 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Yaroslav Molodkov, Alexander Cumarav
- * Created: October 21, 2019
+ * Authors: Alex Cumarav, Vitaly Koulakov, Yaroslav Molodkov
+ * Created: July 27, 2020
  *
  */
 
-package com.odysseusinc.arachne.executionengine.service;
+package com.odysseusinc.arachne.executionengine.service.impl;
 
-import com.odysseusinc.arachne.commons.types.DBMSType;
-import com.odysseusinc.arachne.executionengine.service.versiondetector.VersionDetectionService;
+public class RuntimeFinishState {
 
-public interface VersionDetectionServiceFactory {
+    private final int exitCode;
+    private final String stdout;
 
-    VersionDetectionService getService(DBMSType dbmsType);
+    public RuntimeFinishState(int exitCode, String stdout) {
+
+        this.exitCode = exitCode;
+        this.stdout = stdout;
+    }
+
+    public int getExitCode() {
+
+        return exitCode;
+    }
+
+    public String getStdout() {
+
+        return stdout;
+    }
 }

@@ -26,25 +26,26 @@ then
   sudo cp $BQ_KEYFILE $JAIL/$BQ_KEYFILE
 fi
 
-sudo cp /etc/R-with-krb.sh $JAIL/etc/R-with-krb.sh
 sudo cp -R /impala/. $JAIL/impala/
-sudo chmod +x $JAIL/etc/R-with-krb.sh
+CHROOT_DEF=$JAIL/etc/R-with-krb.sh
+sudo touch $CHROOT_DEF
+printf "#!/usr/bin/env bash\n " | sudo tee -a $CHROOT_DEF > /dev/null
+printf "	export DATA_SOURCE_NAME=%q \n" "${DATA_SOURCE_NAME}" | sudo tee -a $CHROOT_DEF > /dev/null
+printf "	export DBMS_USERNAME=%q \n" "${DBMS_USERNAME}" | sudo tee -a $CHROOT_DEF  > /dev/null
+printf "	export DBMS_PASSWORD=%q \n" "${DBMS_PASSWORD}" | sudo tee -a $CHROOT_DEF  > /dev/null
+printf "	export DBMS_TYPE=%q \n" "${DBMS_TYPE}" | sudo tee -a $CHROOT_DEF  > /dev/null
+printf "	export CONNECTION_STRING=%q \n" "${CONNECTION_STRING}" | sudo tee -a $CHROOT_DEF  > /dev/null
+printf "	export DBMS_SCHEMA=%q \n" "${DBMS_SCHEMA}" | sudo tee -a $CHROOT_DEF  > /dev/null
+printf "	export TARGET_SCHEMA=%q \n" "${TARGET_SCHEMA}" | sudo tee -a $CHROOT_DEF  > /dev/null
+printf "	export RESULT_SCHEMA=%q \n" "${RESULT_SCHEMA}" | sudo tee -a $CHROOT_DEF  > /dev/null
+printf "	export COHORT_TARGET_TABLE=%q \n" "${COHORT_TARGET_TABLE}" | sudo tee -a $CHROOT_DEF  > /dev/null
+printf "	export ANALYSIS_ID=%q \n" "${ANALYSIS_ID}" | sudo tee -a $CHROOT_DEF  > /dev/null
+printf "	export PATH=%q \n" "${PATH}" | sudo tee -a $CHROOT_DEF  > /dev/null
+printf "	export HOME=%q \n" "${HOME}" | sudo tee -a $CHROOT_DEF  > /dev/null
+printf "	export JDBC_DRIVER_PATH=%q \n" "${JDBC_DRIVER_PATH}" | sudo tee -a $CHROOT_DEF  > /dev/null
+sudo tail --lines=+2 /etc/R-with-krb.sh  | sudo tee -a $CHROOT_DEF  > /dev/null
 
-sudo echo -e "#!/usr/bin/env bash \n \
-    export DATA_SOURCE_NAME=\"$DATA_SOURCE_NAME\" \n \
-    export DBMS_USERNAME=\"$DBMS_USERNAME\" \n \
-    export DBMS_PASSWORD=\"$DBMS_PASSWORD\" \n \
-    export DBMS_TYPE=\"$DBMS_TYPE\" \n \
-    export CONNECTION_STRING=\"$CONNECTION_STRING\" \n \
-    export DBMS_SCHEMA=\"$DBMS_SCHEMA\" \n \
-    export TARGET_SCHEMA=\"$TARGET_SCHEMA\" \n \
-    export RESULT_SCHEMA=\"$RESULT_SCHEMA\" \n \
-    export COHORT_TARGET_TABLE=\"$COHORT_TARGET_TABLE\" \n \
-    export ANALYSIS_ID=\"$ANALYSIS_ID\" \n \
-    export PATH=\"$PATH\" \n \
-    export HOME=\"$HOME\" \n \
-    export JDBC_DRIVER_PATH=\"$JDBC_DRIVER_PATH\" \n \
-    $(tail --lines=+2 $JAIL/etc/R-with-krb.sh)" | sudo tee $JAIL/etc/R-with-krb.sh > /dev/null
+sudo chmod +x $CHROOT_DEF
 
 sudo unshare --fork --pid -- chroot $JAIL /bin/bash -c " \
     mount -t proc proc /proc && \
