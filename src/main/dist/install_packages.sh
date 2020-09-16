@@ -71,26 +71,6 @@ local({
 })
 _EOF_
 
-# PYTHON 3.8
-if [[ "$DIST" == "bionic" ]]; then
-  sudo wget https://www.python.org/ftp/python/3.8.5/Python-3.8.5.tgz
-  sudo tar xzf Python-3.8.5.tgz
-  cd Python-3.8.5 || exit 1
-  sudo ./configure --enable-optimizations
-  sudo make install
-  cd .. && rm -fr Python-3.8.5
-
-  curl https://bootstrap.pypa.io/get-pip.py | sudo -H python3.8
-  rm -f /usr/bin/python3
-  ln -s /usr/local/bin/python3.8 /usr/bin/python3
-elif [[ "$DIST" == "xenial" ]]; then
-  sudo add-apt-repository -y ppa:deadsnakes/ppa
-  sudo apt update && apt -y install python3.8 python3.8-dev python3.8-venv
-#else
-  # For ubuntu focal (20.04) python3.8 is default
-  # sudo apt update && apt -y install python3 python3-dev python3-venv python3-pip
-fi
-
 # Miniconda for Python 3.8
 # Using 4.5.12 since latest version failed during installation
 # https://github.com/conda/conda/issues/10143
@@ -102,11 +82,15 @@ if [ "$(sha256sum Miniconda3-4.5.12-Linux-x86_64.sh)" -ne "866ae9dff53ad0874e1d1
 fi
 bash Miniconda3-4.5.12-Linux-x86_64.sh -b -p /root/miniconda -f || exit 1
 echo 'export PATH=$PATH:/root/miniconda/bin' >> /root/.bashrc
+ln -s /root/miniconda/bin/conda /usr/bin/conda
+ln -s /root/miniconda/bin/conda-env /usr/bin/conda-env
 
 export PATH=$PATH:/root/miniconda/bin
 conda create -y -n PLP python=3.8.3
 conda install -y -n PLP -c sebp scikit-survival=0.12.0
 conda install -y -n PLP -c pytorch pytorch torchvision
+
+rm -f /Miniconda3-4.5.12-Linux-x86_64.sh
 
 R CMD javareconf
 Rscript /root/libs/libs_1.r
