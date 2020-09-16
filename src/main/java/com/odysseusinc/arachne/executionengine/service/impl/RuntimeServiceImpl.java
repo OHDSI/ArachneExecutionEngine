@@ -22,8 +22,6 @@
 
 package com.odysseusinc.arachne.executionengine.service.impl;
 
-import static org.apache.commons.io.IOUtils.closeQuietly;
-
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.commons.utils.CommonFilenameUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
@@ -33,12 +31,24 @@ import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.properties.HiveBulkLoadProperties;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
-import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -57,18 +67,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import javax.annotation.PostConstruct;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Service;
+
+import static org.apache.commons.io.IOUtils.closeQuietly;
 
 @Service
 public class RuntimeServiceImpl implements RuntimeService {
@@ -83,7 +83,6 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String EXECUTION_FAILURE_LOG = "Execution id={} failure, ExitCode='{}'";
     private static final String STDOUT_LOG = "stdout:\n{}";
     private static final String STDOUT_LOG_DIFF = "stdout update:\n{}";
-    private static final String DELETE_DIR_ERROR_LOG = "Can't delete analysis directory: '{}'";
 
     private static final String RUNTIME_ENV_DATA_SOURCE_NAME = "DATA_SOURCE_NAME";
     private static final String RUNTIME_ENV_DBMS_USERNAME = "DBMS_USERNAME";
@@ -108,9 +107,9 @@ public class RuntimeServiceImpl implements RuntimeService {
     private static final String RUNTIME_BQ_KEYFILE = "BQ_KEYFILE";
     private static final String RUNTIME_ANALYSIS_ID = "ANALYSIS_ID";
 
-    private final ThreadPoolTaskExecutor taskExecutor;
-    private final CallbackService callbackService;
     private final ResourceLoader resourceLoader;
+    private final ResultStatusEvaluator resultStatusEvaluator;
+    private final ThreadPoolTaskExecutor taskExecutor;
 
     @Value("${runtime.timeOutSec}")
     private int runtimeTimeOutSec;
@@ -125,24 +124,24 @@ public class RuntimeServiceImpl implements RuntimeService {
     @Value("${drivers.location.hive}")
     private String hiveDriversLocation;
     @Value("${bulkload.enableMPP}")
-    private Boolean enableMPP;
+    private boolean enableMPP;
     private final HiveBulkLoadProperties hiveBulkLoadProperties;
 
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
 
 
     @Autowired
-    public RuntimeServiceImpl(ThreadPoolTaskExecutor taskExecutor,
-                              CallbackService callbackService,
+    public RuntimeServiceImpl(HiveBulkLoadProperties hiveBulkLoadProperties,
                               ResourceLoader resourceLoader,
-                              HiveBulkLoadProperties hiveBulkLoadProperties,
-                              RIsolatedRuntimeProperties rIsolatedRuntimeProps) {
+                              ResultStatusEvaluator resultStatusEvaluator,
+                              RIsolatedRuntimeProperties rIsolatedRuntimeProps,
+                              ThreadPoolTaskExecutor taskExecutor) {
 
-        this.taskExecutor = taskExecutor;
-        this.callbackService = callbackService;
-        this.resourceLoader = resourceLoader;
         this.hiveBulkLoadProperties = hiveBulkLoadProperties;
+        this.resourceLoader = resourceLoader;
+        this.resultStatusEvaluator = resultStatusEvaluator;
         this.rIsolatedRuntimeProps = rIsolatedRuntimeProps;
+        this.taskExecutor = taskExecutor;
     }
 
     @PostConstruct
@@ -170,7 +169,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                 Long id = analysis.getId();
                 String executableFileName = analysis.getExecutableFileName();
                 DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
-                RuntimeFinishStatus finishStatus;
+                RuntimeFinishState finishState;
                 try {
                     File runFile = prepareEnvironment();
                     prepareRprofile(file);
@@ -179,11 +178,10 @@ public class RuntimeServiceImpl implements RuntimeService {
 
                         final Map<String, String> envp = buildRuntimeEnvVariables(dataSource, krbConfig.getIsolatedRuntimeEnvs());
                         envp.put(RUNTIME_ANALYSIS_ID, analysis.getId().toString());
-                        finishStatus = runtime(command, envp, file, runtimeTimeOutSec, id, stdoutHandlerParams);
-                        AnalysisResultStatusDTO resultStatusDTO = finishStatus.exitCode == 0
-                                ? AnalysisResultStatusDTO.EXECUTED : AnalysisResultStatusDTO.FAILED;
+                        finishState = runtime(command, envp, file, runtimeTimeOutSec, id, stdoutHandlerParams);
+                        AnalysisResultStatusDTO resultStatusDTO = resultStatusEvaluator.evaluateResultStatus(finishState);
                         cleanupEnvironment(file);
-                        analysisCallback.execute(resultStatusDTO, finishStatus.stdout, file, null);
+                        analysisCallback.execute(resultStatusDTO, finishState.getStdout(), file, null);
                     } finally {
                         if (!isExternalJail()) {
                             FileUtils.deleteQuietly(runFile);
@@ -347,12 +345,12 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
     }
 
-    private RuntimeFinishStatus runtime(String[] command,
-                                        Map<String, String> envp,
-                                        File activeDir,
-                                        int timeout,
-                                        Long submissionId,
-                                        StdoutHandlerParams stdoutHandlerParams) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    private RuntimeFinishState runtime(String[] command,
+                                       Map<String, String> envp,
+                                       File activeDir,
+                                       int timeout,
+                                       Long submissionId,
+                                       StdoutHandlerParams stdoutHandlerParams) throws IOException, InterruptedException, ExecutionException, TimeoutException {
 
         final ProcessBuilder processBuilder = new ProcessBuilder(command)
                 .directory(activeDir)
@@ -372,14 +370,14 @@ public class RuntimeServiceImpl implements RuntimeService {
                 process.destroy();
                 LOGGER.warn(DESTROYING_PROCESS_LOG);
             }
-            final String stdout = future.get(submissionUpdateInterval * 2, TimeUnit.MILLISECONDS);
+            final String stdout = future.get(submissionUpdateInterval * 2L, TimeUnit.MILLISECONDS);
             if (process.exitValue() == 0) {
                 LOGGER.info(EXECUTION_SUCCESS_LOG, submissionId, process.exitValue());
             } else {
                 LOGGER.warn(EXECUTION_FAILURE_LOG, submissionId, process.exitValue());
             }
             LOGGER.debug(STDOUT_LOG, stdout);
-            return new RuntimeFinishStatus(process.exitValue(), stdout);
+            return new RuntimeFinishState(process.exitValue(), stdout);
         } finally {
             if (Objects.nonNull(process)) {
                 closeQuietly(process.getOutputStream());
@@ -389,16 +387,7 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
     }
 
-    private class RuntimeFinishStatus {
-        private final int exitCode;
-        private final String stdout;
 
-        private RuntimeFinishStatus(int exitCode, String stdout) {
-
-            this.exitCode = exitCode;
-            this.stdout = stdout;
-        }
-    }
 
     private class StdoutHandler implements Callable<String> {
 

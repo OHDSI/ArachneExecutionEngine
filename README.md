@@ -18,3 +18,23 @@ https://www.cloudera.com/downloads/connectors/impala/jdbc/2-5-42.html
     ```:shell 
     mvn -P impala clean install
     ```
+
+## Running tests
+
+Before running tests it's required to prepare CDM database version 5.0 or newer.
+Run tests command should include CDM database connection parameters like shown below:
+
+```bash
+mvn -Dcdm.jdbc_url=jdbc:postgresql://localhost/synpuf -Dcdm.username=postgres -Dcdm.password=postgres test
+```  
+
+If deployed to DBMS other than PostgreSQL point one 
+of the following dbms types with `cdm.dbms` parameter:
+- postgresql
+- sql server
+- pdw
+- redshift
+- oracle
+- implala
+- bigquery
+- netezza
