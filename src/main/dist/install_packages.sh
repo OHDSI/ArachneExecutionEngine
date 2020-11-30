@@ -76,7 +76,7 @@ rm -f /usr/bin/python3
 ln -s /usr/bin/python3.6 /usr/bin/python3
 
 python3 -m pip install --upgrade pip
-python3 -m pip install -U NumPy
+python3 -m pip install -U NumPy==1.18.5 #https://github.com/tensorflow/models/issues/9200
 python3 -m pip install -U SciPy
 # Installs specific version due to issue in the PatientLevelPrediction package
 # that uses deprecated sklearn.externals.joblib
