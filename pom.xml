@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.16.2-QA</version>
+    <version>1.17.0-QA</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -114,7 +114,7 @@
         <dependency>
             <groupId>com.amazon.redshift</groupId>
             <artifactId>redshift-jdbc42-no-awssdk</artifactId>
-            <version>1.2.10.1009</version>
+            <version>1.2.43.1067</version>
         </dependency>
 
         <dependency>
@@ -674,7 +674,7 @@
         </repository>
         <repository>
             <id>redshift</id>
-            <url>http://redshift-maven-repository.s3-website-us-east-1.amazonaws.com/release</url>
+            <url>https://s3.amazonaws.com/redshift-maven-repository/release</url>
         </repository>
     </repositories>
 

@@ -28,16 +28,17 @@ LANG=en_US.UTF-8 locale-gen --purge en_US.UTF-8
 echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\nLC_ALL="en_US.UTF-8"' > /etc/default/locale
 LC_ALL=en_US.UTF-8 dpkg-reconfigure -f noninteractive locales
 
-apt-get install -y software-properties-common
+apt install -y software-properties-common
 sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe restricted"
 add-apt-repository -y ppa:openjdk-r/ppa
-apt-get update && apt-get install -y openjdk-8-jdk
+apt update && apt install -y openjdk-8-jdk
 
 rm -f /usr/bin/java
 update-alternatives --config java
 
-sudo add-apt-repository -y ppa:deadsnakes/ppa
-apt-get update && apt-get install -y libpq-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user python3.6 python3.6-dev virtualenv python3.6-venv libgeos-dev libprotobuf-dev protobuf-compiler
+# Doesn't work for Bionic
+#sudo add-apt-repository -y ppa:deadsnakes/ppa
+apt update && apt install -yf libpq-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user virtualenv libgeos-dev libprotobuf-dev protobuf-compiler
 
 wget http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip \
         && echo "8021a28b8cac41b44f1421fd210a0a0822fcaf88d62d2e70a35b2ff628a8675a  ZuluJCEPolicies.zip" | sha256sum -c - \
@@ -49,18 +50,17 @@ wget http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip \
 wget https://s3.amazonaws.com/redshift-downloads/redshift-keytool.jar && java -jar redshift-keytool.jar -s && rm -f redshift-keytool.jar
 
 # Add jq JSON processor
-add-apt-repository -y ppa:opencpu/jq
-apt-get update
-apt-get -y install libjq-dev
+#add-apt-repository -y ppa:opencpu/jq
+apt update & apt -y install libjq-dev
 
-add-apt-repository "deb http://cran.rstudio.com/bin/linux/ubuntu $DIST/"
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
-gpg -a --export E084DAB9 | sudo apt-key add -
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $DIST/"
+#gpg -a --export E298A3A825C0D65DFD57CBB651716619E084DAB9 | sudo apt-key add -
 #sudo sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu $DIST/" >> /etc/apt/sources.list.d/rstudio.list'
 #gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
 #gpg -a --export E084DAB9 | sudo apt-key add -
 
-apt-get update && apt-get -y --allow-unauthenticated install r-base
+apt update && apt -y --allow-unauthenticated install r-base r-base-dev
 
 cat >> /etc/R/Rprofile.site <<_EOF_
 local({ 
@@ -71,22 +71,26 @@ local({
 })
 _EOF_
 
-curl https://bootstrap.pypa.io/get-pip.py | sudo -H python3.6
-rm -f /usr/bin/python3
-ln -s /usr/bin/python3.6 /usr/bin/python3
+# Miniconda for Python 3.8
+# Using 4.5.12 since latest version failed during installation
+# https://github.com/conda/conda/issues/10143
+wget https://repo.anaconda.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
 
-python3 -m pip install --upgrade pip
-python3 -m pip install -U NumPy
-python3 -m pip install -U SciPy
-# Installs specific version due to issue in the PatientLevelPrediction package
-# that uses deprecated sklearn.externals.joblib
-python3 -m pip install -Iv scikit-learn==0.22.2.post1
-python3 -m pip install -U torch
-python3 -m pip install -U joblib
-python3 -m pip install --upgrade tensorflow
-python3 -m pip install keras
+if [ "$(sha256sum Miniconda3-4.5.12-Linux-x86_64.sh)" -ne "866ae9dff53ad0874e1d1a60b1ad1ef8" ]; then
+  echo "Miniconda checksum failed, try again"
+  exit 1
+fi
+bash Miniconda3-4.5.12-Linux-x86_64.sh -b -p /root/miniconda -f || exit 1
+echo 'export PATH=$PATH:/root/miniconda/bin' >> /root/.bashrc
+ln -s /root/miniconda/bin/conda /usr/bin/conda
+ln -s /root/miniconda/bin/conda-env /usr/bin/conda-env
 
-export USESPECIALPYTHONVERSION=python3.6
+export PATH=$PATH:/root/miniconda/bin
+conda create -y -n PLP python=3.8.3
+conda install -y -n PLP -c sebp scikit-survival=0.12.0
+conda install -y -n PLP -c pytorch pytorch torchvision
+
+rm -f /Miniconda3-4.5.12-Linux-x86_64.sh
 
 R CMD javareconf
 Rscript /root/libs/libs_1.r
