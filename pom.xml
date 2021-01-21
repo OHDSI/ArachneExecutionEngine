@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.17.0-SNAPSHOT</version>
+    <version>1.17.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -166,12 +166,6 @@
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>2.7.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.odysseusinc</groupId>
-            <artifactId>data-source-manager</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
