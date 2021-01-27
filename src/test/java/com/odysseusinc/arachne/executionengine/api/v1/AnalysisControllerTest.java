@@ -62,8 +62,8 @@ import org.springframework.web.client.RestTemplate;
 @RunWith(SpringJUnit4ClassRunner.class)
 @TestPropertySource(locations = "classpath:application-test.properties")
 @SpringBootTest(classes = ExecutionEngineStarter.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, properties = "classpath:application-test.properties")
-public class AnalysysControllerTest {
-    private final static Logger log = LoggerFactory.getLogger(AnalysysControllerTest.class);
+public class AnalysisControllerTest {
+    private final static Logger log = LoggerFactory.getLogger(AnalysisControllerTest.class);
     @Rule
     public ExpectedException thrown = ExpectedException.none();
     @Value("${server.port}")
@@ -112,7 +112,7 @@ public class AnalysysControllerTest {
     @Test
     public void test01AnalysisController_Analyze() {
 
-        String URL = BASE_URL + ":" + serverPort + AnalisysController.REST_API_MAIN + AnalisysController.REST_API_ANALYZE;
+        String URL = BASE_URL + ":" + serverPort + AnalysisController.REST_API_MAIN + AnalysisController.REST_API_ANALYZE;
         AnalysisSyncRequestDTO analysis = getAnalysis();
         analysis.setExecutableFileName("MainAnalysis.R");
         analysis.setId(1L);
@@ -128,7 +128,7 @@ public class AnalysysControllerTest {
     @Test
     public void test02AnalysisController_Analyze() {
 
-        String URL = BASE_URL + ":" + serverPort + AnalisysController.REST_API_MAIN + AnalisysController.REST_API_ANALYZE;
+        String URL = BASE_URL + ":" + serverPort + AnalysisController.REST_API_MAIN + AnalysisController.REST_API_ANALYZE;
         AnalysisRequestDTO analysis = getAnalysis();
         analysis.setExecutableFileName("SQL_Request.sql");
         analysis.setId(2L);
@@ -146,7 +146,7 @@ public class AnalysysControllerTest {
 
         thrown.expect(HttpClientErrorException.class);
         thrown.expectMessage("422 null");
-        String URL = BASE_URL + ":" + serverPort + AnalisysController.REST_API_MAIN + AnalisysController.REST_API_ANALYZE;
+        String URL = BASE_URL + ":" + serverPort + AnalysisController.REST_API_MAIN + AnalysisController.REST_API_ANALYZE;
         AnalysisRequestDTO analysis = getAnalysis();
         analysis.setId(null);
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity(analysis, null);

@@ -61,10 +61,10 @@ import java.util.concurrent.Future;
 
 @RestController
 @Api
-@RequestMapping(value = AnalisysController.REST_API_MAIN)
-public class AnalisysController {
+@RequestMapping(value = AnalysisController.REST_API_MAIN)
+public class AnalysisController {
 
-    private static final Logger log = LoggerFactory.getLogger(AnalisysController.class);
+    private static final Logger log = LoggerFactory.getLogger(AnalysisController.class);
 
     @SuppressWarnings("WeakerAccess")
     public static final String REST_API_MAIN = "/api/v1";
@@ -80,7 +80,7 @@ public class AnalisysController {
     private final ThreadPoolTaskExecutor threadPoolExecutor;
 
     @Autowired
-    public AnalisysController(AnalysisService analysisService, CallbackService callbackService,
+    public AnalysisController(AnalysisService analysisService, CallbackService callbackService,
                               ThreadPoolTaskExecutor threadPoolExecutor) {
 
         this.analysisService = analysisService;
