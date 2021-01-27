@@ -38,7 +38,7 @@ public class ResponseController {
 
     @RequestMapping(value = "/submissions/{id}/update/{password}",
             method = RequestMethod.POST,
-            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public void updateSubmission(@PathVariable Long id,
                                  @PathVariable String password,
                                  @RequestBody AnalysisExecutionStatusDTO status) {

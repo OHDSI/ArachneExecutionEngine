@@ -92,7 +92,7 @@ public class AnalisysController {
     @RequestMapping(value = REST_API_ANALYZE,
             method = RequestMethod.POST,
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+            produces = MediaType.APPLICATION_JSON_VALUE
     )
     public AnalysisRequestStatusDTO analyze(
             @RequestPart("analysisRequest") @Valid AnalysisRequestDTO analysisRequest,
