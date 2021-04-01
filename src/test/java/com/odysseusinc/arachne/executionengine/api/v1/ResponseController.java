@@ -38,19 +38,19 @@ public class ResponseController {
 
     @RequestMapping(value = "/submissions/{id}/update/{password}",
             method = RequestMethod.POST,
-            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     public void updateSubmission(@PathVariable Long id,
                                  @PathVariable String password,
                                  @RequestBody AnalysisExecutionStatusDTO status) {
 
-        if (!AnalysysControllerTest.updateStatusIsOk.get()) {
-            AnalysysControllerTest.updateStatusIsOk.set(true);
+        if (!AnalysisControllerTest.updateStatusIsOk.get()) {
+            AnalysisControllerTest.updateStatusIsOk.set(true);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            AnalysysControllerTest.latch.countDown();
+            AnalysisControllerTest.latch.countDown();
         }
     }
 
@@ -62,23 +62,23 @@ public class ResponseController {
                                @RequestPart("analysisResult") AnalysisResultDTO result,
                                @RequestPart("file") MultipartFile[] files) {
 
-        if (!AnalysysControllerTest.resultIsOk.get()) {
+        if (!AnalysisControllerTest.resultIsOk.get()) {
             switch (id.intValue()) {
                 case 1: {
-                    AnalysysControllerTest.resultIsOk.set(files.length == 5); //TODO implement more relevant criterion
+                    AnalysisControllerTest.resultIsOk.set(files.length == 5); //TODO implement more relevant criterion
                     break;
                 }
                 case 2: {
-                    AnalysysControllerTest.updateStatusIsOk.set(true); //TODO remove after embedded db implementation
-                    AnalysysControllerTest.resultIsOk.set(files.length == 4);
+                    AnalysisControllerTest.updateStatusIsOk.set(true); //TODO remove after embedded db implementation
+                    AnalysisControllerTest.resultIsOk.set(files.length == 4);
                     break;
                 }
                 default: {
-                    AnalysysControllerTest.resultIsOk.set(false);
+                    AnalysisControllerTest.resultIsOk.set(false);
                     break;
                 }
             }
-            AnalysysControllerTest.latch.countDown();
+            AnalysisControllerTest.latch.countDown();
         }
     }
 }
