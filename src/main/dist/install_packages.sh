@@ -92,10 +92,10 @@ conda install -y -n PLP -c pytorch pytorch torchvision
 
 rm -f /Miniconda3-4.5.12-Linux-x86_64.sh
 
-R CMD javareconf
-Rscript /root/libs/libs_1.r
-Rscript /root/libs/libs_2.r
-Rscript /root/libs/libs_3.r
-Rscript /root/libs/libs_4.r
-Rscript /root/libs/libs_5.r
-Rscript /root/libs/libs_6.r
+#R CMD javareconf
+#Rscript /root/libs/libs_1.r
+#Rscript /root/libs/libs_2.r
+#Rscript /root/libs/libs_3.r
+#Rscript /root/libs/libs_4.r
+#Rscript /root/libs/libs_5.r
+#Rscript /root/libs/libs_6.r
