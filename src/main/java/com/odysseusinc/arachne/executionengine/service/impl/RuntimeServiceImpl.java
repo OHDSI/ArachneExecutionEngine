@@ -123,6 +123,14 @@ public class RuntimeServiceImpl implements RuntimeService {
     private String netezzaDriversLocation;
     @Value("${drivers.location.hive}")
     private String hiveDriversLocation;
+    @Value("${drivers.location.postgresql}")
+    private String postgresqlDriversLocation;
+    @Value("${drivers.location.mssql}")
+    private String mssqlDriversLocation;
+    @Value("${drivers.location.redshift}")
+    private String redshiftDriversLocation;
+    @Value("${drivers.location.oracle}")
+    private String oracleDriversLocation;
     @Value("${bulkload.enableMPP}")
     private boolean enableMPP;
     private final HiveBulkLoadProperties hiveBulkLoadProperties;
@@ -340,6 +348,14 @@ public class RuntimeServiceImpl implements RuntimeService {
                 return netezzaDriversLocation;
             case HIVE:
                 return hiveDriversLocation;
+            case POSTGRESQL:
+                return postgresqlDriversLocation;
+            case MS_SQL_SERVER:
+                return mssqlDriversLocation;
+            case REDSHIFT:
+                return redshiftDriversLocation;
+            case ORACLE:
+                return oracleDriversLocation;
             default:
                 return null;
         }
