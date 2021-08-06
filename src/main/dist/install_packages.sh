@@ -91,6 +91,7 @@ conda install -y -n PLP -c sebp scikit-survival=0.12.0
 conda install -y -n PLP -c pytorch pytorch torchvision
 
 rm -f /Miniconda3-4.5.12-Linux-x86_64.sh
+echo 'alias python=python3' >> /root/.bashrc
 
 R CMD javareconf
 Rscript /root/libs/libs_1.r
