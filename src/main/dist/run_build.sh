@@ -202,7 +202,7 @@ sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL
 
 # Run PLP test
-cat >> /root/libs/plp_test.r <<EOF
+cat >> $BUILD_PATH/root/libs/plp_test.r <<EOF
 library(DatabaseConnector)
 connectionDetails <- createConnectionDetails(dbms = "postgresql", connectionString = "$JDBC_TEST")
 PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, python = T)
@@ -211,12 +211,12 @@ if [ -z "${JDBC_TEST}" ]; then
   echo "Skipping PLP test, no JDBC connection string"
 else
   echo "Running PLP test"
-  Rscript /root/libs/plp_test.r
+  Rscript $BUILD_PATH/root/libs/plp_test.r
 fi
 
 umount $BUILD_PATH/proc
 sudo rm -f $BUILD_PATH/root/install_packages.sh
-sudo rm -ff $BUILD_PATH/root/libs
+sudo rm -fr $BUILD_PATH/root/libs
 sudo rm -f $BUILD_PATH/root/.Renviron
 # To prevent unexpected package updates
 sudo cp $WS/.Rprofile $BUILD_PATH/root/
