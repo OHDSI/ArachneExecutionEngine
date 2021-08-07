@@ -93,7 +93,6 @@ rm -f /Miniconda3-4.5.12-Linux-x86_64.sh
 echo 'alias python=python3' >> /root/.bashrc
 alias python=python3
 conda update -y -n base conda
-conda remove -y -n PLP PyYAML
 
 R CMD javareconf
 Rscript /root/libs/libs_1.r
@@ -102,3 +101,10 @@ Rscript /root/libs/libs_3.r
 Rscript /root/libs/libs_4.r
 Rscript /root/libs/libs_5.r
 Rscript /root/libs/libs_6.r
+
+# Required by keras
+conda remove -y -n PLP PyYAML
+
+Rscript /root/libs/libs_7.r
+
+
