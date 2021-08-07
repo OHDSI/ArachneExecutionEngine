@@ -205,6 +205,7 @@ sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL
 if [ -z "${JDBC_TEST}" ]; then
   echo "Skipping PLP test, no JDBC connection string"
 else
+  echo "Running PLP test"
   cat >> /root/libs/plp_test.r <<_EOF_
   library(DatabaseConnector)
   connectionDetails <- createConnectionDetails(dbms = "postgresql", connectionString = "$JDBC_TEST")
