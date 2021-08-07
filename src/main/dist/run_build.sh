@@ -202,7 +202,7 @@ sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL
 
 # Run PLP test
-cat >> plp_test.r <<EOF
+cat >> /root/libs/plp_test.r <<EOF
 library(DatabaseConnector)
 connectionDetails <- createConnectionDetails(dbms = "postgresql", connectionString = "$JDBC_TEST")
 PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, python = T)
