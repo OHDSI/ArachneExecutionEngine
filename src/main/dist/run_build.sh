@@ -202,15 +202,15 @@ sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL
 
 # Run PLP test
+cat >> plp_test.r <<EOF
+library(DatabaseConnector)
+connectionDetails <- createConnectionDetails(dbms = "postgresql", connectionString = "$JDBC_TEST")
+PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, python = T)
+EOF
 if [ -z "${JDBC_TEST}" ]; then
   echo "Skipping PLP test, no JDBC connection string"
 else
   echo "Running PLP test"
-  cat >> /root/libs/plp_test.r <<_EOF_
-  library(DatabaseConnector)
-  connectionDetails <- createConnectionDetails(dbms = "postgresql", connectionString = "$JDBC_TEST")
-  PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, python = T)
-  _EOF_
   Rscript /root/libs/plp_test.r
 fi
 
