@@ -45,7 +45,7 @@ function print_help {
 }
 
 OPTIND=1
-while getopts ":a:d:r:c:l:b:f:h:g:i:n:p:s:m:o" opt; do
+while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o" opt; do
 	case $opt in 
 		a)
 			ARCH=$OPTARG
