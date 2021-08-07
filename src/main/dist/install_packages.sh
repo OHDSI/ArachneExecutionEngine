@@ -107,4 +107,10 @@ conda remove -y -n PLP PyYAML
 
 Rscript /root/libs/libs_7.r
 
+if [ -z "${MEMORY_SIZE_GB}" ]; then
+  MEMORY_OPS="-XX:+AggressiveHeap"
+else
+  MEMORY_OPS="-Xmx${MEMORY_SIZE_GB}G"
+fi
+
 

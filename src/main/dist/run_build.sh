@@ -11,6 +11,7 @@ BUILD_PATH=./dist
 WS=`dirname $0`
 CRAN_URL=
 LIBS_BRANCH=
+JDBC_TEST=
 
 BQ_PATH=../extras/bigquery/
 IMPALA_PATH=../extras/impala/
@@ -29,6 +30,7 @@ function print_help {
 	echo -e "  -r R_DIST_NAME \t\tUbuntu distribution name from cran with R packages, default is the same as used for DIST_NAME"
 	echo -e "  -b BUILDDIR \t\tDirectory where distribution build would be running"
 	echo -e "  -c CRAN_URL \t\tCRAN Mirror (eg https://cran.asia/)"
+	echo -e "  -j JDBC_TEST \t\tJDBC Connection String to verify PLP installation"
 	echo -e "  -l LIBS_BRANCH \t\tBranch for R packages list in repo: https://github.com/odysseusinc/DockerEnv"
 	echo -e "  -f FILE \t\tOutput archive filename"
 	echo -e "  -g PATH \t\tPath to BigQuery drivers"
@@ -57,6 +59,9 @@ while getopts ":a:d:r:c:l:b:f:h:g:i:n:p:s:m:o" opt; do
 		c)
 			CRAN_URL=$OPTARG
 			;;
+	  j)
+  		JDBC_TEST=$OPTARG
+  		;;
 		l)
 			LIBS_BRANCH=$OPTARG
 			;;
@@ -135,7 +140,7 @@ echo "Build dir: $BUILD_PATH"
 echo "Output file: $ARCHIVE"
 echo ""
 
-# Download libs.r from GitHub repo
+# Download libs from GitHub repo
 if [[ -f "libs/libs_1.r" ]]; then
     rm -f "libs/libs*.r"
 fi
@@ -147,6 +152,7 @@ curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/l
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/libs_4.r -o libs/libs_4.r
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/libs_5.r -o libs/libs_5.r
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/libs_6.r -o libs/libs_6.r
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/libs_7.r -o libs/libs_7.r
 
 debootstrap --arch amd64 $DIST $BUILD_PATH http://archive.ubuntu.com/ubuntu/ # http://ubuntu.cs.utah.edu/ubuntu/
 mount --bind /proc $BUILD_PATH/proc
@@ -195,9 +201,21 @@ cp MSSQL_PATH/*.jar $BUILD_PATH/mssql/
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL
 
+# Run PLP test
+if [ -z "${JDBC_TEST}" ]; then
+  echo "Skipping PLP test, no JDBC connection string"
+else
+  cat >> /root/libs/plp_test.r <<_EOF_
+  library(DatabaseConnector)
+  connectionDetails <- createConnectionDetails(dbms = "postgresql", connectionString = "$JDBC_TEST")
+  PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, python = T)
+  _EOF_
+  Rscript /root/libs/plp_test.r
+fi
+
 umount $BUILD_PATH/proc
 sudo rm -f $BUILD_PATH/root/install_packages.sh
-sudo rm -f $BUILD_PATH/root/libs.r
+sudo rm -ff $BUILD_PATH/root/libs
 sudo rm -f $BUILD_PATH/root/.Renviron
 # To prevent unexpected package updates
 sudo cp $WS/.Rprofile $BUILD_PATH/root/
