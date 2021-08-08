@@ -110,9 +110,15 @@ Rscript /root/libs/libs_7.r
 
 
 # Run PLP test
+RUN mkdir /opt/drivers
+RUN echo "DATABASECONNECTOR_JAR_FOLDER=/opt/drivers/" >> /root/.Renviron
 cat >> /root/libs/plp_test.r <<EOF
 library(DatabaseConnector)
-connectionDetails <- createConnectionDetails(dbms = "postgresql", connectionString = "$JDBC_TEST")
+downloadJdbcDrivers("redshift")
+downloadJdbcDrivers("postgresql")
+downloadJdbcDrivers("oracle")
+downloadJdbcDrivers("sql server")
+connectionDetails <- createConnectionDetails(dbms = "postgresql", connectionString = "$JDBC_TEST", pathToDriver="/postgresql")
 PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, python = T)
 EOF
 if [ -z "${JDBC_TEST}" ]; then
