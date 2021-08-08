@@ -199,20 +199,7 @@ mkdir $BUILD_PATH/mssql/
 cp MSSQL_PATH/*.jar $BUILD_PATH/mssql/
 
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
-sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL
-
-# Run PLP test
-cat >> $BUILD_PATH/root/libs/plp_test.r <<EOF
-library(DatabaseConnector)
-connectionDetails <- createConnectionDetails(dbms = "postgresql", connectionString = "$JDBC_TEST")
-PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, python = T)
-EOF
-if [ -z "${JDBC_TEST}" ]; then
-  echo "Skipping PLP test, no JDBC connection string"
-else
-  echo "Running PLP test"
-  Rscript $BUILD_PATH/root/libs/plp_test.r
-fi
+sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL $JDBC_TEST
 
 umount $BUILD_PATH/proc
 sudo rm -f $BUILD_PATH/root/install_packages.sh

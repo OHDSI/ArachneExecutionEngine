@@ -5,6 +5,7 @@
 
 DIST=$1
 CRAN_URL=$2
+JDBC_TEST=$3
 
 HOME=/root
 
@@ -107,10 +108,17 @@ conda remove -y -n PLP PyYAML
 
 Rscript /root/libs/libs_7.r
 
-if [ -z "${MEMORY_SIZE_GB}" ]; then
-  MEMORY_OPS="-XX:+AggressiveHeap"
-else
-  MEMORY_OPS="-Xmx${MEMORY_SIZE_GB}G"
-fi
 
+# Run PLP test
+cat >> /root/libs/plp_test.r <<EOF
+library(DatabaseConnector)
+connectionDetails <- createConnectionDetails(dbms = "postgresql", connectionString = "$JDBC_TEST")
+PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, python = T)
+EOF
+if [ -z "${JDBC_TEST}" ]; then
+  echo "Skipping PLP test, no JDBC connection string"
+else
+  echo "Running PLP test"
+  Rscript /root/libs/plp_test.r
+fi
 
