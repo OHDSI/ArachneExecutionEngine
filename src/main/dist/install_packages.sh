@@ -110,8 +110,8 @@ Rscript /root/libs/libs_7.r
 
 
 # Run PLP test
-RUN mkdir /opt/drivers
-RUN echo "DATABASECONNECTOR_JAR_FOLDER=/opt/drivers/" >> /root/.Renviron
+mkdir /opt/drivers
+echo "DATABASECONNECTOR_JAR_FOLDER=/opt/drivers/" >> /root/.Renviron
 cat >> /root/libs/plp_test.r <<EOF
 library(DatabaseConnector)
 downloadJdbcDrivers("redshift")
