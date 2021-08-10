@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.17.1</version>
+    <version>1.18.0-QA</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -651,8 +651,8 @@
             <url>https://nexus.odysseusinc.com/repository/community-libs-snapshot-local</url>
         </repository>
         <repository>
-            <id>community-libs-release-local</id>
-            <name>community-libs-release-local</name>
+            <id>community-libs-releases-local</id>
+            <name>community-libs-releases-local</name>
             <releases>
                 <enabled>true</enabled>
                 <updatePolicy>always</updatePolicy>
@@ -680,8 +680,8 @@
             <url>https://nexus.odysseusinc.com/repository/community-libs-snapshot-local</url>
         </snapshotRepository>
         <repository>
-            <id>community-libs-release-local</id>
-            <name>community-libs-release-local</name>
+            <id>community-libs-releases-local</id>
+            <name>community-libs-releases-local</name>
             <url>https://nexus.odysseusinc.com/repository/community-libs-release-local</url>
         </repository>
     </distributionManagement>
