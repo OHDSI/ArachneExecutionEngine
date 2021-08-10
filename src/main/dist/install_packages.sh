@@ -2,6 +2,7 @@
 
 # DIST - Ubuntu Dist
 # CRAN_URL - CRAN Mirror (eg https://cran.asia/)
+# JDBC_TEST - JDBC Connection string for PLP test
 
 DIST=$1
 CRAN_URL=$2
@@ -110,8 +111,6 @@ Rscript /root/libs/libs_7.r
 
 
 # Run PLP test
-# Update: test was disabled due to error
-# https://github.com/OHDSI/PatientLevelPrediction/issues/229
 mkdir /opt/drivers
 echo "DATABASECONNECTOR_JAR_FOLDER=/opt/drivers/" >> /root/.Renviron
 cat >> /root/libs/plp_test.r <<EOF
@@ -127,6 +126,8 @@ if [ -z "${JDBC_TEST}" ]; then
   echo "Skipping PLP test, no JDBC connection string"
 else
   echo "Running PLP test"
+  # Update: test was disabled due to error
+  # https://github.com/OHDSI/PatientLevelPrediction/issues/229
   # Rscript /root/libs/plp_test.r
 fi
 
