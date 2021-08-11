@@ -8,7 +8,18 @@ sudo run_build.sh
 - -b Directory where distribution build would be running
 - -f Output archive filename
 - -h prints usage
-
+- -c CRAN Mirror URL
+- -j JDBC Connection String to verify PLP installation
+- -l Branch for R packages list in repo: https://github.com/odysseusinc/DockerEnv
+- -g Path to BigQuery drivers
+- -i Path to Impala drivers
+- -n Path to Netezza drivers
+- -v Path to Hive drivers
+- -p Path to Postgresql drivers
+- -s Path to Redshift drivers
+- -m Path to MS SQL drivers
+- -o Path to Oracle drivers
+  
 ## Adding GitHub Personal Access Token
 
 GitHub limits a number of requests sending from unauthorized host and you may meet

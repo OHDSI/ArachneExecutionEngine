@@ -1,5 +1,5 @@
 FROM odysseusinc/r-env:1.0.15
-MAINTAINER alexandr.ryabokon@odysseusinc.com
+MAINTAINER support@odysseusinc.com
 VOLUME /tmp
 VOLUME /libs-r
 VOLUME /dist
