@@ -184,19 +184,19 @@ cp $HIVE_PATH/*.jar $BUILD_PATH/hive/
 
 # Postgresql drivers
 mkdir $BUILD_PATH/postgresql/
-cp POSTGRESQL_PATH/*.jar $BUILD_PATH/postgresql/
+cp $POSTGRESQL_PATH/*.jar $BUILD_PATH/postgresql/
 
 # Redshift drivers
 mkdir $BUILD_PATH/redshift/
-cp REDSHIFT_PATH/*.jar $BUILD_PATH/redshift/
+cp $REDSHIFT_PATH/*.jar $BUILD_PATH/redshift/
 
 # Oracle drivers
 mkdir $BUILD_PATH/oracle/
-cp ORACLE_PATH/*.jar $BUILD_PATH/oracle/
+cp $ORACLE_PATH/*.jar $BUILD_PATH/oracle/
 
 # Hive drivers
 mkdir $BUILD_PATH/mssql/
-cp MSSQL_PATH/*.jar $BUILD_PATH/mssql/
+cp $MSSQL_PATH/*.jar $BUILD_PATH/mssql/
 
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL $JDBC_TEST
