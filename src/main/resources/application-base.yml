@@ -83,7 +83,7 @@ drivers:
     hive: /hive
     postgresql: /postgresql
     mssql: /mssql
-    redshift: /reshift
+    redshift: /redshift
     oracle: /oracle
 bulkload:
   enableMPP: false
