@@ -1,4 +1,4 @@
-FROM odysseusinc/r-env:1.0.16
+FROM odysseusinc/r-env:1.0.15
 MAINTAINER support@odysseusinc.com
 VOLUME /tmp
 VOLUME /libs-r
