@@ -224,6 +224,13 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        logger.info("impalaDriversLocation: {}", impalaDriversLocation);
+        logger.info("bqDriversLocation: {}", bqDriversLocation);
+        logger.info("netezzaDriversLocation: {}", netezzaDriversLocation);
+        logger.info("hiveDriversLocation: {}", hiveDriversLocation);
+        logger.info("postgresqlDriversLocation: {}", postgresqlDriversLocation);
+        logger.info("redshiftDriversLocation: {}", redshiftDriversLocation);
+        logger.info("oracleDriversLocation: {}", oracleDriversLocation);
 
         driverPathExclusions = Stream.of(impalaDriversLocation, bqDriversLocation, netezzaDriversLocation, hiveDriversLocation,
                 mssqlDriversLocation, postgresqlDriversLocation, redshiftDriversLocation, oracleDriversLocation)
