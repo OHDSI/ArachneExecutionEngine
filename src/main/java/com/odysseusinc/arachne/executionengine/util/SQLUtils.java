@@ -48,7 +48,7 @@ public class SQLUtils {
         String user = dataSource.getUsername();
         String password = dataSource.getPassword();
         String url = dataSource.getConnectionString();
-        logger.info("Using JDBC: " + dataSource.getConnectionStringForLogging());
+        logger.debug("Using JDBC: " + dataSource.getConnectionStringForLogging());
         Connection conn = DriverManager.getConnection(url, user, password);
 
         return conn;
