@@ -70,7 +70,6 @@ public class CallbackServiceImpl implements CallbackService {
             "Sending stdout to callback for analysis with id='{}'";
     private static final String UPDATE_STATUS_FAILED_LOG = "Update analysis status id={} failed";
     private static final String SEND_RESULT_FAILED_LOG = "Send analysis result id={} failed";
-    private static final String SEND_ERROR_RESULT_FAILED_LOG = "Send error analysis result id={} failed";
     private static final String EXECUTION_RESULT_FILES_COUNT_LOG = "Execution id={} produced {} result files";
     private static final String DELETE_DIR_ERROR_LOG = "Can't delete analysis directory: '{}'";
 
@@ -135,7 +134,7 @@ public class CallbackServiceImpl implements CallbackService {
             final List<FileSystemResource> resultFSResources
                     = AnalisysUtils.getFileSystemResources(analysis, resultDir, compressedResult, chunkSize, zipDir);
 
-            sendAnalysisResult(analysis, result, resultFSResources, chunkSize);
+            sendAnalysisResult(analysis.getResultCallback(), analysis.getCallbackPassword(), result, resultFSResources);
         } catch (ZipException ex) {
             log.error(ex.getMessage());
             if (log.isDebugEnabled()) {
@@ -158,10 +157,11 @@ public class CallbackServiceImpl implements CallbackService {
 
     @Override
     @FileDescriptorCount
-    public void sendAnalysisResult(AnalysisRequestDTO analysis,
+    public void sendAnalysisResult(String resultURL,
+                                   String password,
                                    AnalysisResultDTO analysisResult,
-                                   Collection<FileSystemResource> files, 
-                                   Long chunkSize) {
+                                   Collection<FileSystemResource> files) {
+
         HttpHeaders jsonHeader = new HttpHeaders();
         jsonHeader.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<AnalysisResultDTO> analysisRequestHttpEntity = new HttpEntity<>(analysisResult, jsonHeader);
@@ -176,19 +176,14 @@ public class CallbackServiceImpl implements CallbackService {
         Long submissionId = analysisResult.getId();
         try {
             nodeRestTemplate.exchange(
-                    analysis.getResultCallback(),
+                    resultURL,
                     HttpMethod.POST,
                     entity,
                     String.class,
                     submissionId,
-                    analysis.getCallbackPassword());
+                    password);
         } catch (RestClientException ex) {
             log.info(SEND_RESULT_FAILED_LOG, submissionId, ex);
-            try {
-                sendFailedResult(analysis, ex, null, false, chunkSize);
-            } catch (Exception ex1) {
-                log.info(SEND_ERROR_RESULT_FAILED_LOG, submissionId, ex1);
-            }
         }
     }
 
@@ -217,6 +212,7 @@ public class CallbackServiceImpl implements CallbackService {
         }
 
         result.setStdout(stdout);
-        sendAnalysisResult(analysis, result, resultFSResources, chunkSize);
+        sendAnalysisResult(analysis.getResultCallback(), analysis.getCallbackPassword(),
+                result, resultFSResources);
     }
 }
