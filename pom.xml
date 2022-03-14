@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.19.0</version>
+    <version>1.19.1</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -23,8 +23,10 @@
         <httpclient.version>4.5.13</httpclient.version>
         <jtds.version>1.3.1</jtds.version>
         <mysql.version>8.0.16</mysql.version>
-        <postgresql.version>42.2.15</postgresql.version>
+        <postgresql.version>42.2.25</postgresql.version>
         <tomcat.version>9.0.27</tomcat.version>
+        
+        <arachne.commons.version>1.19.0</arachne.commons.version>
     </properties>
 
     <parent>
@@ -45,17 +47,17 @@
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>execution-engine-commons</artifactId>
-            <version>${project.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-common-types</artifactId>
-            <version>${project.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-common-utils</artifactId>
-            <version>${project.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
 
         <!--Swagger-->
@@ -149,7 +151,7 @@
         <dependency>
             <groupId>org.ohdsi.sql</groupId>
             <artifactId>SqlRender</artifactId>
-            <version>1.7.0</version>
+            <version>1.9.0</version>
         </dependency>
 
         <dependency>
@@ -160,7 +162,7 @@
         <dependency>
             <groupId>com.odysseusinc</groupId>
             <artifactId>data-source-manager</artifactId>
-            <version>${project.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
 
         <dependency>

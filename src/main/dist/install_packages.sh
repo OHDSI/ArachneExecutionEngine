@@ -120,14 +120,12 @@ downloadJdbcDrivers("postgresql")
 downloadJdbcDrivers("oracle")
 downloadJdbcDrivers("sql server")
 connectionDetails <- createConnectionDetails(dbms = "postgresql", connectionString = "$JDBC_TEST", pathToDriver="/postgresql")
-PatientLevelPrediction::checkPlpInstallation(connectionDetails = connectionDetails, python = T)
+library(PatientLevelPrediction)
+checkPlpInstallation(connectionDetails = connectionDetails, python = T)
 EOF
 if [ -z "${JDBC_TEST}" ]; then
   echo "Skipping PLP test, no JDBC connection string"
 else
   echo "Running PLP test"
-  # Update: test was disabled due to error
-  # https://github.com/OHDSI/PatientLevelPrediction/issues/229
-  # Rscript /root/libs/plp_test.r
+  Rscript /root/libs/plp_test.r
 fi
-

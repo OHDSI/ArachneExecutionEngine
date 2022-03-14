@@ -32,6 +32,7 @@ import com.odysseusinc.arachne.executionengine.service.impl.StdoutHandlerParams;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,13 +104,21 @@ public class AnalysisController {
             @RequestHeader(value = "arachne-result-chunk-size-mb", defaultValue = "10485760") Long chunkSize
     ) throws IOException {
 
+        Long id = analysisRequest.getId();
         try {
-            log.info("Started processing request for analysis ID = {}", analysisRequest.getId());
+            log.info("Request [{}] for [{}] received", id, analysisRequest.getResultCallback());
             final File analysisDir = AnalisysUtils.extractFiles(files, compressed);
-            log.info("Extracted files for analysis ID = {}", analysisRequest.getId());
-            return analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, attachCdmMetadata, chunkSize);
+            log.info("Request [{}] extracted {} files", id,
+                    Optional.ofNullable(analysisDir.list()).map(dir -> dir.length).orElse(-1)
+            );
+            AnalysisRequestStatusDTO result = analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, attachCdmMetadata, chunkSize);
+            log.info("Request [{}] of type [{}] accepted into processing", id, result.getType());
+            return result;
         } catch (IOException e) {
+            log.info("Request [{}] NOT accepted due to [{}]: {}", id, e.getClass().getName(), e.getMessage());
+            // TODO Abstraction failure here: using `null` value for 'analysisDir' to
             callbackService.sendFailedResult(analysisRequest, e, null, waitCompressedResult, chunkSize);
+            log.info("Request [{}] completed: negative callback sent", id);
             throw e;
         }
     }
