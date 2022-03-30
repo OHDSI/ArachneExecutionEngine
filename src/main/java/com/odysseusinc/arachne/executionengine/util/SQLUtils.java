@@ -27,6 +27,8 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnse
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +50,20 @@ public class SQLUtils {
         String user = dataSource.getUsername();
         String password = dataSource.getPassword();
         String url = dataSource.getConnectionString();
-        logger.debug("Using JDBC: " + dataSource.getConnectionStringForLogging());
-        Connection conn = DriverManager.getConnection(url, user, password);
+        
+        Properties info = new Properties();
+        if (user != null) {
+            info.put("user", user);
+        }
+        if (password != null) {
+            info.put("password", password);
+        }
+        if (dataSource.getType().equals(DBMSType.SNOWFLAKE)) {
+            info.put("CLIENT_RESULT_COLUMN_CASE_INSENSITIVE", "true");
+        }
+
+        logger.info("Using JDBC: " + dataSource.getConnectionStringForLogging());
+        Connection conn = DriverManager.getConnection(url, info);
 
         return conn;
     }

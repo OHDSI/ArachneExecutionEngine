@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.19.0-SNAPSHOT</version>
+    <version>1.19.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -149,7 +149,7 @@
         <dependency>
             <groupId>org.ohdsi.sql</groupId>
             <artifactId>SqlRender</artifactId>
-            <version>1.8.3</version>
+            <version>1.9.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -526,6 +526,20 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>snowflake</id>
+            <properties>
+                <snowflake.enabled>true</snowflake.enabled>
+                <snowflake.driver.version>3.13.14</snowflake.driver.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>net.snowflake</groupId>
+                    <artifactId>snowflake-jdbc</artifactId>
+                    <version>${snowflake.driver.version}</version>
+                </dependency>
+            </dependencies>
         </profile>
     </profiles>
 

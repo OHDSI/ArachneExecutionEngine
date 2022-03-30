@@ -21,6 +21,7 @@ POSTGRESQL_PATH=../extras/postgresql/
 REDSHIFT_PATH=../extras/redshift/
 ORACLE_PATH=../extras/oracle/
 MSSQL_PATH=../extras/mssql/
+SNOWFLAKE_PATH=../extras/snowflake/
 
 function print_help {
 	echo "Usage: run_build.sh [OPTIONS]"
@@ -41,11 +42,12 @@ function print_help {
 	echo -e "  -s PATH \t\tPath to Redshift drivers"
 	echo -e "  -m PATH \t\tPath to MS SQL drivers"
 	echo -e "  -o PATH \t\tPath to Oracle drivers"
+	echo -e "  -w PATH \t\tPath to Snowflake drivers"
 	echo -e "  -h \t\t\tPrints this"
 }
 
 OPTIND=1
-while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o" opt; do
+while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o:w" opt; do
 	case $opt in 
 		a)
 			ARCH=$OPTARG
@@ -95,6 +97,9 @@ while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o" opt; do
 		    ;;
 		o)
 		    ORACLE_PATH=$OPTARG
+		    ;;
+		w)
+		    SNOWFLAKE_PATH=$OPTARG
 		    ;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
@@ -197,6 +202,10 @@ cp $ORACLE_PATH/*.jar $BUILD_PATH/oracle/
 # Hive drivers
 mkdir $BUILD_PATH/mssql/
 cp $MSSQL_PATH/*.jar $BUILD_PATH/mssql/
+
+# Snowflake drivers
+mkdir $BUILD_PATH/snowflake/
+cp $SNOWFLAKE_PATH/*.jar $BUILD_PATH/snowflake/
 
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL $JDBC_TEST
