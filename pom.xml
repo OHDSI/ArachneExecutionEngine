@@ -161,7 +161,7 @@
         <dependency>
             <groupId>com.odysseusinc</groupId>
             <artifactId>data-source-manager</artifactId>
-            <version>${project.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
 
         <dependency>
