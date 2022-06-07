@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.19.111-SNAPSHOT</version>
+    <version>1.19.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -25,7 +25,6 @@
         <mysql.version>8.0.16</mysql.version>
         <postgresql.version>42.2.25</postgresql.version>
         <tomcat.version>9.0.27</tomcat.version>
-        <arachne.commons.version>1.17.333-SNAPSHOT</arachne.commons.version>
     </properties>
 
     <parent>
@@ -46,17 +45,17 @@
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>execution-engine-commons</artifactId>
-            <version>${arachne.commons.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-common-types</artifactId>
-            <version>${arachne.commons.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-common-utils</artifactId>
-            <version>${arachne.commons.version}</version>
+            <version>${project.version}</version>
         </dependency>
 
         <!--Swagger-->
@@ -150,7 +149,7 @@
         <dependency>
             <groupId>org.ohdsi.sql</groupId>
             <artifactId>SqlRender</artifactId>
-            <version>1.9.100-SNAPSHOT</version>
+            <version>1.9.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -161,7 +160,7 @@
         <dependency>
             <groupId>com.odysseusinc</groupId>
             <artifactId>data-source-manager</artifactId>
-            <version>${arachne.commons.version}</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
