@@ -145,7 +145,6 @@ public class AnalysisControllerTest {
     public void test03AnalysisController_AnalyzeValidationError() {
 
         thrown.expect(HttpClientErrorException.class);
-        thrown.expectMessage("422 null");
         String URL = BASE_URL + ":" + serverPort + AnalysisController.REST_API_MAIN + AnalysisController.REST_API_ANALYZE;
         AnalysisRequestDTO analysis = getAnalysis();
         analysis.setId(null);

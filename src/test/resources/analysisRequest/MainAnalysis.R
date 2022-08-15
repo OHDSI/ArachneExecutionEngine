@@ -30,21 +30,22 @@ cdmSchema     = "public"
 resultsSchema = "public"
 sourceName    = "study_test"
 dbms          = Sys.getenv("DBMS_TYPE") # Should be "sql server", "oracle", "postgresql" or "redshift"
+driversPath   = Sys.getenv("JDBC_DRIVER_PATH") # Must contain path to jdbc driver (without driver itself)
 
 # If you want to use R to run the SQL and extract the results tables, please create a connectionDetails 
 # object. See ?createConnectionDetails for details on how to configure for your DBMS.
 
 
 
-user <- Sys.getenv("DBMS_USERNAME")
-pw <- Sys.getenv("DBMS_PASSWORD")
-connectionString <- Sys.getenv("CONNECTION_STRING")
+user <- "postgres"
+pw <- "postgres"
+connectionString <- "jdbc:postgresql://localhost:5432/cdm"
 
 connectionDetails <- createConnectionDetails(dbms=dbms,
   connectionString = connectionString,
   user=user,
   password=pw,
-  schema=cdmSchema)
+  pathToDriver = driversPath)
 
 
 ###########################################################

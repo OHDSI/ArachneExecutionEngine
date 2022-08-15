@@ -32,7 +32,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.13.RELEASE</version>
+        <version>2.5.14</version>
         <relativePath/>
     </parent>
 
@@ -626,12 +626,12 @@
         <repository>
             <id>ohdsi</id>
             <name>repo.ohdsi.org</name>
-            <url>http://repo.ohdsi.org:8085/nexus/content/repositories/releases</url>
+            <url>https://repo.ohdsi.org/nexus/content/repositories/releases</url>
         </repository>
         <repository>
             <id>ohdsi.snapshots</id>
             <name>repo.ohdsi.org-snapshots</name>
-            <url>http://repo.ohdsi.org:8085/nexus/content/repositories/snapshots</url>
+            <url>https://repo.ohdsi.org/nexus/content/repositories/snapshots</url>
             <releases>
                 <enabled>false</enabled>
             </releases>
