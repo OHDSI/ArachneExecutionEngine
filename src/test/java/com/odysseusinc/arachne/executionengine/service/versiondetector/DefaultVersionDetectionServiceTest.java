@@ -3,14 +3,12 @@ package com.odysseusinc.arachne.executionengine.service.versiondetector;
 import com.google.common.collect.ImmutableMap;
 import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -31,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DefaultVersionDetectionServiceTest {
 
     private final ImmutableMap<String, List<String>> common_schema = ImmutableMap.of("COMMON_TABLE", Arrays.asList("one", "two", "three"));
@@ -51,22 +49,15 @@ public class DefaultVersionDetectionServiceTest {
     @InjectMocks
     private DefaultVersionDetectionService defaultVersionDetectionService;
 
-    @Before
-    public void setUp() {
+    @Test
+    public void shouldFindV5CommonPartAndReportOnlyV5DiffErrors() throws SQLException {
         when(cdmSchemaProvider.loadMandatorySchemaJson(V5_COMMONS_SCHEMA.getPath())).thenReturn(common_schema);
         when(cdmSchemaProvider.loadMandatorySchemaJson(V5_0_SCHEMA_DIFF.getPath())).thenReturn(v5_0_diff_schema);
         when(cdmSchemaProvider.loadMandatorySchemaJson(V5_0_1_SCHEMA_DIFF.getPath())).thenReturn(v5_0_1_diff_schema);
-        when(cdmSchemaProvider.loadMandatorySchemaJson(V4_SCHEMA.getPath())).thenReturn(stub_diff_schema);
         when(cdmSchemaProvider.loadMandatorySchemaJson(V5_1_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
         when(cdmSchemaProvider.loadMandatorySchemaJson(V5_2_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
         when(cdmSchemaProvider.loadMandatorySchemaJson(V5_3_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
         when(cdmSchemaProvider.loadMandatorySchemaJson(V5_3_1_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
-        when(cdmSchemaProvider.loadMandatorySchemaJson(V6_SCHEMA.getPath())).thenReturn(stub_diff_schema);
-    }
-
-    @Test
-    public void shouldFindV5CommonPartAndReportOnlyV5DiffErrors() throws SQLException {
-
         when(metadataProvider.extractMetadata(dataSource)).thenReturn(test_one_schema);
 
         final Pair<CommonCDMVersionDTO, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
@@ -79,6 +70,9 @@ public class DefaultVersionDetectionServiceTest {
     @Test
     public void shouldNotFindV5CommonPartAndReportOnlyV4V5V6DiffErrors() throws SQLException {
 
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_COMMONS_SCHEMA.getPath())).thenReturn(common_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V4_SCHEMA.getPath())).thenReturn(stub_diff_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V6_SCHEMA.getPath())).thenReturn(stub_diff_schema);
         when(metadataProvider.extractMetadata(dataSource)).thenReturn(test_wrong_schema);
 
         final Pair<CommonCDMVersionDTO, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
@@ -90,7 +84,9 @@ public class DefaultVersionDetectionServiceTest {
 
     @Test
     public void shouldReportCDMDetectionDiffsSortedByVersion() throws SQLException {
-
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_COMMONS_SCHEMA.getPath())).thenReturn(common_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V4_SCHEMA.getPath())).thenReturn(stub_diff_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V6_SCHEMA.getPath())).thenReturn(stub_diff_schema);
         when(metadataProvider.extractMetadata(dataSource)).thenReturn(test_wrong_schema);
 
         final Pair<CommonCDMVersionDTO, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
@@ -103,6 +99,13 @@ public class DefaultVersionDetectionServiceTest {
 
     @Test
     public void shouldDetectV51WithNoOptionalWarnings() throws SQLException {
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_COMMONS_SCHEMA.getPath())).thenReturn(common_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_0_1_SCHEMA_DIFF.getPath())).thenReturn(v5_0_1_diff_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_1_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_2_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_3_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_3_1_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
+
         final HashMap test_v5_0_1 = new HashMap(common_schema);
         test_v5_0_1.putAll(v5_0_1_diff_schema);
         when(metadataProvider.extractMetadata(dataSource)).thenReturn(test_v5_0_1);
@@ -115,6 +118,12 @@ public class DefaultVersionDetectionServiceTest {
 
     @Test
     public void shouldDetectV51WithOptionalWarning() throws SQLException {
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_COMMONS_SCHEMA.getPath())).thenReturn(common_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_0_1_SCHEMA_DIFF.getPath())).thenReturn(v5_0_1_diff_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_1_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_2_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_3_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
+        when(cdmSchemaProvider.loadMandatorySchemaJson(V5_3_1_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
         when(cdmSchemaProvider.loadOptionalSchemaJson(V5_0_1_SCHEMA_DIFF.getPath())).thenReturn(ImmutableMap.of("VERSION_ONE_TABLE", Arrays.asList("optional_column")));
         final HashMap test_v5_0_1 = new HashMap(common_schema);
         test_v5_0_1.putAll(v5_0_1_diff_schema);

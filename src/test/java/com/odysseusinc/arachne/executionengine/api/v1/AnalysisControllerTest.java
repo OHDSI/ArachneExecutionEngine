@@ -35,13 +35,9 @@ import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,13 +55,14 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @TestPropertySource(locations = "classpath:application-test.properties")
 @SpringBootTest(classes = ExecutionEngineStarter.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, properties = "classpath:application-test.properties")
 public class AnalysisControllerTest {
     private final static Logger log = LoggerFactory.getLogger(AnalysisControllerTest.class);
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
     @Value("${server.port}")
     private Integer serverPort;
     @Value("${cdm.dbms}")
@@ -88,7 +85,7 @@ public class AnalysisControllerTest {
 
     private DBMSType dbmsType = DBMSType.POSTGRESQL;
 
-    @BeforeClass
+    @BeforeAll
     public static void getRestTemplate() {
 
         RestTemplate template = new RestTemplate();
@@ -96,7 +93,7 @@ public class AnalysisControllerTest {
         template.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
     }
 
-    @Before
+    @BeforeEach
     public void setResultIsOk() {
 
         latch = new CountDownLatch(2);
@@ -121,7 +118,7 @@ public class AnalysisControllerTest {
                 URL,
                 HttpMethod.POST, requestEntity,
                 AnalysisRequestStatusDTO.class);
-        Assert.assertEquals(AnalysisRequestTypeDTO.R, exchange.getBody().getType());
+        assertEquals(AnalysisRequestTypeDTO.R, exchange.getBody().getType());
         AssertStates();
     }
 
@@ -137,31 +134,29 @@ public class AnalysisControllerTest {
                 URL,
                 HttpMethod.POST, requestEntity,
                 AnalysisRequestStatusDTO.class);
-        Assert.assertEquals(AnalysisRequestTypeDTO.SQL, exchange.getBody().getType());
+        assertEquals(AnalysisRequestTypeDTO.SQL, exchange.getBody().getType());
         AssertStates();
     }
 
     @Test
     public void test03AnalysisController_AnalyzeValidationError() {
-
-        thrown.expect(HttpClientErrorException.class);
         String URL = BASE_URL + ":" + serverPort + AnalysisController.REST_API_MAIN + AnalysisController.REST_API_ANALYZE;
         AnalysisRequestDTO analysis = getAnalysis();
         analysis.setId(null);
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity(analysis, null);
-        ResponseEntity<String> exchange = restTemplate.exchange(
+        assertThrows(HttpClientErrorException.class, () -> restTemplate.exchange(
                 URL,
                 HttpMethod.POST, requestEntity,
-                String.class);
+                String.class));
     }
 
     private void AssertStates() {
 
         try {
             latch.await(10, TimeUnit.SECONDS);
-            Assert.assertTrue(updateStatusIsOk.get());
+            assertTrue(updateStatusIsOk.get());
             latch.await(10, TimeUnit.SECONDS);
-            Assert.assertTrue(resultIsOk.get());
+            assertTrue(resultIsOk.get());
         } catch (InterruptedException e) {
             log.error("", e);
         }
