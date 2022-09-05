@@ -24,28 +24,29 @@ package com.odysseusinc.arachne.executionengine.service.impl;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ResultStatusEvaluatorTest {
 
     private ResultStatusEvaluator resultStatusEvaluator;
 
-    @Before
+    @BeforeEach
     public void setUp() {
 
         resultStatusEvaluator = new ResultStatusEvaluator();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void shouldFailOnBadArgument() {
 
-        resultStatusEvaluator.evaluateResultStatus(null);
+        assertThrows(NullPointerException.class, () -> resultStatusEvaluator.evaluateResultStatus(null));
     }
 
     @Test

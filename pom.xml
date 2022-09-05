@@ -6,13 +6,13 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.19.0-SNAPSHOT</version>
+    <version>1.19.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring.boot.version>2.2.13.RELEASE</spring.boot.version>
+        <spring.boot.version>2.5.14</spring.boot.version>
 
         <start-class>com.odysseusinc.arachne.executionengine.ExecutionEngineStarter</start-class>
 
@@ -25,12 +25,14 @@
         <mysql.version>8.0.16</mysql.version>
         <postgresql.version>42.2.25</postgresql.version>
         <tomcat.version>9.0.27</tomcat.version>
+
+        <arachne.commons.version>1.19.0</arachne.commons.version>
     </properties>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.13.RELEASE</version>
+        <version>2.5.14</version>
         <relativePath/>
     </parent>
 
@@ -45,17 +47,17 @@
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>execution-engine-commons</artifactId>
-            <version>${project.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-common-types</artifactId>
-            <version>${project.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-common-utils</artifactId>
-            <version>${project.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
 
         <!--Swagger-->
@@ -84,7 +86,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>${spring.boot.version}</version>
         </dependency>
 
         <dependency>
@@ -149,7 +150,7 @@
         <dependency>
             <groupId>org.ohdsi.sql</groupId>
             <artifactId>SqlRender</artifactId>
-            <version>1.8.3</version>
+            <version>1.9.0</version>
         </dependency>
 
         <dependency>
@@ -160,7 +161,7 @@
         <dependency>
             <groupId>com.odysseusinc</groupId>
             <artifactId>data-source-manager</artifactId>
-            <version>${project.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
 
         <dependency>
@@ -624,12 +625,12 @@
         <repository>
             <id>ohdsi</id>
             <name>repo.ohdsi.org</name>
-            <url>http://repo.ohdsi.org:8085/nexus/content/repositories/releases</url>
+            <url>https://repo.ohdsi.org/nexus/content/repositories/releases</url>
         </repository>
         <repository>
             <id>ohdsi.snapshots</id>
             <name>repo.ohdsi.org-snapshots</name>
-            <url>http://repo.ohdsi.org:8085/nexus/content/repositories/snapshots</url>
+            <url>https://repo.ohdsi.org/nexus/content/repositories/snapshots</url>
             <releases>
                 <enabled>false</enabled>
             </releases>
