@@ -37,6 +37,7 @@ public class SqlMetadataServiceFactory {
         DBMSType type = dataSource.getType();
         SqlMetadataService result;
         switch (type) {
+            case SNOWFLAKE:
             case POSTGRESQL:
                 result = new PostgreSqlMetadataService(dataSource);
                 break;

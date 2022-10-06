@@ -528,6 +528,20 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>snowflake</id>
+            <properties>
+                <snowflake.enabled>true</snowflake.enabled>
+                <snowflake.driver.version>3.13.14</snowflake.driver.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>net.snowflake</groupId>
+                    <artifactId>snowflake-jdbc</artifactId>
+                    <version>${snowflake.driver.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 
     <build>
