@@ -355,7 +355,8 @@
             <properties>
                 <bigquery.enabled>true</bigquery.enabled>
                 <bigquery.version>1.28.0</bigquery.version>
-                <bigquery.api.version>v2-rev426-1.25.0</bigquery.api.version>
+                <bigquery.api.version>v2-rev20200415-1.30.9</bigquery.api.version>
+                <bigquery.cloud.version>1.2.11</bigquery.cloud.version>
                 <!-- BigQuery JDBC driver path -->
                 <bigquery.classpath>/bigquery</bigquery.classpath>
             </properties>
@@ -373,7 +374,7 @@
                 <dependency>
                     <groupId>com.google.cloud</groupId>
                     <artifactId>google-cloud-bigquery</artifactId>
-                    <version>${bigquery.version}</version>
+                    <version>${bigquery.cloud.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.http-client</groupId>
@@ -389,6 +390,41 @@
                     <groupId>com.google.oauth-client</groupId>
                     <artifactId>google-oauth-client</artifactId>
                     <version>${bigquery.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.cloud</groupId>
+                    <artifactId>google-cloud-bigquerystorage</artifactId>
+                    <version>0.101.0-beta</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.auth</groupId>
+                    <artifactId>google-auth-library-oauth2-http</artifactId>
+                    <version>0.16.2</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.auth</groupId>
+                    <artifactId>google-auth-library-credentials</artifactId>
+                    <version>0.16.2</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.api</groupId>
+                    <artifactId>gax</artifactId>
+                    <version>1.47.0</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.api</groupId>
+                    <artifactId>gax-grpc</artifactId>
+                    <version>1.47.0</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.api.grpc</groupId>
+                    <artifactId>proto-google-cloud-bigquerystorage-v1beta1</artifactId>
+                    <version>0.66.0</version>
+                </dependency>
+                <dependency>
+                    <groupId>io.opencensus</groupId>
+                    <artifactId>opencensus-contrib-http-util</artifactId>
+                    <version>0.18.0</version>
                 </dependency>
             </dependencies>
             <build>
