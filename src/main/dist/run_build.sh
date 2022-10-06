@@ -199,7 +199,7 @@ cp $REDSHIFT_PATH/*.jar $BUILD_PATH/redshift/
 mkdir $BUILD_PATH/oracle/
 cp $ORACLE_PATH/*.jar $BUILD_PATH/oracle/
 
-# Hive drivers
+# MSSQL drivers
 mkdir $BUILD_PATH/mssql/
 cp $MSSQL_PATH/*.jar $BUILD_PATH/mssql/
 
