@@ -3,10 +3,12 @@
 # DIST - Ubuntu Dist
 # CRAN_URL - CRAN Mirror (eg https://cran.asia/)
 # JDBC_TEST - JDBC Connection string for PLP test
+# GITHUB_PAT - GitHub PAT
 
 DIST=$1
 CRAN_URL=$2
 JDBC_TEST=$3
+GITHUB_PAT=$4
 
 HOME=/root
 
@@ -40,7 +42,7 @@ update-alternatives --config java
 
 # Doesn't work for Bionic
 #sudo add-apt-repository -y ppa:deadsnakes/ppa
-apt update && apt install -yf libopenblas-dev libharfbuzz-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libfribidi-dev libpq-dev libgit2-dev libssh2-1-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user virtualenv libgeos-dev libprotobuf-dev protobuf-compiler
+apt update && apt install -yf libopenblas-dev libharfbuzz-dev libfreetype6-dev libgdal-dev libpng-dev libtiff5-dev libjpeg-dev libfribidi-dev libpq-dev libgit2-dev libssh2-1-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user virtualenv libgeos-dev libprotobuf-dev protobuf-compiler
 
 wget http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip \
         && echo "8021a28b8cac41b44f1421fd210a0a0822fcaf88d62d2e70a35b2ff628a8675a  ZuluJCEPolicies.zip" | sha256sum -c - \
@@ -66,6 +68,7 @@ local({
   options(defaultPackages = c(old, "MASS"), repos = r) 
 })
 _EOF_
+echo "GITHUB_PAT=$GITHUB_PAT" >> /root/.Renviron
 
 # Miniconda for Python 3.8
 # Using 4.5.12 since latest version failed during installation
@@ -124,3 +127,4 @@ else
   Rscript /root/libs/plp_test.r
 fi
 
+rm /root/.Renviron

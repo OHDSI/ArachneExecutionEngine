@@ -12,6 +12,7 @@ WS=`dirname $0`
 CRAN_URL=
 LIBS_BRANCH=
 JDBC_TEST=
+GITHUB_PAT=
 
 BQ_PATH=../extras/bigquery/
 IMPALA_PATH=../extras/impala/
@@ -33,6 +34,7 @@ function print_help {
 	echo -e "  -c CRAN_URL \t\tCRAN Mirror (eg https://cran.asia/)"
 	echo -e "  -j JDBC_TEST \t\tJDBC Connection String to verify PLP installation"
 	echo -e "  -l LIBS_BRANCH \t\tBranch for R packages list in repo: https://github.com/odysseusinc/DockerEnv"
+	echo -e "  -k GITHUB_PAT \t\tGITHUB_PAT token"
 	echo -e "  -f FILE \t\tOutput archive filename"
 	echo -e "  -g PATH \t\tPath to BigQuery drivers"
 	echo -e "  -i PATH \t\tPath to Impala drivers"
@@ -47,7 +49,7 @@ function print_help {
 }
 
 OPTIND=1
-while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o:w" opt; do
+while getopts ":a:d:r:c:j:l:k:b:f:h:g:i:n:p:s:m:o:w" opt; do
 	case $opt in 
 		a)
 			ARCH=$OPTARG
@@ -67,6 +69,9 @@ while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o:w" opt; do
 		l)
 			LIBS_BRANCH=$OPTARG
 			;;
+	  k)
+    	GITHUB_PAT=$OPTARG
+    	;;
 		b)
 			BUILD_PATH=$OPTARG
 			;;
@@ -135,7 +140,12 @@ if [[ ! -d $BUILD_PATH ]]; then
 fi
 
 if [[ "$(ls -A $BUILD_PATH)" ]]; then
-	echo "$BUILD_PATH is not empty, woun't continue"
+	echo "$BUILD_PATH is not empty, won't continue"
+	exit 1
+fi
+
+if [[ -z $GITHUB_PAT ]]; then
+	echo "GITHUB_PAT is empty, won't continue"
 	exit 1
 fi
 
@@ -208,7 +218,7 @@ mkdir $BUILD_PATH/snowflake/
 cp $SNOWFLAKE_PATH/*.jar $BUILD_PATH/snowflake/
 
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
-sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL $JDBC_TEST
+sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL $JDBC_TEST $GITHUB_PAT
 
 umount $BUILD_PATH/proc
 sudo rm -f $BUILD_PATH/root/install_packages.sh
