@@ -50,7 +50,8 @@ public class SQLUtils {
         String user = dataSource.getUsername();
         String password = dataSource.getPassword();
         String url = dataSource.getConnectionString();
-        
+        logger.debug("Using JDBC: " + dataSource.getConnectionStringForLogging());
+
         Properties info = new Properties();
         if (user != null) {
             info.put("user", user);
@@ -61,8 +62,6 @@ public class SQLUtils {
         if (dataSource.getType().equals(DBMSType.SNOWFLAKE)) {
             info.put("CLIENT_RESULT_COLUMN_CASE_INSENSITIVE", "true");
         }
-
-        logger.info("Using JDBC: " + dataSource.getConnectionStringForLogging());
         Connection conn = DriverManager.getConnection(url, info);
 
         return conn;

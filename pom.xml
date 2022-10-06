@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.19.1-SNAPSHOT</version>
+    <version>1.20.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -25,7 +25,7 @@
         <mysql.version>8.0.16</mysql.version>
         <postgresql.version>42.2.25</postgresql.version>
         <tomcat.version>9.0.27</tomcat.version>
-        <arachne.version>1.17.3</arachne.version>
+        <arachne.commons.version>1.19.1</arachne.commons.version>
     </properties>
 
     <parent>
@@ -46,17 +46,17 @@
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>execution-engine-commons</artifactId>
-            <version>${arachne.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-common-types</artifactId>
-            <version>${arachne.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-common-utils</artifactId>
-            <version>${arachne.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
 
         <!--Swagger-->
@@ -161,7 +161,7 @@
         <dependency>
             <groupId>com.odysseusinc</groupId>
             <artifactId>data-source-manager</artifactId>
-            <version>${arachne.version}</version>
+            <version>${arachne.commons.version}</version>
         </dependency>
 
         <dependency>
@@ -532,7 +532,7 @@
             <id>snowflake</id>
             <properties>
                 <snowflake.enabled>true</snowflake.enabled>
-                <snowflake.driver.version>3.13.14</snowflake.driver.version>
+                <snowflake.driver.version>3.13.22</snowflake.driver.version>
             </properties>
             <dependencies>
                 <dependency>
