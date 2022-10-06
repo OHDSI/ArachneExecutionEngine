@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.19.444-SNAPSHOT</version>
+    <version>1.19.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -25,7 +25,7 @@
         <mysql.version>8.0.16</mysql.version>
         <postgresql.version>42.2.25</postgresql.version>
         <tomcat.version>9.0.27</tomcat.version>
-        <arachne.version>1.17.444-SNAPSHOT</arachne.version>
+        <arachne.version>1.17.3</arachne.version>
     </properties>
 
     <parent>
@@ -150,7 +150,7 @@
         <dependency>
             <groupId>org.ohdsi.sql</groupId>
             <artifactId>SqlRender</artifactId>
-            <version>1.9.444-SNAPSHOT</version>
+            <version>1.10.0</version>
         </dependency>
 
         <dependency>
