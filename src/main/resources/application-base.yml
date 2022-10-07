@@ -85,6 +85,7 @@ drivers:
     mssql: /mssql
     redshift: /redshift
     oracle: /oracle
+    snowflake: /snowflake
 bulkload:
   enableMPP: false
   hive:

@@ -129,4 +129,3 @@ else
   echo "Running PLP test"
   Rscript /root/libs/plp_test.r
 fi
-

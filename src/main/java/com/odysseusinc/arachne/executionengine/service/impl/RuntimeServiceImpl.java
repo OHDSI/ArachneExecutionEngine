@@ -131,6 +131,8 @@ public class RuntimeServiceImpl implements RuntimeService {
     private String redshiftDriversLocation;
     @Value("${drivers.location.oracle}")
     private String oracleDriversLocation;
+    @Value("${drivers.location.snowflake}")
+    private String snowflakeDriversLocation;
     @Value("${bulkload.enableMPP}")
     private boolean enableMPP;
     private final HiveBulkLoadProperties hiveBulkLoadProperties;
@@ -351,11 +353,14 @@ public class RuntimeServiceImpl implements RuntimeService {
             case POSTGRESQL:
                 return postgresqlDriversLocation;
             case MS_SQL_SERVER:
+            case SYNAPSE:
                 return mssqlDriversLocation;
             case REDSHIFT:
                 return redshiftDriversLocation;
             case ORACLE:
                 return oracleDriversLocation;
+            case SNOWFLAKE:
+                return snowflakeDriversLocation;
             default:
                 return null;
         }
