@@ -135,17 +135,18 @@ if [[ -z $LIBS_BRANCH ]]; then
   LIBS_BRANCH="master"
 fi
 
+echo $GITHUB_PAT
+if [[ -z $GITHUB_PAT ]]; then
+	echo "GITHUB_PAT is empty, won't continue"
+	exit 1
+fi
+
 if [[ ! -d $BUILD_PATH ]]; then
 	mkdir -p $BUILD_PATH
 fi
 
 if [[ "$(ls -A $BUILD_PATH)" ]]; then
 	echo "$BUILD_PATH is not empty, won't continue"
-	exit 1
-fi
-
-if [[ -z $GITHUB_PAT ]]; then
-	echo "GITHUB_PAT is empty, won't continue"
 	exit 1
 fi
 
