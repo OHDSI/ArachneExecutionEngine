@@ -34,7 +34,7 @@ LANG=en_US.UTF-8 locale-gen --purge en_US.UTF-8
 echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\nLC_ALL="en_US.UTF-8"' > /etc/default/locale
 LC_ALL=en_US.UTF-8 dpkg-reconfigure -f noninteractive locales
 
-apt update -qq && apt install --no-install-recommends software-properties-common dirmngr
+apt update -qq && apt install -y --no-install-recommends software-properties-common dirmngr
 add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe restricted"
 add-apt-repository -y ppa:openjdk-r/ppa
 apt update && apt install --no-install-recommends -y openjdk-8-jdk
