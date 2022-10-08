@@ -219,7 +219,7 @@ mkdir $BUILD_PATH/snowflake/
 cp $SNOWFLAKE_PATH/*.jar $BUILD_PATH/snowflake/
 
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
-sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL $JDBC_TEST $GITHUB_PAT
+sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL $GITHUB_PAT $JDBC_TEST
 
 umount $BUILD_PATH/proc
 sudo rm -f $BUILD_PATH/root/install_packages.sh

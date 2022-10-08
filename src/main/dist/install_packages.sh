@@ -2,13 +2,13 @@
 
 # DIST - Ubuntu Dist
 # CRAN_URL - CRAN Mirror (eg https://cran.asia/)
-# JDBC_TEST - JDBC Connection string for PLP test
 # GITHUB_PAT - GitHub PAT
+# JDBC_TEST - JDBC Connection string for PLP test
 
 DIST=$1
 CRAN_URL=$2
-JDBC_TEST=$3
-GITHUB_PAT=$4
+GITHUB_PAT=$3
+JDBC_TEST=$4
 
 HOME=/root
 
@@ -126,6 +126,7 @@ connectionDetails <- createConnectionDetails(dbms = "postgresql", connectionStri
 library(PatientLevelPrediction)
 checkPlpInstallation(connectionDetails = connectionDetails, python = T)
 EOF
+
 if [ -z "$JDBC_TEST" ]; then
   echo "Skipping PLP test, no JDBC connection string"
 else
