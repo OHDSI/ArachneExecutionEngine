@@ -88,8 +88,8 @@ ln -s /root/miniconda/bin/conda-env /usr/bin/conda-env
 
 export PATH=$PATH:/root/miniconda/bin
 conda create -y -n PLP python=3.8.3
-conda install -y -n PLP -c cython=0.29.32
-conda install -y -n PLP -c numpy=1.22.4
+conda install -y -n PLP cython=0.29.32
+conda install -y -n PLP numpy=1.19.2
 conda install -y -n PLP -c sebp scikit-survival=0.12.0
 conda install -y -n PLP -c pytorch pytorch torchvision
 rm -f /Miniconda3-4.5.12-Linux-x86_64.sh
@@ -106,10 +106,6 @@ Rscript /root/libs/libs_3.r
 Rscript /root/libs/libs_4.r
 Rscript /root/libs/libs_5.r
 Rscript /root/libs/libs_6.r
-
-# Required by keras
-conda remove -y -n PLP PyYAML
-
 Rscript /root/libs/libs_7.r
 
 apt -y autoremove && rm -rf /var/lib/apt/lists/*
@@ -134,5 +130,3 @@ else
   echo "Running PLP test"
   Rscript /root/libs/plp_test.r
 fi
-
-rm /root/.Renviron
