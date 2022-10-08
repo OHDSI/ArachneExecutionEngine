@@ -34,7 +34,7 @@ LANG=en_US.UTF-8 locale-gen --purge en_US.UTF-8
 echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\nLC_ALL="en_US.UTF-8"' > /etc/default/locale
 LC_ALL=en_US.UTF-8 dpkg-reconfigure -f noninteractive locales
 
-apt install -y --no-install-recommends software-properties-common
+apt update -qq && apt install --no-install-recommends software-properties-common dirmngr
 add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe restricted"
 add-apt-repository -y ppa:openjdk-r/ppa
 apt update && apt install --no-install-recommends -y openjdk-8-jdk
@@ -57,8 +57,9 @@ wget http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip \
 # Redshift Certificate Authority Bundle
 wget https://s3.amazonaws.com/redshift-downloads/redshift-keytool.jar && java -jar redshift-keytool.jar -s && rm -f redshift-keytool.jar
 
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
-add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $DIST/"
+# Installing R
+wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
+add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
 
 apt update && apt -y --allow-unauthenticated --no-install-recommends install r-base r-base-dev
 
