@@ -88,10 +88,10 @@ ln -s /root/miniconda/bin/conda-env /usr/bin/conda-env
 
 export PATH=$PATH:/root/miniconda/bin
 conda create -y -n PLP python=3.8.3
-conda install -y -n PLP cython=0.29.32
-conda install -y -n PLP numpy=1.19.2
 conda install -y -n PLP -c sebp scikit-survival=0.12.0
 conda install -y -n PLP -c pytorch pytorch torchvision
+conda install -y -n PLP cython=0.29.32
+conda install -y -n PLP numpy=1.19.2
 rm -f /Miniconda3-4.5.12-Linux-x86_64.sh
 echo 'alias python=python3' >> /root/.bashrc
 alias python=python3
