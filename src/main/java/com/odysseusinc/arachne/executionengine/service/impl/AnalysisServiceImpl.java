@@ -87,6 +87,8 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     private String redshiftDriversLocation;
     @Value("${drivers.location.oracle}")
     private String oracleDriversLocation;
+    @Value("${drivers.location.snowflake}")
+    private String snowflakeDriversLocation;
 
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
@@ -226,7 +228,8 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     public void afterPropertiesSet() throws Exception {
 
         driverPathExclusions = Stream.of(impalaDriversLocation, bqDriversLocation, netezzaDriversLocation, hiveDriversLocation,
-                mssqlDriversLocation, postgresqlDriversLocation, redshiftDriversLocation, oracleDriversLocation)
+                mssqlDriversLocation, postgresqlDriversLocation, redshiftDriversLocation, oracleDriversLocation,
+                snowflakeDriversLocation)
                 .filter(StringUtils::isNotBlank)
                 .map(path -> path.startsWith("/") ? path.substring(1) : path)
                 .map(path -> path + "/**/*")
