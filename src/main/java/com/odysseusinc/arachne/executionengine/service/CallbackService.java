@@ -42,10 +42,10 @@ public interface CallbackService {
             File resultDir,
             Boolean compressedResult,
             Long chunkSize
-    ) throws ZipException;
+    ) throws IOException, ZipException;
 
-    void sendAnalysisResult(AnalysisRequestDTO analysis, AnalysisResultDTO analysisResult,
-                            Collection<FileSystemResource> files, Long chunkSize);
+    void sendAnalysisResult(String resultURL, String password, AnalysisResultDTO analysisResult,
+                            Collection<FileSystemResource> files);
 
     void sendFailedResult(AnalysisRequestDTO analysis, Throwable e, File analysisDir,
                           Boolean compressedResult, Long chunkSize);
