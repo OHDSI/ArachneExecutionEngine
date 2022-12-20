@@ -1,11 +1,11 @@
-FROM odysseusinc/r-env:1.0.16
-MAINTAINER support@odysseusinc.com
+FROM eclipse-temurin:8-jre
+LABEL maintainer="Odysseus Data Services, Inc: support@odysseusinc.com"
 VOLUME /tmp
 VOLUME /libs-r
 VOLUME /dist
 ADD krb5.conf /etc/
 ADD R-with-krb.sh /etc/
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq sudo krb5-user dos2unix cron rsyslog logrotate
+RUN apt-get update && apt-get upgrade -y && DEBIAN_FRONTEND=noninteractive apt-get install -yq sudo krb5-user dos2unix cron rsyslog logrotate
 RUN rm -f /usr/bin/java && update-alternatives --config java
 RUN ln -fs /usr/share/zoneinfo/Etc/GMT /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
 RUN update-rc.d cron defaults && update-rc.d rsyslog defaults
@@ -18,4 +18,9 @@ EXPOSE 8888
 COPY run.sh /run.sh
 RUN dos2unix /run.sh
 RUN chmod +x /run.sh
+RUN apt-get remove -y unzip \
+    && rm -rf /tmp/* \
+    && apt-get autoremove -y \
+    && apt-get autoclean -y \
+    && rm -rf /var/lib/apt/lists/* \
 CMD ["/run.sh"]
