@@ -5,7 +5,7 @@ VOLUME /libs-r
 VOLUME /dist
 ADD krb5.conf /etc/
 ADD R-with-krb.sh /etc/
-RUN apt-get update && apt-get upgrade -y && DEBIAN_FRONTEND=noninteractive apt-get install -yq sudo krb5-user dos2unix cron rsyslog logrotate systemctl
+RUN apt-get update && apt-get upgrade -y && DEBIAN_FRONTEND=noninteractive apt-get install -yq sudo unzip krb5-user dos2unix cron rsyslog logrotate systemctl
 RUN rm -f /usr/bin/java && java -version
 RUN ln -fs /usr/share/zoneinfo/Etc/GMT /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
 RUN update-rc.d cron defaults && systemctl enable rsyslog
