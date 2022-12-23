@@ -22,4 +22,4 @@ RUN apt-get remove -y unzip \
     && apt-get autoremove -y \
     && apt-get autoclean -y \
     && rm -rf /var/lib/apt/lists/* \
-CMD ["/run.sh"]
+ENTRYPOINT ["/run.sh"]
