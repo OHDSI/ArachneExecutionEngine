@@ -21,5 +21,5 @@ RUN apt-get remove -y unzip \
     && rm -rf /tmp/* \
     && apt-get autoremove -y \
     && apt-get autoclean -y \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/*
 CMD ["/run.sh"]
