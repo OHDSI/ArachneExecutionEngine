@@ -162,32 +162,14 @@ public class CallbackServiceImpl implements CallbackService {
                                    AnalysisResultDTO analysisResult,
                                    Collection<FileSystemResource> files, 
                                    Long chunkSize) {
-        HttpHeaders jsonHeader = new HttpHeaders();
-        jsonHeader.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<AnalysisResultDTO> analysisRequestHttpEntity = new HttpEntity<>(analysisResult, jsonHeader);
-        LinkedMultiValueMap<String, Object> multipartRequest = new LinkedMultiValueMap<>();
-        multipartRequest.add("analysisResult", analysisRequestHttpEntity);
-        if (files != null) {
-            files.forEach(f -> multipartRequest.add("file", f));
-        }
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(multipartRequest, headers);
-        Long submissionId = analysisResult.getId();
         try {
-            nodeRestTemplate.exchange(
-                    analysis.getResultCallback(),
-                    HttpMethod.POST,
-                    entity,
-                    String.class,
-                    submissionId,
-                    analysis.getCallbackPassword());
+            sendResult(analysis, analysisResult, files);
         } catch (RestClientException ex) {
-            log.info(SEND_RESULT_FAILED_LOG, submissionId, ex);
+            log.info(SEND_RESULT_FAILED_LOG, analysisResult.getId(), ex);
             try {
                 sendFailedResult(analysis, ex, null, false, chunkSize);
             } catch (Exception ex1) {
-                log.info(SEND_ERROR_RESULT_FAILED_LOG, submissionId, ex1);
+                log.info(SEND_ERROR_RESULT_FAILED_LOG, analysisResult.getId(), ex1);
             }
         }
     }
@@ -217,6 +199,34 @@ public class CallbackServiceImpl implements CallbackService {
         }
 
         result.setStdout(stdout);
-        sendAnalysisResult(analysis, result, resultFSResources, chunkSize);
+        try {
+            sendResult(analysis, result, resultFSResources);
+        } catch (Exception ex) {
+            log.info(SEND_ERROR_RESULT_FAILED_LOG, result.getId(), ex);
+        }
+    }
+
+    private void sendResult(AnalysisRequestDTO analysis,
+                            AnalysisResultDTO analysisResult,
+                            Collection<FileSystemResource> files) {
+        HttpHeaders jsonHeader = new HttpHeaders();
+        jsonHeader.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<AnalysisResultDTO> analysisRequestHttpEntity = new HttpEntity<>(analysisResult, jsonHeader);
+        LinkedMultiValueMap<String, Object> multipartRequest = new LinkedMultiValueMap<>();
+        multipartRequest.add("analysisResult", analysisRequestHttpEntity);
+        if (files != null) {
+            files.forEach(f -> multipartRequest.add("file", f));
+        }
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(multipartRequest, headers);
+        Long submissionId = analysisResult.getId();
+        nodeRestTemplate.exchange(
+                analysis.getResultCallback(),
+                HttpMethod.POST,
+                entity,
+                String.class,
+                submissionId,
+                analysis.getCallbackPassword());
     }
 }
