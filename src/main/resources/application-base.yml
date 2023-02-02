@@ -98,3 +98,17 @@ bulkload:
     hadoop:
       port: 8020
       username:
+callback:
+  retry:
+    success:
+      max-attempts: 10
+      backoff-policy:
+        initial-interval-ms: 5000
+        max-interval-ms: 900000
+        multiplier: 2.71828
+    failure:
+      max-attempts: 3
+      backoff-policy:
+        initial-interval-ms: 5000
+        max-interval-ms: 30000
+        multiplier: 2.0
