@@ -27,10 +27,10 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import net.lingala.zip4j.exception.ZipException;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.ResponseEntity;
 
 public interface CallbackService {
     void updateAnalysisStatus(String updateURL, Long submissionId, String out, String password);
@@ -47,6 +47,6 @@ public interface CallbackService {
     void sendAnalysisResult(AnalysisRequestDTO analysis, AnalysisResultDTO analysisResult,
                             Collection<FileSystemResource> files, Long chunkSize);
 
-    void sendFailedResult(AnalysisRequestDTO analysis, Throwable e, File analysisDir,
-                          Boolean compressedResult, Long chunkSize);
+    ResponseEntity<String> sendFailedResult(AnalysisRequestDTO analysis, Throwable e, File analysisDir,
+                                            Boolean compressedResult, Long chunkSize);
 }
