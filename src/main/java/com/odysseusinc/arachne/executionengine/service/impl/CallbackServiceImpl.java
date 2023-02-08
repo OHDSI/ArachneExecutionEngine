@@ -182,16 +182,14 @@ public class CallbackServiceImpl implements CallbackService {
     @FileDescriptorCount
     public ResponseEntity<String> sendFailedResult(AnalysisRequestDTO analysis, Throwable e, File analysisDir,
                                                    Boolean compressedResult, Long chunkSize) {
+        final String stdout = getErrorStackTrace(e);
         return failureRetryTemplate.execute(retryContext -> {
             AnalysisResultDTO result = new AnalysisResultDTO();
             result.setId(analysis.getId());
             result.setStatus(AnalysisResultStatusDTO.FAILED);
             result.setRequested(analysis.getRequested());
-            String stdout = "";
-            if (Objects.nonNull(e)) {
-                stdout = ExceptionUtils.getStackTrace(e);
-            }
             List<FileSystemResource> resultFSResources = null;
+            result.setStdout(stdout);
             try {
                 if (Objects.nonNull(analysisDir)) {
                     resultFSResources = AnalisysUtils.getFileSystemResources(analysis, analysisDir, compressedResult, chunkSize,
@@ -199,12 +197,18 @@ public class CallbackServiceImpl implements CallbackService {
                 }
             } catch (ZipException ex) {
                 log.error("could not collect analysis results, id={}", analysis.getId());
-                stdout += "\n" + ExceptionUtils.getStackTrace(ex);
+                result.setStdout(stdout + "\n" + ExceptionUtils.getStackTrace(ex));
             }
-
-            result.setStdout(stdout);
             return executeSend(analysis, result, resultFSResources);
         });
+    }
+
+    private String getErrorStackTrace(Throwable e) {
+        if (Objects.nonNull(e)) {
+            return ExceptionUtils.getStackTrace(e);
+        } else {
+            return "";
+        }
     }
 
     private ResponseEntity<String> executeSend(AnalysisRequestDTO analysis, AnalysisResultDTO analysisResult, Collection<FileSystemResource> files) {
