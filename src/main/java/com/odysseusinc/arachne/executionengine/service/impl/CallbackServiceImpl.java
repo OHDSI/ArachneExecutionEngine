@@ -30,14 +30,6 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -51,11 +43,23 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class CallbackServiceImpl implements CallbackService {
@@ -66,6 +70,8 @@ public class CallbackServiceImpl implements CallbackService {
     @Value("${submission.cleanupResults}")
     private boolean cleanupResults;
     private final RestTemplate nodeRestTemplate;
+    private final RetryTemplate successfulRetryTemplate;
+    private final RetryTemplate failureRetryTemplate;
     private static final String SENDING_STDOUT_TO_CENTRAL_LOG =
             "Sending stdout to callback for analysis with id='{}'";
     private static final String UPDATE_STATUS_FAILED_LOG = "Update analysis status id={} failed";
@@ -75,9 +81,13 @@ public class CallbackServiceImpl implements CallbackService {
     private static final String DELETE_DIR_ERROR_LOG = "Can't delete analysis directory: '{}'";
 
     @Autowired
-    public CallbackServiceImpl(@Qualifier("nodeRestTemplate") RestTemplate nodeRestTemplate) {
+    public CallbackServiceImpl(@Qualifier("nodeRestTemplate") RestTemplate nodeRestTemplate,
+                               @Qualifier("successCallbackRetryTemplate") RetryTemplate successfulRetryTemplate,
+                               @Qualifier("failureCallbackRetryTemplate") RetryTemplate failureRetryTemplate) {
 
         this.nodeRestTemplate = nodeRestTemplate;
+        this.successfulRetryTemplate = successfulRetryTemplate;
+        this.failureRetryTemplate = failureRetryTemplate;
     }
 
     @Override
@@ -121,7 +131,7 @@ public class CallbackServiceImpl implements CallbackService {
             Long chunkSize
     ) throws ZipException {
 
-        final File zipDir = com.google.common.io.Files.createTempDir();
+        final File zipDir = Files.createTempDir();
         try {
             AnalysisResultDTO result = new AnalysisResultDTO();
             result.setId(analysis.getId());
@@ -160,55 +170,48 @@ public class CallbackServiceImpl implements CallbackService {
     @FileDescriptorCount
     public void sendAnalysisResult(AnalysisRequestDTO analysis,
                                    AnalysisResultDTO analysisResult,
-                                   Collection<FileSystemResource> files, 
+                                   Collection<FileSystemResource> files,
                                    Long chunkSize) {
-        try {
-            sendResult(analysis, analysisResult, files);
-        } catch (RestClientException ex) {
-            log.info(SEND_RESULT_FAILED_LOG, analysisResult.getId(), ex);
-            try {
-                sendFailedResult(analysis, ex, null, false, chunkSize);
-            } catch (Exception ex1) {
-                log.info(SEND_ERROR_RESULT_FAILED_LOG, analysisResult.getId(), ex1);
-            }
-        }
+        successfulRetryTemplate.execute(
+                (RetryCallback<ResponseEntity<String>, RestClientException>) retryContext -> executeSend(analysis, analysisResult, files),
+                retryContext -> sendFailedResult(analysis, retryContext.getLastThrowable(), null, false, chunkSize)
+        );
     }
-
+    
     @Override
     @FileDescriptorCount
-    public void sendFailedResult(AnalysisRequestDTO analysis, Throwable e, File analysisDir,
-                                 Boolean compressedResult, Long chunkSize) {
-
-        AnalysisResultDTO result = new AnalysisResultDTO();
-        result.setId(analysis.getId());
-        result.setStatus(AnalysisResultStatusDTO.FAILED);
-        result.setRequested(analysis.getRequested());
-        String stdout = "";
-        if (Objects.nonNull(e)) {
-            stdout = ExceptionUtils.getStackTrace(e);
-        }
-        List<FileSystemResource> resultFSResources = null;
-        try {
-            if (Objects.nonNull(analysisDir)) {
-                resultFSResources = AnalisysUtils.getFileSystemResources(analysis, analysisDir, compressedResult, chunkSize,
-                        Files.createTempDir());
+    public ResponseEntity<String> sendFailedResult(AnalysisRequestDTO analysis, Throwable e, File analysisDir,
+                                                   Boolean compressedResult, Long chunkSize) {
+        final String stdout = getErrorStackTrace(e);
+        return failureRetryTemplate.execute(retryContext -> {
+            AnalysisResultDTO result = new AnalysisResultDTO();
+            result.setId(analysis.getId());
+            result.setStatus(AnalysisResultStatusDTO.FAILED);
+            result.setRequested(analysis.getRequested());
+            List<FileSystemResource> resultFSResources = null;
+            result.setStdout(stdout);
+            try {
+                if (Objects.nonNull(analysisDir)) {
+                    resultFSResources = AnalisysUtils.getFileSystemResources(analysis, analysisDir, compressedResult, chunkSize,
+                            Files.createTempDir());
+                }
+            } catch (ZipException ex) {
+                log.error("could not collect analysis results, id={}", analysis.getId());
+                result.setStdout(stdout + "\n" + ExceptionUtils.getStackTrace(ex));
             }
-        } catch (ZipException ex) {
-            log.error("could not collect analysis results, id={}", analysis.getId());
-            stdout += "\n" + ExceptionUtils.getStackTrace(ex);
-        }
 
-        result.setStdout(stdout);
-        try {
-            sendResult(analysis, result, resultFSResources);
-        } catch (Exception ex) {
-            log.info(SEND_ERROR_RESULT_FAILED_LOG, result.getId(), ex);
+            return executeSend(analysis, result, resultFSResources);
+        });
+    }
+    
+    private String getErrorStackTrace(Throwable e) {
+        if (Objects.nonNull(e)) {
+            return ExceptionUtils.getStackTrace(e);
+        } else {
+            return "";
         }
     }
-
-    private void sendResult(AnalysisRequestDTO analysis,
-                            AnalysisResultDTO analysisResult,
-                            Collection<FileSystemResource> files) {
+    private ResponseEntity<String> executeSend(AnalysisRequestDTO analysis, AnalysisResultDTO analysisResult, Collection<FileSystemResource> files) {
         HttpHeaders jsonHeader = new HttpHeaders();
         jsonHeader.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<AnalysisResultDTO> analysisRequestHttpEntity = new HttpEntity<>(analysisResult, jsonHeader);
@@ -221,7 +224,7 @@ public class CallbackServiceImpl implements CallbackService {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(multipartRequest, headers);
         Long submissionId = analysisResult.getId();
-        nodeRestTemplate.exchange(
+        return nodeRestTemplate.exchange(
                 analysis.getResultCallback(),
                 HttpMethod.POST,
                 entity,

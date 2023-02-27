@@ -65,12 +65,12 @@ public class ResponseController {
         if (!AnalysisControllerTest.resultIsOk.get()) {
             switch (id.intValue()) {
                 case 1: {
-                    AnalysisControllerTest.resultIsOk.set(files.length == 5); //TODO implement more relevant criterion
+                    AnalysisControllerTest.resultIsOk.set(files.length == 4); //TODO implement more relevant criterion
                     break;
                 }
                 case 2: {
                     AnalysisControllerTest.updateStatusIsOk.set(true); //TODO remove after embedded db implementation
-                    AnalysisControllerTest.resultIsOk.set(files.length == 4);
+                    AnalysisControllerTest.resultIsOk.set(files.length == 6);
                     break;
                 }
                 default: {
