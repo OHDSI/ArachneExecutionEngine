@@ -191,7 +191,7 @@
             <id>dev</id>
             <properties>
                 <env>dev</env>
-                <latestSuffix>-dev</latestSuffix>
+                <latestSuffix>-dev-thin</latestSuffix>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -201,21 +201,21 @@
             <id>test</id>
             <properties>
                 <env>integration</env>
-                <latestSuffix>-snapshot</latestSuffix>
+                <latestSuffix>-snapshot-thin</latestSuffix>
             </properties>
         </profile>
         <profile>
             <id>prod</id>
             <properties>
                 <env>prod</env>
-                <latestSuffix>-prod</latestSuffix>
+                <latestSuffix>-prod-thin</latestSuffix>
             </properties>
         </profile>
         <profile>
             <id>qa</id>
             <properties>
                 <env>qa</env>
-                <latestSuffix>-qa</latestSuffix>
+                <latestSuffix>-qa-thin</latestSuffix>
             </properties>
         </profile>
         <profile>

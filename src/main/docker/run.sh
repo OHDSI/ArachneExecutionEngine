@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 
-service rsyslog start
-service logrotate start
+systemctl start rsyslog
+systemctl start logrotate
 service cron start
-
-if [ -f "/libs-r/$R_INSTALL_SCRIPT" ]; then
- Rscript /libs-r/$R_INSTALL_SCRIPT
-fi
 
 #
 # Kerberos authentication scheduling

@@ -211,6 +211,7 @@ public class CallbackServiceImpl implements CallbackService {
             return "";
         }
     }
+    
     private ResponseEntity<String> executeSend(AnalysisRequestDTO analysis, AnalysisResultDTO analysisResult, Collection<FileSystemResource> files) {
         HttpHeaders jsonHeader = new HttpHeaders();
         jsonHeader.setContentType(MediaType.APPLICATION_JSON);
