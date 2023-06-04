@@ -6,7 +6,10 @@
 
 DIST=$1
 CRAN_URL=$2
-JDBC_TEST=$3
+GITHUB_PAT=$3
+JDBC_TEST=$4
+
+echo "GITHUB_PAT passed: $GITHUB_PAT"
 
 HOME=/root
 
@@ -33,14 +36,17 @@ LC_ALL=en_US.UTF-8 dpkg-reconfigure -f noninteractive locales
 apt install -y software-properties-common
 sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe restricted"
 add-apt-repository -y ppa:openjdk-r/ppa
-apt update && apt install -y openjdk-8-jdk
+apt update && apt install --no-install-recommends -y openjdk-8-jdk
 
 rm -f /usr/bin/java
 update-alternatives --config java
 
 # Doesn't work for Bionic
 #sudo add-apt-repository -y ppa:deadsnakes/ppa
-apt update && apt install -yf libpq-dev libgit2-dev libssh2-1-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user virtualenv libgeos-dev libprotobuf-dev protobuf-compiler
+apt update && apt install -yf libpq-dev libgit2-dev libssh2-1-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl \
+  libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user virtualenv libgeos-dev \
+  libprotobuf-dev protobuf-compiler libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libsodium-dev libjq-dev \
+  libopenblas-dev automake software-properties-common dirmngr
 
 wget http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip \
         && echo "8021a28b8cac41b44f1421fd210a0a0822fcaf88d62d2e70a35b2ff628a8675a  ZuluJCEPolicies.zip" | sha256sum -c - \
@@ -51,19 +57,15 @@ wget http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip \
 # Redshift Certificate Authority Bundle
 wget https://s3.amazonaws.com/redshift-downloads/redshift-keytool.jar && java -jar redshift-keytool.jar -s && rm -f redshift-keytool.jar
 
-# Add jq JSON processor
-#add-apt-repository -y ppa:opencpu/jq
-apt update & apt -y install libjq-dev
+# Installing R
+wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
+add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
 
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
-add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $DIST/"
-#gpg -a --export E298A3A825C0D65DFD57CBB651716619E084DAB9 | sudo apt-key add -
-#sudo sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu $DIST/" >> /etc/apt/sources.list.d/rstudio.list'
-#gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
-#gpg -a --export E084DAB9 | sudo apt-key add -
+# Install R 4.1.3
+R_VERSION=4.1.3-1.2004.0
+apt update && apt -y --allow-unauthenticated --no-install-recommends install r-recommended=$R_VERSION r-base=$R_VERSION r-base-dev=$R_VERSION
 
-apt update && apt -y --allow-unauthenticated install r-base r-base-dev
-
+touch /etc/R/Rprofile.site
 cat >> /etc/R/Rprofile.site <<_EOF_
 local({ 
   # add MASS to the default packages, set a CRAN mirror  
@@ -91,10 +93,14 @@ export PATH=$PATH:/root/miniconda/bin
 conda create -y -n PLP python=3.8.3
 conda install -y -n PLP -c sebp scikit-survival=0.12.0
 conda install -y -n PLP -c pytorch pytorch torchvision
+conda install -y -n PLP -c defaults -c conda-forge -c pytorch cython=0.29.35
+conda install -y -n PLP numpy=1.19.2
 rm -f /Miniconda3-4.5.12-Linux-x86_64.sh
 echo 'alias python=python3' >> /root/.bashrc
 alias python=python3
 conda update -y -n base conda
+
+echo "GITHUB_PAT=$GITHUB_PAT" >> /root/.Renviron
 
 R CMD javareconf
 Rscript /root/libs/libs_1.r
@@ -103,11 +109,9 @@ Rscript /root/libs/libs_3.r
 Rscript /root/libs/libs_4.r
 Rscript /root/libs/libs_5.r
 Rscript /root/libs/libs_6.r
-
-# Required by keras
-conda remove -y -n PLP PyYAML
-
 Rscript /root/libs/libs_7.r
+
+apt -y autoremove && rm -rf /var/lib/apt/lists/*
 
 
 # Run PLP test

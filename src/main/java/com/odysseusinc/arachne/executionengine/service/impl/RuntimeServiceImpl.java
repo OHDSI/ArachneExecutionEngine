@@ -31,6 +31,7 @@ import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.properties.HiveBulkLoadProperties;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
+import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
@@ -172,7 +173,8 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     @Override
     @FileDescriptorCount
-    public Future analyze(AnalysisSyncRequestDTO analysis, File file, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback analysisCallback, KrbConfig krbConfig) {
+    public Future analyze(AnalysisSyncRequestDTO analysis, File file, DescriptorBundle descriptorBundle,
+                          StdoutHandlerParams stdoutHandlerParams, AnalysisCallback analysisCallback, KrbConfig krbConfig) {
 
         return taskExecutor.submit(() -> {
             try {
@@ -184,7 +186,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                     File runFile = prepareEnvironment();
                     prepareRprofile(file);
                     try {
-                        String[] command = buildRuntimeCommand(runFile, file, executableFileName);
+                        String[] command = buildRuntimeCommand(runFile, file, executableFileName, descriptorBundle.getPath());
 
                         final Map<String, String> envp = buildRuntimeEnvVariables(dataSource, krbConfig.getIsolatedRuntimeEnvs());
                         envp.put(RUNTIME_ANALYSIS_ID, analysis.getId().toString());
@@ -262,7 +264,8 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
     }
 
-    private String[] buildRuntimeCommand(File runFile, File workingDir, String fileName) throws FileNotFoundException {
+    private String[] buildRuntimeCommand(File runFile, File workingDir, String fileName, String bundlePath)
+            throws FileNotFoundException {
 
         if (!workingDir.exists()) {
             throw new FileNotFoundException("Working directory with name" + workingDir.getAbsolutePath() + "is not exists");
@@ -277,7 +280,8 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
         String[] command;
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
-            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, rIsolatedRuntimeProps.getArchive()});
+            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(),
+                    new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, bundlePath});
         } else {
             command = new String[]{EXECUTION_COMMAND, fileName};
         }
