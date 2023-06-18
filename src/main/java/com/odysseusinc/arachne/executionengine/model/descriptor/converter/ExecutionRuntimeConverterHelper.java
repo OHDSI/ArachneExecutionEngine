@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ExecutionRuntimeConverterHelper {
-    private Map<RuntimeType, ExecutionRuntimeConverter> runtimeConvertStrategiesMap = new HashMap<>();
+    private Map<RuntimeType, ExecutionRuntimeConverter<?, ?>> runtimeConvertStrategiesMap = new HashMap<>();
 
     public ExecutionRuntimeConverterHelper() {
         runtimeConvertStrategiesMap.put(RuntimeType.R, new RExecutionRuntimeConverter());

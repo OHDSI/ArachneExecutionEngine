@@ -12,20 +12,20 @@ import java.io.InputStream;
 import java.util.Optional;
 
 public class REnvParseStrategy implements ParseStrategy {
+    private ObjectMapper mapper = new ObjectMapper();
+
     @Override
     public Optional<ExecutionRuntime> getExecutionRuntime(File file) {
         try {
             return Optional.of(RExecutionRuntime.fromREnvLock(getLock(file)));
-        } catch (Exception e) {
-            // ignore
+        } catch (IOException e) {
+            return Optional.empty();
         }
-
-        return Optional.empty();
     }
 
     private REnvLock getLock(File file) throws IOException {
-        InputStream is = new FileInputStream(file);
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(is, REnvLock.class);
+        try (InputStream is = new FileInputStream(file)) {
+            return mapper.readValue(is, REnvLock.class);
+        }
     }
 }

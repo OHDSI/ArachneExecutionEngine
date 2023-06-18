@@ -131,7 +131,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         Validate.notNull(analysis, "analysis can't be null");
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         Future executionFuture = null;
-        String descriptorId = null;
         try {
             File keystoreDir = new File(analysisDir, "keys");
             keystoreDir.mkdirs();
@@ -174,7 +173,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                 case "r": {
                     DescriptorBundle descriptorBundle = descriptorService.getDescriptorBundle(analysisDir,
                             analysis.getId(), analysis.getRequestedDescriptorId());
-                    descriptorId = descriptorBundle.getDescriptor().getId();
                     executionFuture = runtimeService.analyze(analysis, analysisDir, descriptorBundle, stdoutHandlerParams, logCleanupCallback, krbConfig);
                     logger.info("analysis with id={} started in R Runtime Service", analysis.getId());
                     status = AnalysisRequestTypeDTO.R;

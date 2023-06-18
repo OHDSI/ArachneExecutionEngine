@@ -10,14 +10,15 @@ import java.util.List;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        property = "runtimeType",
+        include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        property = "type",
         visible = false)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = RExecutionRuntime.class, name = "R")
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public interface ExecutionRuntime {
-    RuntimeType getRuntimeType();
+    RuntimeType getType();
 
     String getVersion();
 

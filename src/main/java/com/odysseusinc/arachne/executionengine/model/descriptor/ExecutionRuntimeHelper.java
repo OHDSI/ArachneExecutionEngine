@@ -3,7 +3,7 @@ package com.odysseusinc.arachne.executionengine.model.descriptor;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.REnvParseStrategy;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,9 +15,9 @@ public class ExecutionRuntimeHelper {
     private static Map<String, List<ParseStrategy>> runtimeParseStrategiesMap = new HashMap<>();
 
     static {
-        List<ParseStrategy> rEnvParseStrategies = new ArrayList<ParseStrategy>() {{
-            add(new REnvParseStrategy());
-        }};
+        List<ParseStrategy> rEnvParseStrategies = Arrays.asList(
+                new REnvParseStrategy()
+        );
 
         runtimeParseStrategiesMap.put("renv.lock", rEnvParseStrategies);
     }

@@ -4,17 +4,17 @@
   "label": "Default runtime",
   "osLibraries" : [ ],
   "executionRuntimes" : [ {
-    "runtimeType" : "R",
+    "type" : "R",
     "version" : "4.1.2",
     "dependencies" : [ {
-      "name" : "withr",
-      "version" : "2.4.11",
+      "name" : "testthat",
+      "version" : "3.1.4",
       "dependencySourceType" : "CRAN",
       "preInstallScripts" : null,
       "postInstallScripts" : null
     }, {
-      "name" : "latticeExtra",
-      "version" : "0.6-29",
+      "name" : "rematch2",
+      "version" : "2.1.2",
       "dependencySourceType" : "CRAN",
       "preInstallScripts" : null,
       "postInstallScripts" : null
@@ -25,8 +25,8 @@
       "preInstallScripts" : null,
       "postInstallScripts" : null
     }, {
-      "name" : "Andromeda",
-      "version" : "0.6.0",
+      "name" : "AUC",
+      "version" : "0.3.2",
       "dependencySourceType" : "CRAN",
       "preInstallScripts" : null,
       "postInstallScripts" : null

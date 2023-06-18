@@ -9,5 +9,5 @@ import java.util.List;
 public interface DescriptorService {
     List<Descriptor> getDescriptors();
 
-    DescriptorBundle getDescriptorBundle(File file, Long id, String requestedDescriptorId);
+    DescriptorBundle getDescriptorBundle(File file, Long analysisId, String requestedDescriptorId);
 }

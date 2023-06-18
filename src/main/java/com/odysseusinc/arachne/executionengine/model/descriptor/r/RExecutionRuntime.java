@@ -48,7 +48,7 @@ public class RExecutionRuntime implements ExecutionRuntime {
     }
 
     @Override
-    public RuntimeType getRuntimeType() {
+    public RuntimeType getType() {
         return RuntimeType.R;
     }
 
