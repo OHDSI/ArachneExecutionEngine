@@ -1,7 +1,7 @@
 package com.odysseusinc.arachne.executionengine.api.v1;
 
-import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.DescriptorDTO;
-import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.DescriptorsDTO;
+import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.RuntimeEnvironmentDescriptorDTO;
+import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.RuntimeEnvironmentDescriptorsDTO;
 import com.odysseusinc.arachne.executionengine.model.descriptor.Descriptor;
 import com.odysseusinc.arachne.executionengine.model.descriptor.converter.DescriptorConverter;
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
@@ -34,11 +34,11 @@ public class DescriptorController {
 
     @ApiOperation(value = "Runtimes for analysis")
     @RequestMapping(value = REST_API_DESCRIPTORS, method = RequestMethod.GET)
-    public DescriptorsDTO getDescriptors() {
+    public RuntimeEnvironmentDescriptorsDTO getDescriptors() {
         List<Descriptor> descriptors = descriptorService.getDescriptors();
-        List<DescriptorDTO> descriptorDTOS = descriptors.stream()
+        List<RuntimeEnvironmentDescriptorDTO> descriptorDTOS = descriptors.stream()
                 .map(descriptor -> descriptorConverter.toDto(descriptor))
                 .collect(Collectors.toList());
-        return new DescriptorsDTO(descriptorDTOS);
+        return new RuntimeEnvironmentDescriptorsDTO(descriptorDTOS);
     }
 }
