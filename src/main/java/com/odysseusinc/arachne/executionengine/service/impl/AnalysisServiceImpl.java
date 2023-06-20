@@ -29,9 +29,11 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
+import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
+import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
@@ -71,6 +73,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     private final CdmMetadataService cdmMetadataService;
     private final CallbackService callbackService;
     private final KerberosService kerberosService;
+    private final DescriptorService descriptorService;
     @Value("${drivers.location.impala}")
     private String impalaDriversLocation;
     @Value("${drivers.location.bq}")
@@ -102,7 +105,8 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                                @Qualifier("analysisTaskExecutor") ThreadPoolTaskExecutor threadPoolTaskExecutor,
                                CdmMetadataService cdmMetadataService,
                                CallbackService callbackService,
-                               KerberosService kerberosService) {
+                               KerberosService kerberosService,
+                               DescriptorService descriptorService) {
 
         this.sqlService = sqlService;
         this.runtimeService = runtimeService;
@@ -110,6 +114,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         this.cdmMetadataService = cdmMetadataService;
         this.callbackService = callbackService;
         this.kerberosService = kerberosService;
+        this.descriptorService = descriptorService;
         initAuthResolvers();
     }
 
@@ -166,7 +171,9 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                 }
 
                 case "r": {
-                    executionFuture = runtimeService.analyze(analysis, analysisDir, stdoutHandlerParams, logCleanupCallback, krbConfig);
+                    DescriptorBundle descriptorBundle = descriptorService.getDescriptorBundle(analysisDir,
+                            analysis.getId(), analysis.getRequestedDescriptorId());
+                    executionFuture = runtimeService.analyze(analysis, analysisDir, descriptorBundle, stdoutHandlerParams, logCleanupCallback, krbConfig);
                     logger.info("analysis with id={} started in R Runtime Service", analysis.getId());
                     status = AnalysisRequestTypeDTO.R;
                     break;

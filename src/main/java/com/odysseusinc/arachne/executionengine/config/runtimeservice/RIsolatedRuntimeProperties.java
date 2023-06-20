@@ -11,6 +11,7 @@ public class RIsolatedRuntimeProperties {
     private String jailSh;
     private String cleanupSh;
     private String archive;
+    private String archiveFolder;
 
     public String[] getRunCmd() {
         return runCmd;
@@ -42,5 +43,13 @@ public class RIsolatedRuntimeProperties {
 
     public void setArchive(String distArchive) {
         this.archive = distArchive;
+    }
+
+    public String getArchiveFolder() {
+        return archiveFolder;
+    }
+
+    public void setArchiveFolder(String archiveFolder) {
+        this.archiveFolder = archiveFolder;
     }
 }
