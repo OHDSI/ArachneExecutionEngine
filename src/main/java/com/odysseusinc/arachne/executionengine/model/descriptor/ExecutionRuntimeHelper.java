@@ -22,7 +22,7 @@ public class ExecutionRuntimeHelper {
         runtimeParseStrategiesMap.put("renv.lock", rEnvParseStrategies);
     }
 
-    public static Set<ExecutionRuntime> getRuntimes(List<File> files) {
+    public static List<ExecutionRuntime> getRuntimes(List<File> files) {
         return files.stream()
                 .filter(file -> runtimeParseStrategiesMap.containsKey(file.getName()))
                 .map(file -> {
@@ -35,6 +35,6 @@ public class ExecutionRuntimeHelper {
                 })
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 }

@@ -2,7 +2,9 @@ package com.odysseusinc.arachne.executionengine.model.descriptor;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class Descriptor {
@@ -13,9 +15,9 @@ public class Descriptor {
     @JsonProperty
     private String label;
     @JsonProperty
-    private Set<String> osLibraries = new HashSet<>();
+    private List<String> osLibraries = new ArrayList<>();
     @JsonProperty
-    private Set<ExecutionRuntime> executionRuntimes = new HashSet<>();
+    private List<ExecutionRuntime> executionRuntimes = new ArrayList<>();
 
     public String getId() {
         return id;
@@ -41,19 +43,19 @@ public class Descriptor {
         this.label = label;
     }
 
-    public Set<String> getOsLibraries() {
+    public List<String> getOsLibraries() {
         return osLibraries;
     }
 
-    public void setOsLibraries(Set<String> osLibraries) {
+    public void setOsLibraries(List<String> osLibraries) {
         this.osLibraries = osLibraries;
     }
 
-    public Set<ExecutionRuntime> getExecutionRuntimes() {
+    public List<ExecutionRuntime> getExecutionRuntimes() {
         return executionRuntimes;
     }
 
-    public void setExecutionRuntimes(Set<ExecutionRuntime> executionRuntimes) {
+    public void setExecutionRuntimes(List<ExecutionRuntime> executionRuntimes) {
         this.executionRuntimes = executionRuntimes;
     }
 }

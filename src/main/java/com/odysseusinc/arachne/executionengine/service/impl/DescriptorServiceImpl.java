@@ -112,7 +112,7 @@ public class DescriptorServiceImpl implements DescriptorService {
         try {
             extractFiles(file, temporaryDir);
             List<File> files = Arrays.asList(temporaryDir.listFiles());
-            Set<ExecutionRuntime> executionRuntimes = ExecutionRuntimeHelper.getRuntimes(files);
+            List<ExecutionRuntime> executionRuntimes = ExecutionRuntimeHelper.getRuntimes(files);
 
             return availableDescriptors.stream()
                     .filter(availableDescriptor ->
@@ -131,8 +131,8 @@ public class DescriptorServiceImpl implements DescriptorService {
         }
     }
 
-    private boolean compareExecutionRuntimes(Set<ExecutionRuntime> availableExecutionRuntimes,
-                                             Set<ExecutionRuntime> executionRuntimes) {
+    private boolean compareExecutionRuntimes(List<ExecutionRuntime> availableExecutionRuntimes,
+                                             List<ExecutionRuntime> executionRuntimes) {
         boolean result = executionRuntimes.stream()
                 .map(otherRuntime -> availableExecutionRuntimes.stream()
                         .filter(executionRuntime -> executionRuntime.getType().equals(otherRuntime.getType()))
