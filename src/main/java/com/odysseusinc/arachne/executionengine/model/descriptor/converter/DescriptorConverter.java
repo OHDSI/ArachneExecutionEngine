@@ -4,7 +4,7 @@ import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.ExecutionR
 import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.RuntimeEnvironmentDescriptorDTO;
 import com.odysseusinc.arachne.executionengine.model.descriptor.Descriptor;
 
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class DescriptorConverter {
@@ -15,12 +15,12 @@ public class DescriptorConverter {
         dto.setId(model.getId());
         dto.setBundleName(model.getBundleName());
         dto.setLabel(model.getLabel());
-        Set<ExecutionRuntimeDTO> executionRuntimes = model.getExecutionRuntimes().stream()
+        List<ExecutionRuntimeDTO> executionRuntimes = model.getExecutionRuntimes().stream()
                 .map(executionRuntime -> {
                     ExecutionRuntimeConverter converter = runtimeConverterHelper.getConverter(executionRuntime.getType());
                     return converter.toDto(executionRuntime);
                 })
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
         dto.setExecutionRuntimes(executionRuntimes);
         return dto;
     }
