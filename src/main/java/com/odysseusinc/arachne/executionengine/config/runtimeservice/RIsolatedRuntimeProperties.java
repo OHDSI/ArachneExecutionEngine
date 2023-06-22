@@ -12,6 +12,7 @@ public class RIsolatedRuntimeProperties {
     private String cleanupSh;
     private String archive;
     private String archiveFolder;
+    private boolean verboseLog;
 
     public String[] getRunCmd() {
         return runCmd;
@@ -51,5 +52,13 @@ public class RIsolatedRuntimeProperties {
 
     public void setArchiveFolder(String archiveFolder) {
         this.archiveFolder = archiveFolder;
+    }
+
+    public boolean isVerboseLog() {
+        return verboseLog;
+    }
+
+    public void setVerboseLog(boolean verboseLog) {
+        this.verboseLog = verboseLog;
     }
 }
