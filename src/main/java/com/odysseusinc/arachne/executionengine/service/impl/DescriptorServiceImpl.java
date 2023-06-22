@@ -81,6 +81,8 @@ public class DescriptorServiceImpl implements DescriptorService {
                 if (!descriptorBundleOpt.isPresent()) {
                     descriptorBundleOpt = getDescriptorBundle(file, availableDescriptors, analysisId);
                 }
+            } else {
+                LOGGER.info("No descriptors are available");
             }
         }
         return descriptorBundleOpt
@@ -117,9 +119,7 @@ public class DescriptorServiceImpl implements DescriptorService {
             // if there're no required runtimes then each available descriptor will match
             // in case of empty list of required runtimes then we have to use default descriptor
             if (executionRuntimes.isEmpty()) {
-                if (rIsolatedRuntimeProps.isVerboseLog()) {
-                    LOGGER.info("Required runtimes are empty. Using default descriptor");
-                }
+                LOGGER.info("Required runtimes are empty. Cannot find matched descriptor");
                 return Optional.empty();
             }
 
