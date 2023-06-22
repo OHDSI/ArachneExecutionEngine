@@ -114,6 +114,12 @@ public class DescriptorServiceImpl implements DescriptorService {
             List<File> files = Arrays.asList(temporaryDir.listFiles());
             List<ExecutionRuntime> executionRuntimes = ExecutionRuntimeHelper.getRuntimes(files);
 
+            // if there're no required runtimes then each available descriptor will match
+            // in case of empty list of required runtimes then we have to use default descriptor
+            if (executionRuntimes.isEmpty()) {
+                return Optional.empty();
+            }
+
             return availableDescriptors.stream()
                     .filter(availableDescriptor ->
                             compareExecutionRuntimes(availableDescriptor.getExecutionRuntimes(), executionRuntimes))
