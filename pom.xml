@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.21.0-alpha</version>
+    <version>1.21.1-alpha</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -26,7 +26,7 @@
         <postgresql.version>42.2.26</postgresql.version>
         <snakeyaml.version>1.33</snakeyaml.version>
 
-        <arachne.commons.version>1.21.0-alpha</arachne.commons.version>
+        <arachne.commons.version>1.21.1-alpha</arachne.commons.version>
     </properties>
 
     <parent>
@@ -622,42 +622,42 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <version>0.4.13</version>
-                <configuration>
-                    <imageName>${dockerImagePrefix}/${project.artifactId}</imageName>
-                    <imageTags>
-                        <imageTag>latest${latestSuffix}</imageTag>
-                        <imageTag>${project.version}</imageTag>
-                    </imageTags>
-                    <dockerDirectory>src/main/docker</dockerDirectory>
-                    <resources>
-                        <resource>
-                            <!--<targetPath>/</targetPath>-->
-                            <directory>${project.build.directory}</directory>
-                            <include>${project.build.finalName}-exec.${project.packaging}</include>
-                        </resource>
-                    </resources>
-                    <serverId>docker-hub</serverId>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>deploy</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>push</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>com.spotify</groupId>-->
+<!--                <artifactId>docker-maven-plugin</artifactId>-->
+<!--                <version>0.4.13</version>-->
+<!--                <configuration>-->
+<!--                    <imageName>${dockerImagePrefix}/${project.artifactId}</imageName>-->
+<!--                    <imageTags>-->
+<!--                        <imageTag>latest${latestSuffix}</imageTag>-->
+<!--                        <imageTag>${project.version}</imageTag>-->
+<!--                    </imageTags>-->
+<!--                    <dockerDirectory>src/main/docker</dockerDirectory>-->
+<!--                    <resources>-->
+<!--                        <resource>-->
+<!--                            &lt;!&ndash;<targetPath>/</targetPath>&ndash;&gt;-->
+<!--                            <directory>${project.build.directory}</directory>-->
+<!--                            <include>${project.build.finalName}-exec.${project.packaging}</include>-->
+<!--                        </resource>-->
+<!--                    </resources>-->
+<!--                    <serverId>docker-hub</serverId>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>build</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>deploy</id>-->
+<!--                        <phase>deploy</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>push</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
         </plugins>
         <resources>
             <resource>
