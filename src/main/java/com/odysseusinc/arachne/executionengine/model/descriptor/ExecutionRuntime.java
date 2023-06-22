@@ -25,4 +25,6 @@ public interface ExecutionRuntime {
     List<String> createInstallScripts();
 
     boolean matches(ExecutionRuntime otherRuntime);
+
+    List<String> getDiff(ExecutionRuntime otherRuntime);
 }

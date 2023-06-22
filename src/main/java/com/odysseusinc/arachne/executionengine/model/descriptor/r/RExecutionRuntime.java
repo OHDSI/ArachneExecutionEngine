@@ -9,6 +9,7 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.RPackageG
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +25,31 @@ public class RExecutionRuntime implements ExecutionRuntime {
         RExecutionRuntime rExecutionRuntime = (RExecutionRuntime) otherRuntime;
         return this.version.equals(rExecutionRuntime.version)
                 && this.dependencies.containsAll(rExecutionRuntime.dependencies);
+    }
+
+    public List<String> getDiff(ExecutionRuntime otherRuntime) {
+        if (!(otherRuntime instanceof RExecutionRuntime))
+            return Collections.emptyList();
+        List<String> differences = new ArrayList<>();
+        RExecutionRuntime rExecutionRuntime = (RExecutionRuntime) otherRuntime;
+        if (!this.version.equals(rExecutionRuntime.version)) {
+            differences.add(getRuntimeVersionDiffString(rExecutionRuntime.version, this.version));
+        }
+        List<RDependency> dependencies = new ArrayList<>(rExecutionRuntime.dependencies);
+        dependencies.removeAll(this.dependencies);
+        dependencies.forEach(
+                dependency -> differences.add(getDependencyAbsentString(dependency))
+        );
+        return differences;
+    }
+
+    private String getRuntimeVersionDiffString(String requiredVersion, String existingVersion) {
+        return String.format("Required R version '%s' does not match existing R version '%s'",
+                requiredVersion, existingVersion);
+    }
+
+    private String getDependencyAbsentString(RDependency dependency) {
+        return String.format("Required dependency '%s:%s' is absent", dependency.getName(), dependency.getVersion());
     }
 
     public static RExecutionRuntime fromREnvLock(REnvLock rEnvLock) {

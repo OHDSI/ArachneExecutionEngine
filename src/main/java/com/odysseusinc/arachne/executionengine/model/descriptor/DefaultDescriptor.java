@@ -34,4 +34,8 @@ public final class DefaultDescriptor extends Descriptor {
     public String getId() {
         return DEFAULT_DESCRIPTOR_ID;
     }
+
+    public boolean isDefaultDescriptor() {
+        return true;
+    }
 }

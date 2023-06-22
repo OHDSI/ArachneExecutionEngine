@@ -58,4 +58,8 @@ public class Descriptor {
     public void setExecutionRuntimes(List<ExecutionRuntime> executionRuntimes) {
         this.executionRuntimes = executionRuntimes;
     }
+
+    public boolean isDefaultDescriptor() {
+        return false;
+    }
 }
