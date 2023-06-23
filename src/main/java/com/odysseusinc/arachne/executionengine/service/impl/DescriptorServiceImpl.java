@@ -184,7 +184,7 @@ public class DescriptorServiceImpl implements DescriptorService {
                     com.google.common.io.Files.copy(file, new File(tempFolder, file.getName()));
                 }
             } catch (Exception e) {
-                LOGGER.error("Error during unzipping or copying file to temporary directory");
+                LOGGER.error("Error during unzipping or copying file to temporary directory", e);
             }
         }
     }
