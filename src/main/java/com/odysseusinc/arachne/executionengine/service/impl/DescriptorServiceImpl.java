@@ -178,9 +178,13 @@ public class DescriptorServiceImpl implements DescriptorService {
     private void extractFiles(File parentFolder, File tempFolder) {
         for (File file : parentFolder.listFiles()) {
             try {
-                CommonFileUtils.unzipFiles(file, tempFolder);
+                if (CommonFileUtils.isValidZipFile(file)) {
+                    CommonFileUtils.unzipFiles(file, tempFolder);
+                } else {
+                    com.google.common.io.Files.copy(file, new File(tempFolder, file.getName()));
+                }
             } catch (Exception e) {
-                // ignore
+                LOGGER.error("Error during unzipping or copying file to temporary directory");
             }
         }
     }
