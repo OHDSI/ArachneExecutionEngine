@@ -68,6 +68,7 @@ apt update && apt -y --allow-unauthenticated --no-install-recommends install r-r
 touch /etc/R/Rprofile.site
 cat >> /etc/R/Rprofile.site <<_EOF_
 local({ 
+  Sys.setenv(INSTANTIATED_MODULES_FOLDER = "/strategus_modules")
   # add MASS to the default packages, set a CRAN mirror  
   old <- getOption("defaultPackages"); r <- getOption("repos") 
   r["CRAN"] <- "$CRAN_URL"
