@@ -104,6 +104,8 @@ conda update -y -n base conda
 echo "GITHUB_PAT=$GITHUB_PAT" >> /root/.Renviron
 
 R CMD javareconf
+mkdir -p /strategus_modules
+
 Rscript /root/libs/libs_1.r
 Rscript /root/libs/libs_2.r
 Rscript /root/libs/libs_3.r
