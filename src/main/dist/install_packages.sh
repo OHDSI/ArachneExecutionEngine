@@ -129,6 +129,7 @@ conda update -y -n base conda
 
 echo "GITHUB_PAT=$GITHUB_PAT" >> /root/.Renviron
 echo "INSTANTIATED_MODULES_FOLDER=/strategus" >> /root/.Renviron
+echo "STRATEGUS_KEYRING_PASSWORD=strategus" >> /root/.Renviron
 
 R CMD javareconf
 mkdir -p /strategus
