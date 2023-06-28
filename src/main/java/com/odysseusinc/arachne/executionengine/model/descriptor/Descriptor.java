@@ -1,11 +1,8 @@
 package com.odysseusinc.arachne.executionengine.model.descriptor;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class Descriptor {
     @JsonProperty
@@ -57,9 +54,5 @@ public class Descriptor {
 
     public void setExecutionRuntimes(List<ExecutionRuntime> executionRuntimes) {
         this.executionRuntimes = executionRuntimes;
-    }
-
-    public boolean isDefaultDescriptor() {
-        return false;
     }
 }
