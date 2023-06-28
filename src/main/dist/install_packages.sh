@@ -94,7 +94,6 @@ rm -fr R-${R_VERSION}
 touch /root/.Rprofile
 cat >> /root/.Rprofile <<_EOF_
 local({ 
-  Sys.setenv(INSTANTIATED_MODULES_FOLDER = "/strategus_modules")
   # add MASS to the default packages, set a CRAN mirror  
   old <- getOption("defaultPackages"); r <- getOption("repos") 
   r["CRAN"] <- "$CRAN_URL"
