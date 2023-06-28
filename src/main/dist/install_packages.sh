@@ -91,11 +91,8 @@ rm -fr R-${R_VERSION}
 
 # End of R installation
 
-
-#apt update && apt -y --allow-unauthenticated --no-install-recommends install r-recommended=$R_VERSION r-base=$R_VERSION r-base-dev=$R_VERSION
-
-touch /etc/R/Rprofile.site
-cat >> /etc/R/Rprofile.site <<_EOF_
+touch /root/.Rprofile
+cat >> /root/.Rprofile <<_EOF_
 local({ 
   Sys.setenv(INSTANTIATED_MODULES_FOLDER = "/strategus_modules")
   # add MASS to the default packages, set a CRAN mirror  
@@ -131,9 +128,10 @@ alias python=python3
 conda update -y -n base conda
 
 echo "GITHUB_PAT=$GITHUB_PAT" >> /root/.Renviron
+echo "INSTANTIATED_MODULES_FOLDER=/strategus" >> /root/.Renviron
 
 R CMD javareconf
-mkdir -p /strategus_modules
+mkdir -p /strategus
 
 /usr/local/bin/Rscript /root/libs/libs_1.r
 /usr/local/bin/Rscript /root/libs/libs_2.r
