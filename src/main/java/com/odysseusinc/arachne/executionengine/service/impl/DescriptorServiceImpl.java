@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class DescriptorServiceImpl implements DescriptorService {
@@ -79,8 +79,10 @@ public class DescriptorServiceImpl implements DescriptorService {
                     descriptorBundleOpt = getRequestedDescriptorBundle(requestedDescriptorId, availableDescriptors);
                 }
                 if (!descriptorBundleOpt.isPresent()) {
-                    descriptorBundleOpt = getDescriptorBundle(file, availableDescriptors);
+                    descriptorBundleOpt = getDescriptorBundle(file, availableDescriptors, analysisId);
                 }
+            } else {
+                LOGGER.info("No descriptors are available");
             }
         }
         return descriptorBundleOpt
@@ -107,7 +109,7 @@ public class DescriptorServiceImpl implements DescriptorService {
                 .findFirst();
     }
 
-    private Optional<DescriptorBundle> getDescriptorBundle(File file, List<Descriptor> availableDescriptors) {
+    private Optional<DescriptorBundle> getDescriptorBundle(File file, List<Descriptor> availableDescriptors, Long analysisId) {
         File temporaryDir = com.google.common.io.Files.createTempDir();
         try {
             extractFiles(file, temporaryDir);
@@ -117,12 +119,18 @@ public class DescriptorServiceImpl implements DescriptorService {
             // if there're no required runtimes then each available descriptor will match
             // in case of empty list of required runtimes then we have to use default descriptor
             if (executionRuntimes.isEmpty()) {
+                LOGGER.info("Required runtimes are empty. Cannot find matched descriptor");
                 return Optional.empty();
             }
 
             return availableDescriptors.stream()
-                    .filter(availableDescriptor ->
-                            compareExecutionRuntimes(availableDescriptor.getExecutionRuntimes(), executionRuntimes))
+                    .filter(availableDescriptor -> {
+                            boolean matched = compareExecutionRuntimes(availableDescriptor.getExecutionRuntimes(), executionRuntimes);
+                            if (!matched) {
+                                logRuntimeDiff(availableDescriptor, executionRuntimes, analysisId);
+                            }
+                            return matched;
+                    })
                     .findFirst()
                     .map(descriptor -> {
                         String descriptorPath = getDescriptorPath(descriptor);
@@ -148,6 +156,21 @@ public class DescriptorServiceImpl implements DescriptorService {
         return result;
     }
 
+    private void logRuntimeDiff(Descriptor availableDescriptor, List<ExecutionRuntime> executionRuntimes, Long analysisId) {
+        if (rIsolatedRuntimeProps.isVerboseLog()) {
+            String diff = executionRuntimes.stream()
+                    .map(executionRuntime -> availableDescriptor.getExecutionRuntimes().stream()
+                            .filter(availableRuntime -> executionRuntime.getType().equals(executionRuntime.getType()))
+                            .map(availableRuntime -> availableRuntime.getDiff(executionRuntime))
+                            .flatMap(List::stream)
+                            .collect(Collectors.toList())
+                    )
+                    .flatMap(List::stream)
+                    .collect(Collectors.joining(System.lineSeparator()));
+            LOGGER.info("Analysis: {}. Available descriptor {}: {}", analysisId, availableDescriptor.getLabel(), diff);
+        }
+    }
+
     private String getDescriptorPath(Descriptor descriptor) {
         return rIsolatedRuntimeProps.getArchiveFolder() + descriptor.getBundleName();
     }
@@ -155,9 +178,13 @@ public class DescriptorServiceImpl implements DescriptorService {
     private void extractFiles(File parentFolder, File tempFolder) {
         for (File file : parentFolder.listFiles()) {
             try {
-                CommonFileUtils.unzipFiles(file, tempFolder);
+                if (CommonFileUtils.isValidZipFile(file)) {
+                    CommonFileUtils.unzipFiles(file, tempFolder);
+                } else {
+                    com.google.common.io.Files.copy(file, new File(tempFolder, file.getName()));
+                }
             } catch (Exception e) {
-                // ignore
+                LOGGER.error("Error during unzipping or copying file to temporary directory", e);
             }
         }
     }

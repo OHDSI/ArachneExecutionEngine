@@ -1,6 +1,6 @@
 {
   "id" : "Default",
-  "bundleName" : "r_base_focal_amd64_test.tar.gz",
+  "bundleName" : "r_base_focal_amd64.tar.gz",
   "label": "Default runtime",
   "osLibraries" : [ ],
   "executionRuntimes" : [ {
