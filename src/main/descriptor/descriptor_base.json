@@ -5,7 +5,7 @@
   "osLibraries" : [ ],
   "executionRuntimes" : [ {
     "type" : "R",
-    "version" : "4.1.2",
+    "version" : "4.2.3",
     "dependencies" : [ {
       "name" : "testthat",
       "version" : "3.1.4",

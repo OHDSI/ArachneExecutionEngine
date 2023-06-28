@@ -1,5 +1,5 @@
 {
-  "id" : "1",
+  "id" : "hades_0.0.1",
   "bundleName" : "r_base_focal_descriptor_hades_1.13.0_amd64.tar.gz",
   "label" : "Runtime for Hades 1.13.0",
   "osLibraries" : [ ],
