@@ -46,7 +46,7 @@ update-alternatives --config java
 apt update && apt install -yf libpq-dev libgit2-dev libssh2-1-dev build-essential gcc make libcurl4-openssl-dev libssl-dev curl \
   libssh-dev libxml2-dev libdigest-hmac-perl libcairo2-dev wget unzip apt-transport-https python-dev krb5-user virtualenv libgeos-dev \
   libprotobuf-dev protobuf-compiler libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libsodium-dev libjq-dev \
-  libopenblas-dev automake software-properties-common dirmngr cmake
+  libopenblas-dev automake software-properties-common dirmngr cmake gfortran libbz2-dev libopenblas-dev
 
 wget http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip \
         && echo "8021a28b8cac41b44f1421fd210a0a0822fcaf88d62d2e70a35b2ff628a8675a  ZuluJCEPolicies.zip" | sha256sum -c - \
@@ -61,13 +61,43 @@ wget https://s3.amazonaws.com/redshift-downloads/redshift-keytool.jar && java -j
 wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
 add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
 
-# Install R 4.1.3
-R_VERSION=4.1.3-1.2004.0
-apt update && apt -y --allow-unauthenticated --no-install-recommends install r-recommended=$R_VERSION r-base=$R_VERSION r-base-dev=$R_VERSION
+# Install R 4.2.3 from sources
+export R_VERSION=4.2.3
+curl -O https://cran.rstudio.com/src/base/R-4/R-${R_VERSION}.tar.gz
+tar -xzvf R-${R_VERSION}.tar.gz
+rm -f R-${R_VERSION}.tar.gz
+cd R-${R_VERSION}
+
+./configure \
+    --prefix=/opt/R/${R_VERSION} \
+    --enable-R-shlib \
+    --enable-memory-profiling \
+    --with-blas \
+    --with-lapack \
+    --with-readline=no \
+    --with-x=no
+
+make
+make install
+# Verify R
+/opt/R/${R_VERSION}/bin/R --version
+ln -s /opt/R/${R_VERSION}/bin/R /usr/local/bin/R
+ln -s /opt/R/${R_VERSION}/bin/Rscript /usr/local/bin/Rscript
+
+update-alternatives --config libblas.so.3-$(arch)-linux-gnu
+
+cd ..
+rm -fr R-${R_VERSION}
+
+# End of R installation
+
+
+#apt update && apt -y --allow-unauthenticated --no-install-recommends install r-recommended=$R_VERSION r-base=$R_VERSION r-base-dev=$R_VERSION
 
 touch /etc/R/Rprofile.site
 cat >> /etc/R/Rprofile.site <<_EOF_
 local({ 
+  Sys.setenv(INSTANTIATED_MODULES_FOLDER = "/strategus_modules")
   # add MASS to the default packages, set a CRAN mirror  
   old <- getOption("defaultPackages"); r <- getOption("repos") 
   r["CRAN"] <- "$CRAN_URL"
@@ -103,13 +133,15 @@ conda update -y -n base conda
 echo "GITHUB_PAT=$GITHUB_PAT" >> /root/.Renviron
 
 R CMD javareconf
-Rscript /root/libs/libs_1.r
-Rscript /root/libs/libs_2.r
-Rscript /root/libs/libs_3.r
-Rscript /root/libs/libs_4.r
-Rscript /root/libs/libs_5.r
-Rscript /root/libs/libs_6.r
-Rscript /root/libs/libs_7.r
+mkdir -p /strategus_modules
+
+/usr/local/bin/Rscript /root/libs/libs_1.r
+/usr/local/bin/Rscript /root/libs/libs_2.r
+/usr/local/bin/Rscript /root/libs/libs_3.r
+/usr/local/bin/Rscript /root/libs/libs_4.r
+/usr/local/bin/Rscript /root/libs/libs_5.r
+/usr/local/bin/Rscript /root/libs/libs_6.r
+/usr/local/bin/Rscript /root/libs/libs_7.r
 
 apt -y autoremove && rm -rf /var/lib/apt/lists/*
 

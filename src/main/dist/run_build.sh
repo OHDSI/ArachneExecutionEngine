@@ -170,6 +170,10 @@ if [[ -a "$HOME/.Renviron" ]]; then
     sudo cp $HOME/.Renviron $BUILD_PATH/root/
 fi
 
+# Strategus settings
+mkdir $BUILD_PATH/strategus_modules
+echo "INSTANTIATED_MODULES_FOLDER=/strategus_modules" >> /root/.Renviron
+
 #Impala drivers
 mkdir $BUILD_PATH/impala/
 cp $IMPALA_PATH/*.jar $BUILD_PATH/impala/
@@ -214,6 +218,7 @@ umount $BUILD_PATH/proc
 sudo rm -f $BUILD_PATH/root/install_packages.sh
 sudo rm -fr $BUILD_PATH/root/libs
 sudo rm -f $BUILD_PATH/root/.Renviron
+sudo echo "INSTANTIATED_MODULES_FOLDER=/strategus_modules" >> /root/.Renviron
 # To prevent unexpected package updates
 sudo cp $WS/.Rprofile $BUILD_PATH/root/
 
