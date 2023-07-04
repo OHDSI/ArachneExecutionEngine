@@ -151,6 +151,7 @@ if [[ -f "libs/libs_1.r" ]]; then
 fi
 
 mkdir libs
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/additional/moduleSpecification.json -o libs/additional/moduleSpecification.json
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/libs_1.r -o libs/libs_1.r
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/libs_2.r -o libs/libs_2.r
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/libs_3.r -o libs/libs_3.r
