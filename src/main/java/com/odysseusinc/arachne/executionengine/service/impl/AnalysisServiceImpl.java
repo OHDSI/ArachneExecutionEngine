@@ -131,6 +131,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         Validate.notNull(analysis, "analysis can't be null");
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
         Future executionFuture = null;
+        String actualDescriptorId = null;
         try {
             File keystoreDir = new File(analysisDir, "keys");
             keystoreDir.mkdirs();
@@ -161,7 +162,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                 FileUtils.deleteQuietly(keystoreDir);
                 resultCallback.execute(resultingStatus, stdout, resultDir, ex);
             };
-
             switch (fileExtension) {
                 case "sql": {
                     executionFuture = sqlService.analyze(analysis, analysisDir, stdoutHandlerParams, logCleanupCallback);
@@ -174,8 +174,9 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                     DescriptorBundle descriptorBundle = descriptorService.getDescriptorBundle(analysisDir,
                             analysis.getId(), analysis.getRequestedDescriptorId());
                     executionFuture = runtimeService.analyze(analysis, analysisDir, descriptorBundle, stdoutHandlerParams, logCleanupCallback, krbConfig);
-                    logger.info("analysis with id={} started in R Runtime Service", analysis.getId());
                     status = AnalysisRequestTypeDTO.R;
+                    actualDescriptorId = descriptorBundle.getDescriptor().getId();
+                    logger.info("analysis with id={} and actual descriptor='{}' started in R Runtime Service", analysis.getId(), actualDescriptorId);
                     break;
                 }
 
@@ -188,7 +189,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
             logger.error("analysis with id={} failed to execute", analysis.getId(), e);
             resultCallback.execute(null, null, analysisDir, e);
         }
-        return new AnalysisRequestStatusDTO(analysis.getId(), status, executionFuture);
+        return new AnalysisRequestStatusDTO(analysis.getId(), status, executionFuture, actualDescriptorId);
     }
 
     @Override
