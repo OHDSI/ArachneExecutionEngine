@@ -70,6 +70,13 @@ public class DescriptorServiceImpl implements DescriptorService {
     }
 
     @Override
+    public List<Descriptor> getDescriptors(String id) {
+        return getDescriptors().stream()
+                .filter(descriptor -> descriptor.getId().equals(id))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public DescriptorBundle getDescriptorBundle(File file, Long analysisId, String requestedDescriptorId) {
         Optional<DescriptorBundle> descriptorBundleOpt = Optional.empty();
         if (rIsolatedRuntimeProps.getArchiveFolder() != null) {
