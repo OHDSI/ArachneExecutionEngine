@@ -53,6 +53,5 @@ public class DescriptorController {
                 .map(descriptor -> descriptorConverter.toDto(descriptor))
                 .collect(Collectors.toList());
         return new RuntimeEnvironmentDescriptorsDTO(descriptorDTOS);
-
     }
 }
