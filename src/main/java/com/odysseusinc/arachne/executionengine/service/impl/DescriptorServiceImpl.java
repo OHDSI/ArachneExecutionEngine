@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -67,6 +68,13 @@ public class DescriptorServiceImpl implements DescriptorService {
             }
         }
         return descriptors;
+    }
+
+    @Override
+    public List<Descriptor> getDescriptors(String id) {
+        return getDescriptors().stream()
+                .filter(descriptor -> Objects.equals(descriptor.getId(), id))
+                .collect(Collectors.toList());
     }
 
     @Override
