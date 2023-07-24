@@ -18,7 +18,7 @@
 
         <springfox.swagger2.version>2.9.2</springfox.swagger2.version>
 
-        <dockerImagePrefix>hub.odysseusinc.com</dockerImagePrefix>
+        <dockerImagePrefix>odysseusinc</dockerImagePrefix>
         <commons.lang3.version>3.11</commons.lang3.version>
         <httpclient.version>4.5.13</httpclient.version>
         <jtds.version>1.3.1</jtds.version>
@@ -26,7 +26,7 @@
         <postgresql.version>42.2.26</postgresql.version>
         <snakeyaml.version>1.33</snakeyaml.version>
 
-        <arachne.commons.version>1.21.1-alpha</arachne.commons.version>
+        <arachne.commons.version>1.21.0-alpha</arachne.commons.version>
     </properties>
 
     <parent>
@@ -640,7 +640,7 @@
                             <include>${project.build.finalName}-exec.${project.packaging}</include>
                         </resource>
                     </resources>
-                    <serverId>hub.odysseusinc.com</serverId>
+                    <serverId>docker-hub</serverId>
                 </configuration>
                 <executions>
                     <execution>
