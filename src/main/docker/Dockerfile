@@ -1,4 +1,4 @@
-FROM eclipse-temurin:8-jdk
+FROM docker.io/eclipse-temurin:8-jdk
 LABEL maintainer="Odysseus Data Services, Inc: support@odysseusinc.com"
 VOLUME /tmp
 VOLUME /libs-r
