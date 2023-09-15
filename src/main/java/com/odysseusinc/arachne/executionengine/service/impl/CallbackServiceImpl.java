@@ -177,7 +177,7 @@ public class CallbackServiceImpl implements CallbackService {
                 retryContext -> sendFailedResult(analysis, retryContext.getLastThrowable(), null, false, chunkSize)
         );
     }
-
+    
     @Override
     @FileDescriptorCount
     public ResponseEntity<String> sendFailedResult(AnalysisRequestDTO analysis, Throwable e, File analysisDir,
@@ -199,10 +199,11 @@ public class CallbackServiceImpl implements CallbackService {
                 log.error("could not collect analysis results, id={}", analysis.getId());
                 result.setStdout(stdout + "\n" + ExceptionUtils.getStackTrace(ex));
             }
+
             return executeSend(analysis, result, resultFSResources);
         });
     }
-
+    
     private String getErrorStackTrace(Throwable e) {
         if (Objects.nonNull(e)) {
             return ExceptionUtils.getStackTrace(e);
@@ -210,7 +211,7 @@ public class CallbackServiceImpl implements CallbackService {
             return "";
         }
     }
-
+    
     private ResponseEntity<String> executeSend(AnalysisRequestDTO analysis, AnalysisResultDTO analysisResult, Collection<FileSystemResource> files) {
         HttpHeaders jsonHeader = new HttpHeaders();
         jsonHeader.setContentType(MediaType.APPLICATION_JSON);
