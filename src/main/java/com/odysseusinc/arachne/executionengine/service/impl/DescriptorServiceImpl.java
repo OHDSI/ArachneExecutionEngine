@@ -165,7 +165,7 @@ public class DescriptorServiceImpl implements DescriptorService {
     }
 
     private void logRuntimeDiff(Descriptor availableDescriptor, List<ExecutionRuntime> executionRuntimes, Long analysisId) {
-        if (rIsolatedRuntimeProps.isVerboseLog()) {
+        if (rIsolatedRuntimeProps.isApplyRuntimeDependenciesComparisonLogic()) {
             String diff = executionRuntimes.stream()
                     .map(executionRuntime -> availableDescriptor.getExecutionRuntimes().stream()
                             .filter(availableRuntime -> executionRuntime.getType().equals(executionRuntime.getType()))

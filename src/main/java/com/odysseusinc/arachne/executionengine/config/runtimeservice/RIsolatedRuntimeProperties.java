@@ -10,9 +10,12 @@ public class RIsolatedRuntimeProperties {
     private String[] runCmd;
     private String jailSh;
     private String cleanupSh;
+    // Path to default runtime environment
     private String archive;
+    // Path to folder with custom runtime environments
     private String archiveFolder;
-    private boolean verboseLog;
+    // Flag for showing difference between dependencies
+    private boolean applyRuntimeDependenciesComparisonLogic;
 
     public String[] getRunCmd() {
         return runCmd;
@@ -54,11 +57,11 @@ public class RIsolatedRuntimeProperties {
         this.archiveFolder = archiveFolder;
     }
 
-    public boolean isVerboseLog() {
-        return verboseLog;
+    public boolean isApplyRuntimeDependenciesComparisonLogic() {
+        return applyRuntimeDependenciesComparisonLogic;
     }
 
-    public void setVerboseLog(boolean verboseLog) {
-        this.verboseLog = verboseLog;
+    public void setApplyRuntimeDependenciesComparisonLogic(boolean applyRuntimeDependenciesComparisonLogic) {
+        this.applyRuntimeDependenciesComparisonLogic = applyRuntimeDependenciesComparisonLogic;
     }
 }

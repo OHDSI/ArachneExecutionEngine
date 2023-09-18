@@ -15,8 +15,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+// Used for creating descriptors from REnv lock files
+// Only for developers
 public class DescriptorTool {
-    private static final String ARCHIVE_FOLDER = ""; // "c:\\projects\\r_base\\modules\\"
+    private static final String ENV_LOCK_FILES_FOLDER = ""; // "c:\\projects\\r_base\\modules\\"
     private static final String BUNDLE_NAME = ""; // "r_base_focal_amd64.tar.gz"
     private static final String DESCRIPTOR_LABEL = ""; // "Runtime for Strategus 0.0.1"
     private static final String DESCRIPTOR_ID = ""; // "descriptor_strategus_experimental_0.0.1"
@@ -24,8 +26,8 @@ public class DescriptorTool {
 
     public static void main(String[] args) throws IOException {
         RIsolatedRuntimeProperties properties = new RIsolatedRuntimeProperties();
-        properties.setArchiveFolder(ARCHIVE_FOLDER);
-        File dir = new File(ARCHIVE_FOLDER);
+        properties.setArchiveFolder(ENV_LOCK_FILES_FOLDER);
+        File dir = new File(ENV_LOCK_FILES_FOLDER);
         RExecutionRuntime executionRuntime = null;
         for (File file: dir.listFiles()) {
             REnvLock lock = getREnvLock(file);
