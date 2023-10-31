@@ -31,6 +31,7 @@ import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.properties.HiveBulkLoadProperties;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
+import com.odysseusinc.arachne.executionengine.model.descriptor.Descriptor;
 import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
@@ -53,8 +54,10 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -184,6 +187,7 @@ public class RuntimeServiceImpl implements RuntimeService {
                 RuntimeFinishState finishState;
                 try {
                     File runFile = prepareEnvironment();
+                    prepareEnvironmentInfoFile(file, descriptorBundle);
                     prepareRprofile(file);
                     try {
                         String[] command = buildRuntimeCommand(runFile, file, executableFileName, descriptorBundle.getPath());
@@ -215,6 +219,22 @@ public class RuntimeServiceImpl implements RuntimeService {
                 analysisCallback.execute(null, null, file, t);
             }
         });
+    }
+
+    private void prepareEnvironmentInfoFile(File workDir, DescriptorBundle descriptorBundle) {
+        Descriptor descriptor = descriptorBundle.getDescriptor();
+        final String lineDelimiter = StringUtils.repeat("-", 32);
+        try(FileWriter fw = new FileWriter(new File(workDir, "environment.txt")); PrintWriter pw = new PrintWriter(fw)) {
+            pw.printf("Analysis Runtime Environment is %s(%s):[%s]\n", descriptor.getBundleName(), descriptor.getLabel(), descriptor.getId());
+            if (descriptor.getOsLibraries() != null) {
+                pw.println(lineDelimiter);
+                pw.println("Runtime Libraries:");
+                pw.println(lineDelimiter);
+                descriptor.getOsLibraries().forEach(pw::println);
+            }
+        } catch (IOException e) {
+            LOGGER.error("Failed to write environment info file", e);
+        }
     }
 
     private void prepareRprofile(File workDir) throws IOException {
