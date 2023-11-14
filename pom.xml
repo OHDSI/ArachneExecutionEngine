@@ -639,7 +639,7 @@
                             <include>${project.build.finalName}-exec.${project.packaging}</include>
                         </resource>
                     </resources>
-                    <serverId>hub.odysseusinc.com</serverId>
+                    <serverId>docker-hub</serverId>
                 </configuration>
                 <executions>
                     <execution>
