@@ -6,7 +6,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.21.2</version>
+    <version>1.21.3-alpha</version>
     <packaging>jar</packaging>
 
     <properties>
