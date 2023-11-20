@@ -364,9 +364,17 @@
             <id>bigquery</id>
             <properties>
                 <bigquery.enabled>true</bigquery.enabled>
-                <bigquery.version>1.28.0</bigquery.version>
-                <bigquery.api.version>v2-rev20200415-1.30.9</bigquery.api.version>
-                <bigquery.cloud.version>1.2.11</bigquery.cloud.version>
+                <google.api.client.version>1.33.4</google.api.client.version>
+                <google.api.services.bigquery.version>v2-rev20220326-1.32.1</google.api.services.bigquery.version>
+                <google.cloud.bigquery.version>1.2.15</google.cloud.bigquery.version>
+                <!-- currently it differs from google.api.client.version -->
+                <google.http.client.version>1.41.5</google.http.client.version>
+                <google.oauth.client.version>1.33.1</google.oauth.client.version>
+                <google.cloud.bigquerystorage.version>2.12.0</google.cloud.bigquerystorage.version>
+                <google.auth.library.version>1.6.0</google.auth.library.version>
+                <google.gax.version>2.13.0</google.gax.version>
+                <proto.google.cloud.bigquerystorage.v1.version>2.12.0</proto.google.cloud.bigquerystorage.v1.version>
+                <opencensus.contrib.http.util.version>0.31.0</opencensus.contrib.http.util.version>
                 <!-- BigQuery JDBC driver path -->
                 <bigquery.classpath>/bigquery</bigquery.classpath>
             </properties>
@@ -374,67 +382,67 @@
                 <dependency>
                     <groupId>com.google.api-client</groupId>
                     <artifactId>google-api-client</artifactId>
-                    <version>${bigquery.version}</version>
+                    <version>${google.api.client.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.apis</groupId>
                     <artifactId>google-api-services-bigquery</artifactId>
-                    <version>${bigquery.api.version}</version>
+                    <version>${google.api.services.bigquery.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.cloud</groupId>
                     <artifactId>google-cloud-bigquery</artifactId>
-                    <version>${bigquery.cloud.version}</version>
+                    <version>${google.cloud.bigquery.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.http-client</groupId>
                     <artifactId>google-http-client</artifactId>
-                    <version>${bigquery.version}</version>
+                    <version>${google.http.client.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.http-client</groupId>
-                    <artifactId>google-http-client-jackson2</artifactId>
-                    <version>${bigquery.version}</version>
+                    <artifactId>google-http-client-gson</artifactId>
+                    <version>${google.http.client.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.oauth-client</groupId>
                     <artifactId>google-oauth-client</artifactId>
-                    <version>${bigquery.version}</version>
+                    <version>${google.oauth.client.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.cloud</groupId>
                     <artifactId>google-cloud-bigquerystorage</artifactId>
-                    <version>0.101.0-beta</version>
+                    <version>${google.cloud.bigquerystorage.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.auth</groupId>
                     <artifactId>google-auth-library-oauth2-http</artifactId>
-                    <version>0.16.2</version>
+                    <version>${google.auth.library.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.auth</groupId>
                     <artifactId>google-auth-library-credentials</artifactId>
-                    <version>0.16.2</version>
+                    <version>${google.auth.library.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.api</groupId>
                     <artifactId>gax</artifactId>
-                    <version>1.47.0</version>
+                    <version>${google.gax.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.api</groupId>
                     <artifactId>gax-grpc</artifactId>
-                    <version>1.47.0</version>
+                    <version>${google.gax.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.api.grpc</groupId>
-                    <artifactId>proto-google-cloud-bigquerystorage-v1beta1</artifactId>
-                    <version>0.66.0</version>
+                    <artifactId>proto-google-cloud-bigquerystorage-v1</artifactId>
+                    <version>${proto.google.cloud.bigquerystorage.v1.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>io.opencensus</groupId>
                     <artifactId>opencensus-contrib-http-util</artifactId>
-                    <version>0.18.0</version>
+                    <version>${opencensus.contrib.http.util.version}</version>
                 </dependency>
             </dependencies>
             <build>
@@ -453,9 +461,9 @@
                                 <configuration>
                                     <groupId>com.google.api-client</groupId>
                                     <artifactId>google-api-client</artifactId>
-                                    <version>${bigquery.version}</version>
+                                    <version>${google.api.client.version}</version>
                                     <packaging>jar</packaging>
-                                    <file>${bigquery.classpath}/google-api-client-${bigquery.version}.jar</file>
+                                    <file>${bigquery.classpath}/google-api-client-${google.api.client.version}.jar</file>
                                 </configuration>
                             </execution>
                             <execution>
@@ -467,9 +475,9 @@
                                 <configuration>
                                     <groupId>com.google.apis</groupId>
                                     <artifactId>google-api-services-bigquery</artifactId>
-                                    <version>${bigquery.version}</version>
+                                    <version>${google.api.services.bigquery.version}</version>
                                     <packaging>jar</packaging>
-                                    <file>${bigquery.classpath}/google-api-services-bigquery-${bigquery.api.version}.jar</file>
+                                    <file>${bigquery.classpath}/google-api-services-bigquery-${google.api.services.bigquery.version}.jar</file>
                                 </configuration>
                             </execution>
                             <execution>
@@ -481,7 +489,7 @@
                                 <configuration>
                                     <groupId>com.google.cloud</groupId>
                                     <artifactId>google-cloud-bigquery</artifactId>
-                                    <version>${bigquery.version}</version>
+                                    <version>${google.cloud.bigquery.version}</version>
                                     <packaging>jar</packaging>
                                     <file>${bigquery.classpath}/GoogleBigQueryJDBC42.jar</file>
                                 </configuration>
@@ -495,23 +503,23 @@
                                 <configuration>
                                     <groupId>com.google.http-client</groupId>
                                     <artifactId>google-http-client</artifactId>
-                                    <version>${bigquery.version}</version>
+                                    <version>${google.http.client.version}</version>
                                     <packaging>jar</packaging>
-                                    <file>${bigquery.classpath}/google-http-client-${bigquery.version}.jar</file>
+                                    <file>${bigquery.classpath}/google-http-client-${google.http.client.version}.jar</file>
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>google-http-client-jackson2</id>
+                                <id>google-http-client-gson</id>
                                 <phase>initialize</phase>
                                 <goals>
                                     <goal>install-file</goal>
                                 </goals>
                                 <configuration>
                                     <groupId>com.google.http-client</groupId>
-                                    <artifactId>google-http-client-jackson2</artifactId>
-                                    <version>${bigquery.version}</version>
+                                    <artifactId>google-http-client-gson</artifactId>
+                                    <version>${google.http.client.version}</version>
                                     <packaging>jar</packaging>
-                                    <file>${bigquery.classpath}/google-http-client-jackson2-${bigquery.version}.jar</file>
+                                    <file>${bigquery.classpath}/google-http-client-gson-${google.http.client.version}.jar</file>
                                 </configuration>
                             </execution>
                             <execution>
@@ -523,9 +531,23 @@
                                 <configuration>
                                     <groupId>com.google.oauth-client</groupId>
                                     <artifactId>google-oauth-client</artifactId>
-                                    <version>${bigquery.version}</version>
+                                    <version>${google.oauth.client.version}</version>
                                     <packaging>jar</packaging>
-                                    <file>${bigquery.classpath}/google-oauth-client-${bigquery.version}.jar</file>
+                                    <file>${bigquery.classpath}/google-oauth-client-${google.oauth.client.version}.jar</file>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>google-cloud-bigquerystorage</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <groupId>com.google.cloud</groupId>
+                                    <artifactId>google-cloud-bigquerystorage</artifactId>
+                                    <version>${google.cloud.bigquerystorage.version}</version>
+                                    <packaging>jar</packaging>
+                                    <file>${bigquery.classpath}/google-cloud-bigquerystorage-${google.cloud.bigquerystorage.version}.jar</file>
                                 </configuration>
                             </execution>
                         </executions>
