@@ -25,17 +25,23 @@ package com.odysseusinc.arachne.executionengine.api.v1;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
-import com.odysseusinc.arachne.execution_engine_common.client.FeignSpringFormEncoder;
 import com.odysseusinc.arachne.executionengine.service.AnalysisService;
 import com.odysseusinc.arachne.executionengine.service.CallbackService;
 import com.odysseusinc.arachne.executionengine.service.impl.StdoutHandlerParams;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+
 import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -51,9 +57,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.List;
@@ -172,7 +180,7 @@ public class AnalysisController {
             Arrays.stream(directoryListing).filter(File::isFile).forEach(f -> {
                 try {
                     MultipartFile mf = new MockMultipartFile(f.getName(), f.getName(), null, new FileInputStream(f));
-                    results.add("file", FeignSpringFormEncoder.encodeMultipartFile(mf));
+                    results.add("file", encodeMultipartFile(mf));
                 } catch (IOException ex) {
                     throw new UncheckedIOException(ex);
                 }
@@ -180,10 +188,10 @@ public class AnalysisController {
         }
 
         // Encode and attach stdout
-        results.add("stdout", FeignSpringFormEncoder.encodeMultipartFile(new MockMultipartFile("stdout.txt", "stdout.txt", null, stdoutBuilder.toString().getBytes())));
+        results.add("stdout", encodeMultipartFile(new MockMultipartFile("stdout.txt", "stdout.txt", null, stdoutBuilder.toString().getBytes())));
 
         // Encode and attach status DTO
-        results.add("status", FeignSpringFormEncoder.encodeJsonObject(requestStatus));
+        results.add("status", encodeJsonObject(requestStatus));
 
         return new ResponseEntity<>(results, HttpStatus.OK);
     }
@@ -211,5 +219,65 @@ public class AnalysisController {
         result.append("Task completed: ").append(threadPoolExecutor.getThreadPoolExecutor().getCompletedTaskCount()).append("\n");
         return result.toString();
     }
+    
+    /**
+     * Wraps a single {@link MultipartFile} into a {@link HttpEntity} and sets the
+     * {@code Content-type} header to {@code application/octet-stream}
+     *
+     * @param file
+     * @return
+     */
+    private HttpEntity<?> encodeMultipartFile(MultipartFile file) throws IOException {
+        HttpHeaders filePartHeaders = new HttpHeaders();
+        filePartHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+
+        Resource multipartFileResource = new MultipartFileResource(file.getOriginalFilename(), file.getSize(), file.getInputStream());
+        return new HttpEntity<>(multipartFileResource, filePartHeaders);
+    }
+    
+    /**
+     * Wraps an object into a {@link HttpEntity} and sets the {@code Content-type} header to
+     * {@code application/json}
+     *
+     * @param o
+     * @return
+     */
+    private HttpEntity<?> encodeJsonObject(Object o) {
+        HttpHeaders jsonPartHeaders = new HttpHeaders();
+        jsonPartHeaders.setContentType(MediaType.APPLICATION_JSON);
+        return new HttpEntity<>(o, jsonPartHeaders);
+    }
+    
+    /**
+     * Dummy resource class. Wraps file content and its original name.
+     */
+    static class MultipartFileResource extends InputStreamResource {
+
+        private final String filename;
+        private final long size;
+
+        public MultipartFileResource(String filename, long size, InputStream inputStream) {
+            super(inputStream);
+            this.size = size;
+            this.filename = filename;
+        }
+
+        @Override
+        public String getFilename() {
+            return this.filename;
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException, IllegalStateException {
+            return super.getInputStream();
+        }
+
+        @Override
+        public long contentLength() throws IOException {
+            return size;
+        }
+
+    }
+
 
 }
