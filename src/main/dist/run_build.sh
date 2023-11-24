@@ -12,6 +12,8 @@ WS=`dirname $0`
 CRAN_URL=
 LIBS_BRANCH=
 JDBC_TEST=
+BITBUCKET_USER=
+BITBUCKET_PASSWORD=
 
 BQ_PATH=../extras/bigquery/
 IMPALA_PATH=../extras/impala/
@@ -43,11 +45,13 @@ function print_help {
 	echo -e "  -m PATH \t\tPath to MS SQL drivers"
 	echo -e "  -o PATH \t\tPath to Oracle drivers"
 	echo -e "  -w PATH \t\tPath to Snowflake drivers"
+	echo -e "  -u BITBUCKET_USER \t\tBitbucket username"
+	echo -e "  -t BITBUCKET_PASSWORD \t\tBitbucket app password"
 	echo -e "  -h \t\t\tPrints this"
 }
 
 OPTIND=1
-while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o:w" opt; do
+while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o:w:u:t" opt; do
 	case $opt in 
 		a)
 			ARCH=$OPTARG
@@ -61,9 +65,9 @@ while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o:w" opt; do
 		c)
 			CRAN_URL=$OPTARG
 			;;
-	  j)
-  		JDBC_TEST=$OPTARG
-  		;;
+	    j)
+  		    JDBC_TEST=$OPTARG
+  		    ;;
 		l)
 			LIBS_BRANCH=$OPTARG
 			;;
@@ -100,6 +104,12 @@ while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o:w" opt; do
 		    ;;
 		w)
 		    SNOWFLAKE_PATH=$OPTARG
+		    ;;
+		u)
+		    BITBUCKET_USER=$OPTARG
+		    ;;
+		t)
+		    BITBUCKET_PASSWORD=$OPTARG
 		    ;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
@@ -151,6 +161,7 @@ if [[ -f "libs/libs_1.r" ]]; then
 fi
 
 mkdir libs
+curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/additional/moduleSpecification.json -o libs/additional/moduleSpecification.json
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/libs_1.r -o libs/libs_1.r
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/libs_2.r -o libs/libs_2.r
 curl https://raw.githubusercontent.com/odysseusinc/DockerEnv/$LIBS_BRANCH/libs/libs_3.r -o libs/libs_3.r
@@ -169,6 +180,10 @@ cp -r $WS/libs $BUILD_PATH/root
 if [[ -a "$HOME/.Renviron" ]]; then
     sudo cp $HOME/.Renviron $BUILD_PATH/root/
 fi
+
+# Strategus settings
+mkdir $BUILD_PATH/strategus_modules
+echo "INSTANTIATED_MODULES_FOLDER=/strategus_modules" >> /root/.Renviron
 
 #Impala drivers
 mkdir $BUILD_PATH/impala/
@@ -214,6 +229,7 @@ umount $BUILD_PATH/proc
 sudo rm -f $BUILD_PATH/root/install_packages.sh
 sudo rm -fr $BUILD_PATH/root/libs
 sudo rm -f $BUILD_PATH/root/.Renviron
+sudo echo "INSTANTIATED_MODULES_FOLDER=/strategus_modules" >> /root/.Renviron
 # To prevent unexpected package updates
 sudo cp $WS/.Rprofile $BUILD_PATH/root/
 
