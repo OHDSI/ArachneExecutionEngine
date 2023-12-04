@@ -33,11 +33,15 @@ import com.odysseusinc.arachne.executionengine.config.properties.HiveBulkLoadPro
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
 import com.odysseusinc.arachne.executionengine.model.descriptor.Descriptor;
 import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
+import com.odysseusinc.arachne.executionengine.model.descriptor.ExecutionRuntime;
+import com.odysseusinc.arachne.executionengine.model.descriptor.r.RDependency;
+import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRuntime;
 import com.odysseusinc.arachne.executionengine.service.RuntimeService;
 import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
 import com.odysseusinc.arachne.executionengine.util.FileResourceUtils;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -51,6 +55,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -228,9 +233,20 @@ public class RuntimeServiceImpl implements RuntimeService {
             pw.printf("Analysis Runtime Environment is %s(%s):[%s]\n", descriptor.getBundleName(), descriptor.getLabel(), descriptor.getId());
             if (descriptor.getOsLibraries() != null) {
                 pw.println(lineDelimiter);
-                pw.println("Runtime Libraries:");
+                pw.println("Operating System Libraries:");
                 pw.println(lineDelimiter);
                 descriptor.getOsLibraries().forEach(pw::println);
+            }
+            for (ExecutionRuntime runtime : descriptor.getExecutionRuntimes()) {
+                if (runtime instanceof RExecutionRuntime) {
+                    pw.println(lineDelimiter);
+                    pw.println("R Execution Runtime Libraries:");
+                    pw.println(lineDelimiter);
+                    RExecutionRuntime rRuntime = (RExecutionRuntime) runtime;
+                    for (RDependency rDependency : rRuntime.getDependencies()) {
+                        pw.println(rDependency.getName() + " " + rDependency.getVersion() + " " + rDependency.getOwner() + " " + rDependency.getDependencySourceType());
+                    }
+                }
             }
         } catch (IOException e) {
             LOGGER.error("Failed to write environment info file", e);
