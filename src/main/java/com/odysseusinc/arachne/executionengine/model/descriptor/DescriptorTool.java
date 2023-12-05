@@ -35,11 +35,11 @@ public class DescriptorTool {
                 executionRuntime = RExecutionRuntime.fromREnvLock(lock);
             } else {
                 RExecutionRuntime tempExecutionRuntime = RExecutionRuntime.fromREnvLock(lock);
-                executionRuntime.getDependencies().addAll(tempExecutionRuntime.getDependencies());
+                executionRuntime.setDependencies(tempExecutionRuntime.getDependencies());
             }
         }
         Descriptor descriptor = new Descriptor();
-        descriptor.getExecutionRuntimes().add(executionRuntime);
+        descriptor.setExecutionRuntimes(new ExecutionRuntime[]{executionRuntime});
         descriptor.setBundleName(BUNDLE_NAME);
         descriptor.setLabel(DESCRIPTOR_LABEL);
         descriptor.setId(DESCRIPTOR_ID);

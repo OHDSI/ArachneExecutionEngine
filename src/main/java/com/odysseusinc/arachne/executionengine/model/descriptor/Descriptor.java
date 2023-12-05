@@ -1,23 +1,9 @@
 package com.odysseusinc.arachne.executionengine.model.descriptor;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.odysseusinc.arachne.execution_engine_common.descriptor.RuntimeType;
-import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
-import com.odysseusinc.arachne.executionengine.model.descriptor.r.RDependency;
-import com.odysseusinc.arachne.executionengine.model.descriptor.r.RDependencySourceType;
-import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRuntime;
-import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.REnvLock;
-import com.odysseusinc.arachne.executionengine.service.impl.DescriptorServiceImpl;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Descriptor {
     @JsonProperty
@@ -29,7 +15,7 @@ public class Descriptor {
     @JsonProperty
     private List<String> osLibraries = new ArrayList<>();
     @JsonProperty
-    private List<ExecutionRuntime> executionRuntimes = new ArrayList<>();
+    private ExecutionRuntime[] executionRuntimes = new ExecutionRuntime[0];
 
     public String getId() {
         return id;
@@ -63,11 +49,11 @@ public class Descriptor {
         this.osLibraries = osLibraries;
     }
 
-    public List<ExecutionRuntime> getExecutionRuntimes() {
+    public ExecutionRuntime[] getExecutionRuntimes() {
         return executionRuntimes;
     }
 
-    public void setExecutionRuntimes(List<ExecutionRuntime> executionRuntimes) {
+    public void setExecutionRuntimes(ExecutionRuntime[] executionRuntimes) {
         this.executionRuntimes = executionRuntimes;
     }
 }

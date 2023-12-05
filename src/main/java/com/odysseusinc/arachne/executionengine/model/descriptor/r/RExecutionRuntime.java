@@ -6,9 +6,11 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.ExecutionRuntime
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.REnvLock;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.RPackage;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.RPackageGitHub;
+
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,14 +19,14 @@ public class RExecutionRuntime implements ExecutionRuntime {
     @JsonProperty
     private String version;
     @JsonProperty
-    private List<RDependency> dependencies = new ArrayList<>();
+    private RDependency[] dependencies = new RDependency[0];
 
     public boolean matches(ExecutionRuntime otherRuntime) {
         if (!(otherRuntime instanceof RExecutionRuntime))
             return false;
         RExecutionRuntime rExecutionRuntime = (RExecutionRuntime) otherRuntime;
         return this.version.equals(rExecutionRuntime.version)
-                && this.dependencies.containsAll(rExecutionRuntime.dependencies);
+                && Arrays.asList(this.dependencies).containsAll(Arrays.asList(rExecutionRuntime.dependencies));
     }
 
     public List<String> getDiff(ExecutionRuntime otherRuntime) {
@@ -35,8 +37,8 @@ public class RExecutionRuntime implements ExecutionRuntime {
         if (!this.version.equals(rExecutionRuntime.version)) {
             differences.add(getRuntimeVersionDiffString(rExecutionRuntime.version, this.version));
         }
-        List<RDependency> dependencies = new ArrayList<>(rExecutionRuntime.dependencies);
-        dependencies.removeAll(this.dependencies);
+        List<RDependency> dependencies = Arrays.asList(rExecutionRuntime.dependencies);
+        dependencies.removeAll(Arrays.asList(this.dependencies));
         dependencies.forEach(
                 dependency -> differences.add(getDependencyAbsentString(dependency))
         );
@@ -55,7 +57,7 @@ public class RExecutionRuntime implements ExecutionRuntime {
     public static RExecutionRuntime fromREnvLock(REnvLock rEnvLock) {
         RExecutionRuntime runtime = new RExecutionRuntime();
         runtime.version = rEnvLock.getrEnv().getVersion();
-        runtime.dependencies = rEnvLock.getPackageMap().entrySet().stream()
+        List<RDependency> rDependencies = rEnvLock.getPackageMap().entrySet().stream()
                 .map(entry -> {
                     RDependency dependency = new RDependency();
                     dependency.setName(entry.getKey());
@@ -70,6 +72,8 @@ public class RExecutionRuntime implements ExecutionRuntime {
                     return dependency;
                 })
                 .collect(Collectors.toList());
+        
+        runtime.dependencies = (RDependency[])rDependencies.toArray();
         return runtime;
     }
 
@@ -88,11 +92,15 @@ public class RExecutionRuntime implements ExecutionRuntime {
         throw new NotImplementedException();
     }
 
-    public List<RDependency> getDependencies() {
+    public RDependency[] getDependencies() {
         return dependencies;
     }
 
-    public void setDependencies(List<RDependency> dependencies) {
+    public void setDependencies(RDependency[] dependencies) {
         this.dependencies = dependencies;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

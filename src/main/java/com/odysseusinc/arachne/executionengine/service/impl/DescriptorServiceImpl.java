@@ -133,9 +133,9 @@ public class DescriptorServiceImpl implements DescriptorService {
 
             return availableDescriptors.stream()
                     .filter(availableDescriptor -> {
-                            boolean matched = compareExecutionRuntimes(availableDescriptor.getExecutionRuntimes(), executionRuntimes);
+                            boolean matched = compareExecutionRuntimes(Arrays.asList(availableDescriptor.getExecutionRuntimes()), executionRuntimes);
                             if (!matched) {
-                                logRuntimeDiff(availableDescriptor, executionRuntimes, analysisId);
+                                logRuntimeDiff(availableDescriptor.getLabel(), Arrays.asList(availableDescriptor.getExecutionRuntimes()), executionRuntimes, analysisId);
                             }
                             return matched;
                     })
@@ -164,10 +164,11 @@ public class DescriptorServiceImpl implements DescriptorService {
         return result;
     }
 
-    private void logRuntimeDiff(Descriptor availableDescriptor, List<ExecutionRuntime> executionRuntimes, Long analysisId) {
+    private void logRuntimeDiff(String availableDescriptorLabel, List<ExecutionRuntime> availableDescriptorExecutionRuntimes, 
+                                List<ExecutionRuntime> executionRuntimes, Long analysisId) {
         if (rIsolatedRuntimeProps.isApplyRuntimeDependenciesComparisonLogic()) {
             String diff = executionRuntimes.stream()
-                    .map(executionRuntime -> availableDescriptor.getExecutionRuntimes().stream()
+                    .map(executionRuntime -> availableDescriptorExecutionRuntimes.stream()
                             .filter(availableRuntime -> executionRuntime.getType().equals(executionRuntime.getType()))
                             .map(availableRuntime -> availableRuntime.getDiff(executionRuntime))
                             .flatMap(List::stream)
@@ -175,7 +176,7 @@ public class DescriptorServiceImpl implements DescriptorService {
                     )
                     .flatMap(List::stream)
                     .collect(Collectors.joining(System.lineSeparator()));
-            LOGGER.info("Analysis: {}. Available descriptor {}: {}", analysisId, availableDescriptor.getLabel(), diff);
+            LOGGER.info("Analysis: {}. Available descriptor {}: {}", analysisId, availableDescriptorLabel, diff);
         }
     }
 
