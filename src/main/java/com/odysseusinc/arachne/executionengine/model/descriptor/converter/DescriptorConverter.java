@@ -17,8 +17,7 @@ public class DescriptorConverter {
         dto.setId(model.getId());
         dto.setBundleName(model.getBundleName());
         dto.setLabel(model.getLabel());
-        List<ExecutionRuntime> modelExecutionRuntimes = Arrays.asList(model.getExecutionRuntimes());
-        List<ExecutionRuntimeDTO> executionRuntimes = modelExecutionRuntimes.stream()
+        List<ExecutionRuntimeDTO> executionRuntimes = Arrays.stream(model.getExecutionRuntimes())
                 .map(executionRuntime -> {
                     ExecutionRuntimeConverter converter = runtimeConverterHelper.getConverter(executionRuntime.getType());
                     return converter.toDto(executionRuntime);

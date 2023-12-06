@@ -73,7 +73,7 @@ public class RExecutionRuntime implements ExecutionRuntime {
                 })
                 .collect(Collectors.toList());
         
-        runtime.dependencies = (RDependency[])rDependencies.toArray();
+        runtime.dependencies = rDependencies.toArray(new RDependency[0]);
         return runtime;
     }
 

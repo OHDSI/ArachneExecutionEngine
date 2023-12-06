@@ -16,8 +16,7 @@ public class RExecutionRuntimeConverter implements ExecutionRuntimeConverter<REx
     public RExecutionRuntimeDTO toDto(RExecutionRuntime model) {
         RExecutionRuntimeDTO dto = new RExecutionRuntimeDTO();
         dto.setVersion(model.getVersion());
-        List<RDependency> modelDependencies = Arrays.asList(model.getDependencies());
-        List<RDependencyDTO> dependencies = modelDependencies.stream()
+        List<RDependencyDTO> dependencies = Arrays.stream(model.getDependencies())
                 .map(rDependency -> toRDependencyDto(rDependency))
                 .collect(Collectors.toList());
         dto.setDependencies(dependencies);
