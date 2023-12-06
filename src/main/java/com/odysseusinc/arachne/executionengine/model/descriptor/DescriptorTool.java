@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 // Used for creating descriptors from REnv lock files
 // Only for developers
@@ -35,7 +36,7 @@ public class DescriptorTool {
                 executionRuntime = RExecutionRuntime.fromREnvLock(lock);
             } else {
                 RExecutionRuntime tempExecutionRuntime = RExecutionRuntime.fromREnvLock(lock);
-                executionRuntime.setDependencies(tempExecutionRuntime.getDependencies());
+                executionRuntime.setDependencies(concat(executionRuntime.getDependencies(), tempExecutionRuntime.getDependencies()));
             }
         }
         Descriptor descriptor = new Descriptor();
@@ -86,5 +87,11 @@ public class DescriptorTool {
         InputStream is = new FileInputStream(file);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(is, REnvLock.class);
+    }
+    
+    static <T> T[] concat(T[] first, T[] second) {
+        T[] result = Arrays.copyOf(first, first.length + second.length);
+        System.arraycopy(second, 0, result, first.length, second.length);
+        return result;
     }
 }
