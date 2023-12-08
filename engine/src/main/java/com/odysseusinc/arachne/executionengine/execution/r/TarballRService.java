@@ -60,7 +60,6 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
 public class TarballRService extends RService implements ExecutionService {
     private static final String EXECUTION_COMMAND = "Rscript";
 
