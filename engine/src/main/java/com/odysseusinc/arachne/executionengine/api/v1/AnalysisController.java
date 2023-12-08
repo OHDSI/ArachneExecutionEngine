@@ -104,6 +104,7 @@ public class AnalysisController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
+
     public AnalysisRequestStatusDTO analyze(
             @RequestPart("analysisRequest") @Valid AnalysisRequestDTO analysisRequest,
             @RequestPart("file") List<MultipartFile> files,

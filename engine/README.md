@@ -38,3 +38,39 @@ of the following dbms types with `cdm.dbms` parameter:
 - implala
 - bigquery
 - netezza
+
+## Process R files with Docker (locally)
+
+Steps:
+
+- Set the `docker: true` in `application-base.yml`
+- You can use: https://hub.docker.com/_/r-base or `docker pull r-base` to have an imageReady for testing purposes in R. If you consider to create a custom one, please make sure Docker image contains the environment and dependencies required for your code to run.
+- You can use the following template for testing purposes:
+
+```bash
+curl --location 'https://localhost:8888/api/v1/analyze' \
+--header 'arachne-compressed: false' \
+--header 'arachne-waiting-compressed-result: false' \
+--header 'arachne-attach-cdm-metadata: true' \
+--header 'arachne-result-chunk-size-mb: 10485760' \
+--form 'analysisRequest="{
+      \"id\": 123,
+      \"executableFileName\": \"main.R\",
+      \"dataSource\": {
+      \"id\": 123,
+      \"name\": \"Data Source\",
+      \"url\": \"https://test.com"
+      },
+      \"requested\": \"2023-12-19T10:00:00Z\",
+      \"requestedDescriptorId\": \"789\",
+      \"resultExclusions\": \"exclude_result1,exclude_result2\",
+      \"dockerImage\": \"r-base\",
+      \"callbackPassword\": \"callback-password\",
+      \"updateStatusCallback\": \"https://callback-url.com/update\",
+      \"resultCallback\": \"https://callback-url.com/result\"
+      }";type=application/json' \
+--form 'file=@"/Downloads/main.R"' \
+--form 'container="r-base"'
+```  
+
+- Make sure `image name` will be in a `descriptor`, since it is taken from `descriptorBundle.getDescriptor().getBundleName()`
