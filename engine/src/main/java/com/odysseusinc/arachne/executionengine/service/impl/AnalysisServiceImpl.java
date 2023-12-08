@@ -30,12 +30,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRe
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
-import com.odysseusinc.arachne.executionengine.service.AnalysisService;
-import com.odysseusinc.arachne.executionengine.service.CallbackService;
-import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
-import com.odysseusinc.arachne.executionengine.service.DescriptorService;
-import com.odysseusinc.arachne.executionengine.service.RuntimeService;
-import com.odysseusinc.arachne.executionengine.service.SQLService;
+import com.odysseusinc.arachne.executionengine.service.*;
 import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
 import com.odysseusinc.datasourcemanager.jdbc.auth.BigQueryAuthResolver;
 import com.odysseusinc.datasourcemanager.jdbc.auth.DataSourceAuthResolver;
@@ -74,6 +69,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     private final CallbackService callbackService;
     private final KerberosService kerberosService;
     private final DescriptorService descriptorService;
+    private final DockerService dockerService;
     @Value("${drivers.location.impala}")
     private String impalaDriversLocation;
     @Value("${drivers.location.bq}")
@@ -106,7 +102,8 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                                CdmMetadataService cdmMetadataService,
                                CallbackService callbackService,
                                KerberosService kerberosService,
-                               DescriptorService descriptorService) {
+                               DescriptorService descriptorService,
+                               DockerService dockerService) {
 
         this.sqlService = sqlService;
         this.runtimeService = runtimeService;
@@ -115,6 +112,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         this.callbackService = callbackService;
         this.kerberosService = kerberosService;
         this.descriptorService = descriptorService;
+        this.dockerService = dockerService;
         initAuthResolvers();
     }
 
@@ -173,10 +171,14 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                 case "r": {
                     DescriptorBundle descriptorBundle = descriptorService.getDescriptorBundle(analysisDir,
                             analysis.getId(), analysis.getRequestedDescriptorId());
-                    executionFuture = runtimeService.analyze(analysis, analysisDir, descriptorBundle, stdoutHandlerParams, logCleanupCallback, krbConfig);
+                    if(isUseDocker()){
+                        executionFuture = dockerService.analyze(analysis, analysisDir, descriptorBundle, stdoutHandlerParams, logCleanupCallback, krbConfig);
+                    } else {
+                        executionFuture = runtimeService.analyze(analysis, analysisDir, descriptorBundle, stdoutHandlerParams, logCleanupCallback, krbConfig);
+                    }
                     status = AnalysisRequestTypeDTO.R;
                     actualDescriptorId = descriptorBundle.getDescriptor().getId();
-                    logger.info("analysis with id={} and actual descriptor='{}' started in R Runtime Service", analysis.getId(), actualDescriptorId);
+                    logger.info("analysis with id={} and actual descriptor='{}' started in R {} Service", analysis.getId(), actualDescriptorId, isUseDocker() ? "Docker" : "Runtime");
                     break;
                 }
 
@@ -230,6 +232,15 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         } catch (Exception e) {
             logger.info("Failed to collect CDM metadata for analysis id={}. {}", analysis.getId(), e);
         }
+    }
+
+    public String cancelExecution(String containerId) {
+        return dockerService.cancelExecution(containerId);
+    }
+
+    private Boolean isUseDocker() {
+        String useDocker = System.getProperty("use.docker");
+        return Boolean.getBoolean(useDocker);
     }
 
     @Override
