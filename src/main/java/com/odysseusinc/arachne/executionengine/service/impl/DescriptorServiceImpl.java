@@ -120,8 +120,12 @@ public class DescriptorServiceImpl implements DescriptorService {
     private Optional<DescriptorBundle> getDescriptorBundle(File file, List<Descriptor> availableDescriptors, Long analysisId) {
         File temporaryDir = com.google.common.io.Files.createTempDir();
         try {
-            extractFiles(file, temporaryDir);
+            File[] filesInFolder = file.listFiles();
+            LOGGER.info("Extracting {} files from [{}]", filesInFolder.length, file.getName());
+            extractFiles(temporaryDir, filesInFolder);
             List<File> files = Arrays.asList(temporaryDir.listFiles());
+            LOGGER.info("Extracted {} files to [{}]", files.size(), temporaryDir.getName());
+
             List<ExecutionRuntime> executionRuntimes = ExecutionRuntimeHelper.getRuntimes(files);
 
             // if there're no required runtimes then each available descriptor will match
@@ -183,8 +187,8 @@ public class DescriptorServiceImpl implements DescriptorService {
         return rIsolatedRuntimeProps.getArchiveFolder() + descriptor.getBundleName();
     }
 
-    private void extractFiles(File parentFolder, File tempFolder) {
-        for (File file : parentFolder.listFiles()) {
+    private void extractFiles(File tempFolder, File[] files) {
+        for (File file : files) {
             try {
                 if (CommonFileUtils.isValidZipFile(file)) {
                     CommonFileUtils.unzipFiles(file, tempFolder);
