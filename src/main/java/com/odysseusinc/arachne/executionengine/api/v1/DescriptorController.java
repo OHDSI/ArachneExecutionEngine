@@ -7,13 +7,14 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.converter.Descri
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @Api
@@ -38,11 +39,8 @@ public class DescriptorController {
     @ApiOperation(value = "Runtimes for analysis")
     @RequestMapping(value = REST_API_DESCRIPTORS, method = RequestMethod.GET)
     public RuntimeEnvironmentDescriptorsDTO getDescriptors() {
-        List<Descriptor> descriptors = descriptorService.getDescriptors();
-        List<RuntimeEnvironmentDescriptorDTO> descriptorDTOS = descriptors.stream()
-                .map(descriptor -> descriptorConverter.toDto(descriptor))
-                .collect(Collectors.toList());
-        return new RuntimeEnvironmentDescriptorsDTO(descriptorDTOS);
+        Stream<Descriptor> descriptors = descriptorService.getDescriptors().map(Collection::stream).orElseGet(Stream::of);
+        return new RuntimeEnvironmentDescriptorsDTO(descriptors.map(descriptorConverter::toDto).collect(Collectors.toList()));
     }
 
     @ApiOperation(value = "Runtimes with identifier for analysis")
@@ -50,7 +48,7 @@ public class DescriptorController {
     public RuntimeEnvironmentDescriptorsDTO getDescriptors(@PathVariable String id) {
         List<Descriptor> descriptors = descriptorService.getDescriptors(id);
         List<RuntimeEnvironmentDescriptorDTO> descriptorDTOS = descriptors.stream()
-                .map(descriptor -> descriptorConverter.toDto(descriptor))
+                .map(descriptorConverter::toDto)
                 .collect(Collectors.toList());
         return new RuntimeEnvironmentDescriptorsDTO(descriptorDTOS);
     }

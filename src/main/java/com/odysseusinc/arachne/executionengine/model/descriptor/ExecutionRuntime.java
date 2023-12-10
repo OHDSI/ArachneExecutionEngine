@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.RuntimeType;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRuntime;
-
 import java.util.List;
 
 @JsonTypeInfo(
@@ -24,7 +23,13 @@ public interface ExecutionRuntime {
 
     List<String> createInstallScripts();
 
-    boolean matches(ExecutionRuntime otherRuntime);
-
-    List<String> getDiff(ExecutionRuntime otherRuntime);
+    /**
+     * Compares this runtime with another runtime  and returns any mismatches.
+     * The comparison is assymetric: dependencies in requested runtime must all be present in this runtime,
+     * but not the other way around.
+     * @param requested runtime to compare with.
+     * @return null if this runtime matches the requested.
+     * A string describing the mismatches otherwise.
+     */
+    String getMismatches(ExecutionRuntime requested);
 }
