@@ -6,50 +6,42 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.ExecutionRuntime
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.REnvLock;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.RPackage;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.RPackageGitHub;
-import org.apache.commons.lang3.NotImplementedException;
-
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class RExecutionRuntime implements ExecutionRuntime {
     @JsonProperty
     private String version;
     @JsonProperty
-    private List<RDependency> dependencies = new ArrayList<>();
+    private List<RDependency> dependencies;
 
-    public boolean matches(ExecutionRuntime otherRuntime) {
-        if (!(otherRuntime instanceof RExecutionRuntime))
-            return false;
-        RExecutionRuntime rExecutionRuntime = (RExecutionRuntime) otherRuntime;
-        return this.version.equals(rExecutionRuntime.version)
-                && this.dependencies.containsAll(rExecutionRuntime.dependencies);
-    }
+    public String getMismatches(ExecutionRuntime requested) {
+        if (requested instanceof RExecutionRuntime) {
+            RExecutionRuntime other = (RExecutionRuntime) requested;
+            String differences = Stream.concat(
+                    calcVersionMismatch(other), calcDependencyMismatch(other)
+            ).collect(Collectors.joining(", "));
 
-    public List<String> getDiff(ExecutionRuntime otherRuntime) {
-        if (!(otherRuntime instanceof RExecutionRuntime))
-            return Collections.emptyList();
-        List<String> differences = new ArrayList<>();
-        RExecutionRuntime rExecutionRuntime = (RExecutionRuntime) otherRuntime;
-        if (!this.version.equals(rExecutionRuntime.version)) {
-            differences.add(getRuntimeVersionDiffString(rExecutionRuntime.version, this.version));
+            return (differences.length() > 0) ? ("Not matched [" + other + "] to [" + this + "]: " + differences) : null;
+        } else {
+            return "Not matched [" + requested + "] to [" + this + "]: type mismatch";
         }
-        List<RDependency> dependencies = new ArrayList<>(rExecutionRuntime.dependencies);
-        dependencies.removeAll(this.dependencies);
-        dependencies.forEach(
-                dependency -> differences.add(getDependencyAbsentString(dependency))
+    }
+
+    private Stream<String> calcVersionMismatch(RExecutionRuntime other) {
+        return version.equals(other.version) ? Stream.of() : Stream.of(
+                String.format("Required R version '%s' does not match existing R version '%s'", other.version, version)
         );
-        return differences;
     }
 
-    private String getRuntimeVersionDiffString(String requiredVersion, String existingVersion) {
-        return String.format("Required R version '%s' does not match existing R version '%s'",
-                requiredVersion, existingVersion);
-    }
-
-    private String getDependencyAbsentString(RDependency dependency) {
-        return String.format("Required dependency '%s:%s' is absent", dependency.getName(), dependency.getVersion());
+    private Stream<String> calcDependencyMismatch(RExecutionRuntime other) {
+        return other.dependencies.stream().filter(dependency ->
+                !dependencies.contains(dependency)
+        ).map(dependency ->
+                String.format("Missing dependency %s:%s via %s", dependency.getName(), dependency.getVersion(), dependency.getDependencySourceType())
+        );
     }
 
     public static RExecutionRuntime fromREnvLock(REnvLock rEnvLock) {
@@ -94,5 +86,9 @@ public class RExecutionRuntime implements ExecutionRuntime {
 
     public void setDependencies(List<RDependency> dependencies) {
         this.dependencies = dependencies;
+    }
+
+    public String toString() {
+        return getType().name() + ":" + getVersion();
     }
 }
