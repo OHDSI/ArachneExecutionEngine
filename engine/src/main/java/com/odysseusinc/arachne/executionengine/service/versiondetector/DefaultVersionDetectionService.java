@@ -22,14 +22,9 @@
 
 package com.odysseusinc.arachne.executionengine.service.versiondetector;
 
-import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import static java.lang.String.join;
 
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,8 +33,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-
-import static java.lang.String.join;
+import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class DefaultVersionDetectionService extends BaseVersionDetectionService implements VersionDetectionService {
@@ -57,19 +55,19 @@ public class DefaultVersionDetectionService extends BaseVersionDetectionService 
     }
 
     @Override
-    public Pair<CommonCDMVersionDTO, String> detectCDMVersion(DataSourceUnsecuredDTO dataSource) throws SQLException {
+    public Pair<String, String> detectCDMVersion(DataSourceUnsecuredDTO dataSource) throws SQLException {
 
         Map<String, List<String>> databaseSchema = metadataProvider.extractMetadata(dataSource);
         return doDetectVersion(databaseSchema, dataSource.getName());
     }
 
-    private Pair<CommonCDMVersionDTO, String> doDetectVersion(Map<String, List<String>> databaseSchema, String datasourceName) {
+    private Pair<String, String> doDetectVersion(Map<String, List<String>> databaseSchema, String datasourceName) {
 
         Map<String, Map<String, List<String>>> foundDiffs = new TreeMap<>();
         final Map<String, List<String>> expectedCommonCDM = cdmSchemaProvider.loadMandatorySchemaJson(COMMONS_SCHEMA);
         final Map<String, List<String>> v5BaseDiff = calculateSchemasDiff(expectedCommonCDM, databaseSchema);
         if (v5BaseDiff.isEmpty()) {//V5 base found
-            for (CommonCDMVersionDTO version : V5_VERSIONS) {
+            for (String version : V5_VERSIONS) {
                 final String subVersionColumnsResource = buildResourcePath(version);
                 final Map<String, List<String>> cmdSubVersionColumnsSet = cdmSchemaProvider.loadMandatorySchemaJson(subVersionColumnsResource);
                 final Map<String, List<String>> diff = calculateSchemasDiff(cmdSubVersionColumnsSet, databaseSchema);
@@ -78,16 +76,16 @@ public class DefaultVersionDetectionService extends BaseVersionDetectionService 
                     final Map<String, List<String>> optionalDiff = calculateSchemasDiff(optionalColumnsSet, databaseSchema);
                     return Pair.of(version, buildOptionalMessage(version, optionalDiff));
                 }
-                foundDiffs.put(version.name(), diff);
+                foundDiffs.put(version, diff);
             }
         } else {
-            for (Map.Entry<CommonCDMVersionDTO, String> versionEntry : OTHER_VERSIONS.entrySet()) {
+            for (Map.Entry<String, String> versionEntry : OTHER_VERSIONS.entrySet()) {
                 final Map<String, List<String>> otherVersionColumnsSet = cdmSchemaProvider.loadMandatorySchemaJson(versionEntry.getValue());
                 final Map<String, List<String>> diff = calculateSchemasDiff(otherVersionColumnsSet, databaseSchema);
                 if (diff.isEmpty()) {
                     return Pair.of(versionEntry.getKey(), null);
                 }
-                foundDiffs.put(versionEntry.getKey().name(), diff);
+                foundDiffs.put(versionEntry.getKey(), diff);
             }
             foundDiffs.put("V5_COMMONS", v5BaseDiff);
         }
@@ -131,10 +129,10 @@ public class DefaultVersionDetectionService extends BaseVersionDetectionService 
         return Collections.unmodifiableMap(diff);
     }
 
-    private String buildOptionalMessage(CommonCDMVersionDTO version, Map<String, List<String>> optionalDiff) {
+    private String buildOptionalMessage(String version, Map<String, List<String>> optionalDiff) {
 
         if (optionalDiff == null || !optionalDiff.isEmpty()) {
-            return formatDiffsReport(Collections.singletonMap(version.name(), optionalDiff), false);
+            return formatDiffsReport(Collections.singletonMap(version, optionalDiff), false);
         }
         return null;
     }

@@ -22,21 +22,10 @@
 
 package com.odysseusinc.arachne.executionengine.service.versiondetector;
 
-import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
-
-import java.util.ArrayList;
+import com.google.common.collect.ImmutableMap;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.TreeMap;
-
-import static com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO.V4_0;
-import static com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO.V5_0;
-import static com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO.V5_0_1;
-import static com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO.V5_1;
-import static com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO.V5_2;
-import static com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO.V5_3;
-import static com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO.V5_3_1;
-import static com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO.V6_0;
 
 public abstract class BaseVersionDetectionService implements VersionDetectionService {
 
@@ -46,25 +35,15 @@ public abstract class BaseVersionDetectionService implements VersionDetectionSer
     protected static final String CDM_V4_SCHEMA = "/cdm/v4/cdm_V4_0.json";
     protected static final String CDM_V6_SCHEMA = "/cdm/v6/cdm_V6_0.json";
 
-    protected static Collection<CommonCDMVersionDTO> V5_VERSIONS = new ArrayList<>(6);
-    protected static Map<CommonCDMVersionDTO, String> OTHER_VERSIONS = new TreeMap<>();
+    protected static Collection<String> V5_VERSIONS = Arrays.asList(
+            "V5_3_1", "V5_3", "V5_2", "V5_1", "V5_0_1", "V5_0"
+    );
+    protected static Map<String, String> OTHER_VERSIONS = ImmutableMap.of(
+            "V6_0", CDM_V6_SCHEMA,
+            "V4_0", CDM_V4_SCHEMA
+    );
 
-    static {
-        V5_VERSIONS.add(V5_3_1);
-        V5_VERSIONS.add(V5_3);
-        V5_VERSIONS.add(V5_2);
-        V5_VERSIONS.add(V5_1);
-        V5_VERSIONS.add(V5_0_1);
-        V5_VERSIONS.add(V5_0);
-    }
-
-    static {
-        OTHER_VERSIONS.put(V6_0, CDM_V6_SCHEMA);
-        OTHER_VERSIONS.put(V4_0, CDM_V4_SCHEMA);
-    }
-
-    protected static String buildResourcePath(CommonCDMVersionDTO version){
-
-        return String.format(SCHEMA_TMPL, version.name());
+    protected static String buildResourcePath(String version){
+        return String.format(SCHEMA_TMPL, version);
     }
 }

@@ -22,13 +22,11 @@
 
 package com.odysseusinc.arachne.executionengine.service.versiondetector;
 
-import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.sql.SQLException;
+import org.apache.commons.lang3.tuple.Pair;
 
 public interface VersionDetectionService {
 
-    Pair<CommonCDMVersionDTO,String> detectCDMVersion(DataSourceUnsecuredDTO dataSource) throws SQLException;
+    Pair<String,String> detectCDMVersion(DataSourceUnsecuredDTO dataSource) throws SQLException;
 }

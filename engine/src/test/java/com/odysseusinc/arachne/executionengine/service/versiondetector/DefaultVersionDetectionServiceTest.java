@@ -1,21 +1,5 @@
 package com.odysseusinc.arachne.executionengine.service.versiondetector;
 
-import com.google.common.collect.ImmutableMap;
-import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-
-import static com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO.V5_0_1;
 import static com.odysseusinc.arachne.executionengine.service.versiondetector.CDMResources.V4_SCHEMA;
 import static com.odysseusinc.arachne.executionengine.service.versiondetector.CDMResources.V5_0_1_SCHEMA_DIFF;
 import static com.odysseusinc.arachne.executionengine.service.versiondetector.CDMResources.V5_0_SCHEMA_DIFF;
@@ -28,6 +12,18 @@ import static com.odysseusinc.arachne.executionengine.service.versiondetector.CD
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableMap;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class DefaultVersionDetectionServiceTest {
@@ -60,7 +56,7 @@ public class DefaultVersionDetectionServiceTest {
         when(cdmSchemaProvider.loadMandatorySchemaJson(V5_3_1_SCHEMA_DIFF.getPath())).thenReturn(stub_diff_schema);
         when(metadataProvider.extractMetadata(dataSource)).thenReturn(test_one_schema);
 
-        final Pair<CommonCDMVersionDTO, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
+        final Pair<String, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
 
         assertThat(result.getKey()).isNull();
         assertThat(result.getValue()).contains("[V5_3_1]", "[V5_3]", "[V5_2]", "[V5_1]", "[V5_0_1]", "[V5_0]");
@@ -75,7 +71,7 @@ public class DefaultVersionDetectionServiceTest {
         when(cdmSchemaProvider.loadMandatorySchemaJson(V6_SCHEMA.getPath())).thenReturn(stub_diff_schema);
         when(metadataProvider.extractMetadata(dataSource)).thenReturn(test_wrong_schema);
 
-        final Pair<CommonCDMVersionDTO, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
+        final Pair<String, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
 
         assertThat(result.getKey()).isNull();
         assertThat(result.getValue()).contains("[V4_0]", "[V5_COMMONS]", "[V6_0]");
@@ -89,7 +85,7 @@ public class DefaultVersionDetectionServiceTest {
         when(cdmSchemaProvider.loadMandatorySchemaJson(V6_SCHEMA.getPath())).thenReturn(stub_diff_schema);
         when(metadataProvider.extractMetadata(dataSource)).thenReturn(test_wrong_schema);
 
-        final Pair<CommonCDMVersionDTO, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
+        final Pair<String, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
 
         final String[] ordereredVersions = result.getValue().replaceAll("]\\s.*", "").split(System.lineSeparator());
 
@@ -110,9 +106,9 @@ public class DefaultVersionDetectionServiceTest {
         test_v5_0_1.putAll(v5_0_1_diff_schema);
         when(metadataProvider.extractMetadata(dataSource)).thenReturn(test_v5_0_1);
 
-        final Pair<CommonCDMVersionDTO, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
+        final Pair<String, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
 
-        assertThat(result.getKey()).isEqualTo(V5_0_1);
+        assertThat(result.getKey()).isEqualTo("V5_0_1");
         assertThat(result.getValue()).isNull();
     }
 
@@ -129,9 +125,9 @@ public class DefaultVersionDetectionServiceTest {
         test_v5_0_1.putAll(v5_0_1_diff_schema);
         when(metadataProvider.extractMetadata(dataSource)).thenReturn(test_v5_0_1);
 
-        final Pair<CommonCDMVersionDTO, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
+        final Pair<String, String> result = defaultVersionDetectionService.detectCDMVersion(dataSource);
 
-        assertThat(result.getKey()).isEqualTo(V5_0_1);
+        assertThat(result.getKey()).isEqualTo("V5_0_1");
         assertThat(result.getValue()).isEqualToIgnoringWhitespace("[V5_0_1] Database table VERSION_ONE_TABLE  missed optional fields: optional_column");
     }
 }

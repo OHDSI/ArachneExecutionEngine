@@ -22,7 +22,6 @@
 
 package com.odysseusinc.arachne.executionengine.service.versiondetector;
 
-import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.exceptions.ExecutionEngineRuntimeException;
@@ -59,9 +58,9 @@ public class ImpalaVersionDetectionService extends BaseVersionDetectionService i
     }
 
     @Override
-    public Pair<CommonCDMVersionDTO,String> detectCDMVersion(DataSourceUnsecuredDTO dataSource) {
+    public Pair<String,String> detectCDMVersion(DataSourceUnsecuredDTO dataSource) {
 
-        final CommonCDMVersionDTO version = doDetectVersion(schema -> {
+        final String version = doDetectVersion(schema -> {
             try {
                 return checkSchema(dataSource, schema);
             } catch (SQLException e) {
@@ -71,12 +70,12 @@ public class ImpalaVersionDetectionService extends BaseVersionDetectionService i
         return Pair.of(version,null);
     }
 
-    private CommonCDMVersionDTO doDetectVersion(Predicate<Map<String, List<String>>> schemaPredicate) {
+    private String doDetectVersion(Predicate<Map<String, List<String>>> schemaPredicate) {
 
-        CommonCDMVersionDTO result = null;
+        String result = null;
         Map<String, List<String>> commonsSchema = cdmSchemaProvider.loadMandatorySchemaJson(COMMONS_SCHEMA);
         if (schemaPredicate.test(commonsSchema)) { //checks is it V5
-            for(CommonCDMVersionDTO version : V5_VERSIONS) {
+            for(String version : V5_VERSIONS) {
                 Map<String, List<String>> mandatorySubversionColumns = cdmSchemaProvider.loadMandatorySchemaJson(buildResourcePath(version));
                 if (schemaPredicate.test(mandatorySubversionColumns)) {
                     result = version;
@@ -84,7 +83,7 @@ public class ImpalaVersionDetectionService extends BaseVersionDetectionService i
                 }
             }
         } else {
-            for(CommonCDMVersionDTO version : OTHER_VERSIONS.keySet()) {
+            for(String version : OTHER_VERSIONS.keySet()) {
                 Map<String, List<String>> cdmSchema = cdmSchemaProvider.loadMandatorySchemaJson(OTHER_VERSIONS.get(version));
                 if (schemaPredicate.test(cdmSchema)) {
                     result = version;
