@@ -1,0 +1,1293 @@
+{
+  "id" : "Default",
+  "bundleName" : "r_base_focal_amd64.tar.gz",
+  "label": "Default runtime",
+  "osLibraries" : [ ],
+  "executionRuntimes" : [ {
+    "type" : "R",
+    "version" : "4.1.2",
+    "dependencies" : [ {
+      "name" : "testthat",
+      "version" : "3.1.4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "rematch2",
+      "version" : "2.1.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "assertthat",
+      "version" : "0.2.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "AUC",
+      "version" : "0.3.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "lubridate",
+      "version" : "1.7.10",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "htmlwidgets",
+      "version" : "1.5.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "hms",
+      "version" : "1.1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "openssl",
+      "version" : "2.0.4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "knitr",
+      "version" : "1.31",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "xgboost",
+      "version" : "1.3.2.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "Rcpp",
+      "version" : "1.0.8",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "clipr",
+      "version" : "0.7.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "fs",
+      "version" : "1.5.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "rlang",
+      "version" : "1.0.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "plogr",
+      "version" : "0.2.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "gtable",
+      "version" : "0.3.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "shinydashboard",
+      "version" : "0.7.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "viridisLite",
+      "version" : "0.3.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "isoband",
+      "version" : "0.2.4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "fansi",
+      "version" : "1.0.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "sys",
+      "version" : "3.4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "ggplot2",
+      "version" : "3.3.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "renv",
+      "version" : "0.15.4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "farver",
+      "version" : "2.1.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "tinytex",
+      "version" : "0.31",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "Hmisc",
+      "version" : "4.7-2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "RSQLite",
+      "version" : "2.2.5",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "pillar",
+      "version" : "1.5.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "rstudioapi",
+      "version" : "0.13",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "stringr",
+      "version" : "1.4.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "munsell",
+      "version" : "0.5.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "memoise",
+      "version" : "2.0.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "magrittr",
+      "version" : "2.0.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "tibble",
+      "version" : "3.1.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "isoband",
+      "version" : "0.2.5",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "rJava",
+      "version" : "0.9-13",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "stringi",
+      "version" : "1.7.6",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "tzdb",
+      "version" : "0.1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "reticulate",
+      "version" : "1.19",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "rJava",
+      "version" : "1.0-6",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "survAUC",
+      "version" : "1.0-5",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "EmpiricalCalibration",
+      "version" : "3.0.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "MatrixModels",
+      "version" : "0.5-0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "vctrs",
+      "version" : "0.3.8",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "Cyclops",
+      "version" : "3.1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "withr",
+      "version" : "2.4.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "DBI",
+      "version" : "1.1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "glue",
+      "version" : "1.6.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "bit64",
+      "version" : "4.0.5",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "ParallelLogger",
+      "version" : "3.0.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "magrittr",
+      "version" : "2.0.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "codetools",
+      "version" : "0.2-18",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "gridExtra",
+      "version" : "2.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "generics",
+      "version" : "0.1.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "ggplot2",
+      "version" : "3.3.5",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "DBI",
+      "version" : "1.1.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "generics",
+      "version" : "0.1.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "Cyclops",
+      "version" : "3.1.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "vctrs",
+      "version" : "0.3.7",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "matrixStats",
+      "version" : "0.58.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "Rcpp",
+      "version" : "1.0.7",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "yaml",
+      "version" : "2.2.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "multcomp",
+      "version" : "1.4-16",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "cachem",
+      "version" : "1.0.6",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "ParallelLogger",
+      "version" : "3.0.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "askpass",
+      "version" : "1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "jpeg",
+      "version" : "0.1-8.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "htmltools",
+      "version" : "0.5.1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "SqlRender",
+      "version" : "1.7.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "urltools",
+      "version" : "1.7.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "rms",
+      "version" : "6.2-0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "hms",
+      "version" : "1.0.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "zip",
+      "version" : "2.2.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "mgcv",
+      "version" : "1.8-34",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "shinyWidgets",
+      "version" : "0.6.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "triebeard",
+      "version" : "0.3.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "purrr",
+      "version" : "0.3.4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "snow",
+      "version" : "0.4-4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "xml2",
+      "version" : "1.3.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "markdown",
+      "version" : "1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "tidyselect",
+      "version" : "1.1.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "nnet",
+      "version" : "7.3-15",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "blob",
+      "version" : "1.2.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "dbplyr",
+      "version" : "2.1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "zoo",
+      "version" : "1.8-9",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "viridisLite",
+      "version" : "0.4.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "plotly",
+      "version" : "4.9.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "commonmark",
+      "version" : "1.7",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "cachem",
+      "version" : "1.0.4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "fastmap",
+      "version" : "1.1.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "RcppEigen",
+      "version" : "0.3.3.9.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "labeling",
+      "version" : "0.4.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "snow",
+      "version" : "0.4-3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "tidyselect",
+      "version" : "1.1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "SqlRender",
+      "version" : "1.8.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "filelock",
+      "version" : "1.0.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "bit",
+      "version" : "4.0.4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "bslib",
+      "version" : "0.2.4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "DatabaseConnector",
+      "version" : "5.0.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "nlme",
+      "version" : "3.1-153",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "blob",
+      "version" : "1.2.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "digest",
+      "version" : "0.6.27",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "BH",
+      "version" : "1.78.0-0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "rappdirs",
+      "version" : "0.3.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "highr",
+      "version" : "0.8",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "nlme",
+      "version" : "3.1-152",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "later",
+      "version" : "1.1.0.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "shiny",
+      "version" : "1.6.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "mime",
+      "version" : "0.10",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "lazyeval",
+      "version" : "0.2.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "FeatureExtraction",
+      "version" : "v3.2.0",
+      "owner" : "ohdsi",
+      "dependencySourceType" : "GITHUB",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "BigKnn",
+      "version" : "v1.0.1",
+      "owner" : "ohdsi",
+      "dependencySourceType" : "GITHUB",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "lifecycle",
+      "version" : "1.0.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "CohortMethod",
+      "version" : "v4.2.2",
+      "owner" : "ohdsi",
+      "dependencySourceType" : "GITHUB",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "renv",
+      "version" : "0.13.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "crayon",
+      "version" : "1.4.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "pillar",
+      "version" : "1.6.5",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "png",
+      "version" : "0.1-7",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "rmarkdown",
+      "version" : "2.11",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "sass",
+      "version" : "0.3.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "digest",
+      "version" : "0.6.29",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "pkgconfig",
+      "version" : "2.0.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "mgcv",
+      "version" : "1.8-38",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "colorspace",
+      "version" : "2.0-0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "PRROC",
+      "version" : "1.3.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "cli",
+      "version" : "3.2.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "jsonlite",
+      "version" : "1.7.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "xfun",
+      "version" : "0.22",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "evaluate",
+      "version" : "0.14",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "TH.data",
+      "version" : "1.0-10",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "ellipsis",
+      "version" : "0.3.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "memuse",
+      "version" : "4.1-0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "FeatureExtraction",
+      "version" : "v3.1.1",
+      "owner" : "ohdsi",
+      "dependencySourceType" : "GITHUB",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "MethodEvaluation",
+      "version" : "v2.2.0",
+      "owner" : "ohdsi",
+      "dependencySourceType" : "GITHUB",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "OhdsiSharing",
+      "version" : "v0.2.2",
+      "owner" : "ohdsi",
+      "dependencySourceType" : "GITHUB",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "foreign",
+      "version" : "0.8-81",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "openssl",
+      "version" : "1.4.6",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "DT",
+      "version" : "0.17",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "viridis",
+      "version" : "0.5.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "lubridate",
+      "version" : "1.8.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "jquerylib",
+      "version" : "0.1.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "ellipsis",
+      "version" : "0.3.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "utf8",
+      "version" : "1.2.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "colorspace",
+      "version" : "2.0-2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "lattice",
+      "version" : "0.20-45",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "mvtnorm",
+      "version" : "1.1-1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "SparseM",
+      "version" : "1.81",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "backports",
+      "version" : "1.2.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "crayon",
+      "version" : "1.4.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "tibble",
+      "version" : "3.1.6",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "curl",
+      "version" : "4.3.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "dplyr",
+      "version" : "1.0.7",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "sodium",
+      "version" : "1.2.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "pool",
+      "version" : "0.1.6",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "checkmate",
+      "version" : "2.0.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "utf8",
+      "version" : "1.2.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "conquer",
+      "version" : "1.0.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "crosstalk",
+      "version" : "1.1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "prettyunits",
+      "version" : "1.1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "yaml",
+      "version" : "2.2.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "cpp11",
+      "version" : "0.4.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "keyring",
+      "version" : "1.3.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "fansi",
+      "version" : "0.4.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "httr",
+      "version" : "1.4.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "promises",
+      "version" : "1.2.0.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "readr",
+      "version" : "2.1.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "MASS",
+      "version" : "7.3-53.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "RcppArmadillo",
+      "version" : "0.10.2.2.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "RColorBrewer",
+      "version" : "1.1-2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "polspline",
+      "version" : "1.1.19",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "xtable",
+      "version" : "1.8-4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "cpp11",
+      "version" : "0.2.7",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "rlang",
+      "version" : "0.4.10",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "R6",
+      "version" : "2.5.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "scales",
+      "version" : "1.1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "survival",
+      "version" : "3.2-10",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "backports",
+      "version" : "1.4.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "shinycssloaders",
+      "version" : "1.0.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "RSQLite",
+      "version" : "2.2.9",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "progress",
+      "version" : "1.2.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "base64enc",
+      "version" : "0.1-3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "httpuv",
+      "version" : "1.6.6",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "dplyr",
+      "version" : "1.0.5",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "tidyr",
+      "version" : "1.1.3",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "jsonlite",
+      "version" : "1.7.2",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "sandwich",
+      "version" : "3.0-0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "CirceR",
+      "version" : "v1.1.1",
+      "owner" : "ohdsi",
+      "dependencySourceType" : "GITHUB",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "survival",
+      "version" : "3.2-13",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "R6",
+      "version" : "2.5.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "sourcetools",
+      "version" : "0.1.7",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "memoise",
+      "version" : "2.0.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "MASS",
+      "version" : "7.3-54",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "data.table",
+      "version" : "1.14.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "pROC",
+      "version" : "1.18.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "cli",
+      "version" : "3.1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "vroom",
+      "version" : "1.5.7",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "lifecycle",
+      "version" : "1.0.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "lattice",
+      "version" : "0.20-41",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "Matrix",
+      "version" : "1.2-18",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "BH",
+      "version" : "1.75.0-0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "rpart",
+      "version" : "4.1-15",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "Hydra",
+      "version" : "develop",
+      "owner" : "ohdsi",
+      "dependencySourceType" : "GITHUB",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "Matrix",
+      "version" : "1.3-4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "CohortGenerator",
+      "version" : "v0.4.0",
+      "owner" : "ohdsi",
+      "dependencySourceType" : "GITHUB",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "PatientLevelPrediction",
+      "version" : "v5.0.5",
+      "owner" : "ohdsi",
+      "dependencySourceType" : "GITHUB",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "Formula",
+      "version" : "1.2-4",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "plyr",
+      "version" : "1.8.6",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "htmlTable",
+      "version" : "2.1.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "quantreg",
+      "version" : "5.85",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "tzdb",
+      "version" : "0.2.0",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "RJSONIO",
+      "version" : "1.3-1.6",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    }, {
+      "name" : "cluster",
+      "version" : "2.1.1",
+      "dependencySourceType" : "CRAN",
+      "preInstallScripts" : null,
+      "postInstallScripts" : null
+    } ]
+  } ]
+}

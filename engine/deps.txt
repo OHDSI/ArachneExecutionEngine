@@ -1,0 +1,216 @@
+[INFO] Scanning for projects...
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/build-helper-maven-plugin/3.2.0/build-helper-maven-plugin-3.2.0.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/build-helper-maven-plugin/3.2.0/build-helper-maven-plugin-3.2.0.pom (7.3 kB at 37 kB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/build-helper-maven-plugin/3.2.0/build-helper-maven-plugin-3.2.0.jar
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/build-helper-maven-plugin/3.2.0/build-helper-maven-plugin-3.2.0.jar (69 kB at 1.1 MB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-maven-plugin/7.7.3/flyway-maven-plugin-7.7.3.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-maven-plugin/7.7.3/flyway-maven-plugin-7.7.3.pom (4.5 kB at 197 kB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-parent/7.7.3/flyway-parent-7.7.3.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-parent/7.7.3/flyway-parent-7.7.3.pom (0 B at 0 B/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-maven-plugin/7.7.3/flyway-maven-plugin-7.7.3.jar
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-maven-plugin/7.7.3/flyway-maven-plugin-7.7.3.jar (119 kB at 2.8 MB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/pl/project13/maven/git-commit-id-plugin/4.0.5/git-commit-id-plugin-4.0.5.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/pl/project13/maven/git-commit-id-plugin/4.0.5/git-commit-id-plugin-4.0.5.pom (11 kB at 341 kB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/pl/project13/maven/git-commit-id-plugin-parent/4.0.5/git-commit-id-plugin-parent-4.0.5.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/pl/project13/maven/git-commit-id-plugin-parent/4.0.5/git-commit-id-plugin-parent-4.0.5.pom (12 kB at 492 kB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/pl/project13/maven/git-commit-id-plugin/4.0.5/git-commit-id-plugin-4.0.5.jar
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/pl/project13/maven/git-commit-id-plugin/4.0.5/git-commit-id-plugin-4.0.5.jar (40 kB at 1.4 MB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/johnzon/johnzon-maven-plugin/1.2.20/johnzon-maven-plugin-1.2.20.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/johnzon/johnzon-maven-plugin/1.2.20/johnzon-maven-plugin-1.2.20.pom (4.7 kB at 203 kB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/johnzon/johnzon/1.2.20/johnzon-1.2.20.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/johnzon/johnzon/1.2.20/johnzon-1.2.20.pom (31 kB at 1.1 MB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/johnzon/johnzon-maven-plugin/1.2.20/johnzon-maven-plugin-1.2.20.jar
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/johnzon/johnzon-maven-plugin/1.2.20/johnzon-maven-plugin-1.2.20.jar (35 kB at 1.2 MB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jooq/jooq-codegen-maven/3.14.16/jooq-codegen-maven-3.14.16.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jooq/jooq-codegen-maven/3.14.16/jooq-codegen-maven-3.14.16.pom (4.1 kB at 187 kB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jooq/jooq-parent/3.14.16/jooq-parent-3.14.16.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jooq/jooq-parent/3.14.16/jooq-parent-3.14.16.pom (28 kB at 1.1 MB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jooq/jooq-codegen-maven/3.14.16/jooq-codegen-maven-3.14.16.jar
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jooq/jooq-codegen-maven/3.14.16/jooq-codegen-maven-3.14.16.jar (17 kB at 281 kB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-maven-plugin/1.5.32/kotlin-maven-plugin-1.5.32.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-maven-plugin/1.5.32/kotlin-maven-plugin-1.5.32.pom (5.9 kB at 255 kB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-project/1.5.32/kotlin-project-1.5.32.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-project/1.5.32/kotlin-project-1.5.32.pom (10 kB at 455 kB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-maven-plugin/1.5.32/kotlin-maven-plugin-1.5.32.jar
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-maven-plugin/1.5.32/kotlin-maven-plugin-1.5.32.jar (80 kB at 215 kB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/liquibase/liquibase-maven-plugin/4.3.5/liquibase-maven-plugin-4.3.5.pom
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/liquibase/liquibase-maven-plugin/4.3.5/liquibase-maven-plugin-4.3.5.pom (2.8 kB at 122 kB/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/liquibase/liquibase-maven-plugin/4.3.5/liquibase-maven-plugin-4.3.5.jar
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/liquibase/liquibase-maven-plugin/4.3.5/liquibase-maven-plugin-4.3.5.jar (103 kB at 2.2 MB/s)
+[INFO] 
+[INFO] --------------< com.odysseusinc.arachne:execution_engine >--------------
+[INFO] Building execution_engine 1.21.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] Downloading from alfresco: https://artifacts.alfresco.com/nexus/content/repositories/public/com/odysseusinc/arachne/execution-engine-commons/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/execution-engine-commons/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from community-libs-snapshot-local: https://nexus.odysseusinc.com/repository/community-libs-snapshot-local/com/odysseusinc/arachne/execution-engine-commons/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from ohdsi: https://repo.ohdsi.org/nexus/content/repositories/releases/com/odysseusinc/arachne/execution-engine-commons/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/execution-engine-commons/1.21.0-SNAPSHOT/maven-metadata.xml (800 B at 1.7 kB/s)
+[INFO] Downloading from ohdsi: https://repo.ohdsi.org/nexus/content/repositories/releases/com/odysseusinc/arachne/execution-engine-commons/1.21.0-SNAPSHOT/execution-engine-commons-1.21.0-20231124.151722-1.pom
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/execution-engine-commons/1.21.0-SNAPSHOT/execution-engine-commons-1.21.0-20231124.151722-1.pom
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/execution-engine-commons/1.21.0-SNAPSHOT/execution-engine-commons-1.21.0-20231124.151722-1.pom (2.7 kB at 6.4 kB/s)
+[INFO] Downloading from ohdsi: https://repo.ohdsi.org/nexus/content/repositories/releases/com/odysseusinc/arachne/arachne-commons-bundle/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from alfresco: https://artifacts.alfresco.com/nexus/content/repositories/public/com/odysseusinc/arachne/arachne-commons-bundle/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from community-libs-snapshot-local: https://nexus.odysseusinc.com/repository/community-libs-snapshot-local/com/odysseusinc/arachne/arachne-commons-bundle/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-commons-bundle/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-commons-bundle/1.21.0-SNAPSHOT/maven-metadata.xml (624 B at 1.5 kB/s)
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-commons-bundle/1.21.0-SNAPSHOT/arachne-commons-bundle-1.21.0-20231124.151721-1.pom
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-commons-bundle/1.21.0-SNAPSHOT/arachne-commons-bundle-1.21.0-20231124.151721-1.pom (4.3 kB at 21 kB/s)
+[INFO] Downloading from ohdsi: https://repo.ohdsi.org/nexus/content/repositories/releases/com/odysseusinc/arachne/arachne-common-types/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from alfresco: https://artifacts.alfresco.com/nexus/content/repositories/public/com/odysseusinc/arachne/arachne-common-types/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from community-libs-snapshot-local: https://nexus.odysseusinc.com/repository/community-libs-snapshot-local/com/odysseusinc/arachne/arachne-common-types/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-common-types/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-common-types/1.21.0-SNAPSHOT/maven-metadata.xml (796 B at 2.0 kB/s)
+[INFO] Downloading from ohdsi: https://repo.ohdsi.org/nexus/content/repositories/releases/com/odysseusinc/arachne/arachne-common-types/1.21.0-SNAPSHOT/arachne-common-types-1.21.0-20231124.151720-1.pom
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-common-types/1.21.0-SNAPSHOT/arachne-common-types-1.21.0-20231124.151720-1.pom
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-common-types/1.21.0-SNAPSHOT/arachne-common-types-1.21.0-20231124.151720-1.pom (1.2 kB at 2.9 kB/s)
+[INFO] Downloading from ohdsi: https://repo.ohdsi.org/nexus/content/repositories/releases/com/odysseusinc/arachne/arachne-common-utils/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-common-utils/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from community-libs-snapshot-local: https://nexus.odysseusinc.com/repository/community-libs-snapshot-local/com/odysseusinc/arachne/arachne-common-utils/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from alfresco: https://artifacts.alfresco.com/nexus/content/repositories/public/com/odysseusinc/arachne/arachne-common-utils/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-common-utils/1.21.0-SNAPSHOT/maven-metadata.xml (796 B at 2.0 kB/s)
+[INFO] Downloading from ohdsi: https://repo.ohdsi.org/nexus/content/repositories/releases/com/odysseusinc/arachne/arachne-common-utils/1.21.0-SNAPSHOT/arachne-common-utils-1.21.0-20231124.151720-1.pom
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-common-utils/1.21.0-SNAPSHOT/arachne-common-utils-1.21.0-20231124.151720-1.pom
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-common-utils/1.21.0-SNAPSHOT/arachne-common-utils-1.21.0-20231124.151720-1.pom (2.0 kB at 5.0 kB/s)
+[INFO] Downloading from ohdsi: https://repo.ohdsi.org/nexus/content/repositories/releases/com/odysseusinc/data-source-manager/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from alfresco: https://artifacts.alfresco.com/nexus/content/repositories/public/com/odysseusinc/data-source-manager/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from community-libs-snapshot-local: https://nexus.odysseusinc.com/repository/community-libs-snapshot-local/com/odysseusinc/data-source-manager/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/data-source-manager/1.21.0-SNAPSHOT/maven-metadata.xml
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/data-source-manager/1.21.0-SNAPSHOT/maven-metadata.xml (787 B at 2.0 kB/s)
+[INFO] Downloading from ohdsi: https://repo.ohdsi.org/nexus/content/repositories/releases/com/odysseusinc/data-source-manager/1.21.0-SNAPSHOT/data-source-manager-1.21.0-20231124.151719-1.pom
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/data-source-manager/1.21.0-SNAPSHOT/data-source-manager-1.21.0-20231124.151719-1.pom
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/data-source-manager/1.21.0-SNAPSHOT/data-source-manager-1.21.0-20231124.151719-1.pom (3.3 kB at 8.2 kB/s)
+[INFO] 
+[INFO] --- maven-dependency-plugin:3.1.2:tree (default-cli) @ execution_engine ---
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/execution-engine-commons/1.21.0-SNAPSHOT/execution-engine-commons-1.21.0-20231124.151722-1.jar
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-common-types/1.21.0-SNAPSHOT/arachne-common-types-1.21.0-20231124.151720-1.jar
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-common-utils/1.21.0-SNAPSHOT/arachne-common-utils-1.21.0-20231124.151720-1.jar
+[INFO] Downloading from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/data-source-manager/1.21.0-SNAPSHOT/data-source-manager-1.21.0-20231124.151719-1.jar
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-common-types/1.21.0-SNAPSHOT/arachne-common-types-1.21.0-20231124.151720-1.jar (5.3 kB at 26 kB/s)
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/data-source-manager/1.21.0-SNAPSHOT/data-source-manager-1.21.0-20231124.151719-1.jar (27 kB at 54 kB/s)
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/execution-engine-commons/1.21.0-SNAPSHOT/execution-engine-commons-1.21.0-20231124.151722-1.jar (36 kB at 71 kB/s)
+[INFO] Downloaded from ohdsi.snapshots: https://repo.ohdsi.org/nexus/content/repositories/snapshots/com/odysseusinc/arachne/arachne-common-utils/1.21.0-SNAPSHOT/arachne-common-utils-1.21.0-20231124.151720-1.jar (12 kB at 24 kB/s)
+[INFO] com.odysseusinc.arachne:execution_engine:jar:1.21.0-SNAPSHOT
+[INFO] +- org.springframework.boot:spring-boot-starter-web:jar:2.5.15:compile
+[INFO] |  +- org.springframework.boot:spring-boot-starter:jar:2.5.15:compile
+[INFO] |  |  +- org.springframework.boot:spring-boot:jar:2.5.15:compile
+[INFO] |  |  +- org.springframework.boot:spring-boot-autoconfigure:jar:2.5.15:compile
+[INFO] |  |  \- jakarta.annotation:jakarta.annotation-api:jar:1.3.5:compile
+[INFO] |  +- org.springframework.boot:spring-boot-starter-json:jar:2.5.15:compile
+[INFO] |  |  +- com.fasterxml.jackson.core:jackson-databind:jar:2.12.7.1:compile
+[INFO] |  |  |  \- com.fasterxml.jackson.core:jackson-core:jar:2.12.7:compile
+[INFO] |  |  +- com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.12.7:compile
+[INFO] |  |  +- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.12.7:compile
+[INFO] |  |  \- com.fasterxml.jackson.module:jackson-module-parameter-names:jar:2.12.7:compile
+[INFO] |  +- org.springframework.boot:spring-boot-starter-tomcat:jar:2.5.15:compile
+[INFO] |  |  +- org.apache.tomcat.embed:tomcat-embed-core:jar:9.0.75:compile
+[INFO] |  |  +- org.apache.tomcat.embed:tomcat-embed-el:jar:9.0.75:compile
+[INFO] |  |  \- org.apache.tomcat.embed:tomcat-embed-websocket:jar:9.0.75:compile
+[INFO] |  +- org.springframework:spring-web:jar:5.3.27:compile
+[INFO] |  |  \- org.springframework:spring-beans:jar:5.3.27:compile
+[INFO] |  \- org.springframework:spring-webmvc:jar:5.3.27:compile
+[INFO] |     +- org.springframework:spring-context:jar:5.3.27:compile
+[INFO] |     \- org.springframework:spring-expression:jar:5.3.27:compile
+[INFO] +- org.yaml:snakeyaml:jar:1.33:compile
+[INFO] +- com.odysseusinc.arachne:execution-engine-commons:jar:1.21.0-SNAPSHOT:compile
+[INFO] |  +- javax.validation:validation-api:jar:2.0.1.Final:compile
+[INFO] |  +- net.lingala.zip4j:zip4j:jar:2.6.4:compile
+[INFO] |  +- org.slf4j:slf4j-api:jar:1.7.36:compile
+[INFO] |  \- com.fasterxml.jackson.core:jackson-annotations:jar:2.12.7:compile
+[INFO] +- com.odysseusinc.arachne:arachne-common-types:jar:1.21.0-SNAPSHOT:compile
+[INFO] +- com.odysseusinc.arachne:arachne-common-utils:jar:1.21.0-SNAPSHOT:compile
+[INFO] |  \- com.github.jknack:handlebars:jar:4.2.0:compile
+[INFO] +- io.springfox:springfox-swagger2:jar:2.9.2:compile
+[INFO] |  +- io.swagger:swagger-annotations:jar:1.5.20:compile
+[INFO] |  +- io.swagger:swagger-models:jar:1.5.20:compile
+[INFO] |  +- io.springfox:springfox-spi:jar:2.9.2:compile
+[INFO] |  |  \- io.springfox:springfox-core:jar:2.9.2:compile
+[INFO] |  +- io.springfox:springfox-schema:jar:2.9.2:compile
+[INFO] |  +- io.springfox:springfox-swagger-common:jar:2.9.2:compile
+[INFO] |  +- io.springfox:springfox-spring-web:jar:2.9.2:compile
+[INFO] |  +- com.google.guava:guava:jar:20.0:compile
+[INFO] |  +- com.fasterxml:classmate:jar:1.5.1:compile
+[INFO] |  +- org.springframework.plugin:spring-plugin-core:jar:1.2.0.RELEASE:compile
+[INFO] |  +- org.springframework.plugin:spring-plugin-metadata:jar:1.2.0.RELEASE:compile
+[INFO] |  \- org.mapstruct:mapstruct:jar:1.2.0.Final:compile
+[INFO] +- io.springfox:springfox-swagger-ui:jar:2.9.2:compile
+[INFO] +- org.springframework.boot:spring-boot-starter-logging:jar:2.5.15:compile
+[INFO] |  +- ch.qos.logback:logback-classic:jar:1.2.12:compile
+[INFO] |  |  \- ch.qos.logback:logback-core:jar:1.2.12:compile
+[INFO] |  +- org.apache.logging.log4j:log4j-to-slf4j:jar:2.17.2:compile
+[INFO] |  |  \- org.apache.logging.log4j:log4j-api:jar:2.17.2:compile
+[INFO] |  \- org.slf4j:jul-to-slf4j:jar:1.7.36:compile
+[INFO] +- org.apache.commons:commons-lang3:jar:3.11:compile
+[INFO] +- org.springframework.boot:spring-boot-starter-test:jar:2.5.15:compile
+[INFO] |  +- org.springframework.boot:spring-boot-test:jar:2.5.15:compile
+[INFO] |  +- org.springframework.boot:spring-boot-test-autoconfigure:jar:2.5.15:compile
+[INFO] |  +- com.jayway.jsonpath:json-path:jar:2.5.0:compile
+[INFO] |  |  \- net.minidev:json-smart:jar:2.4.10:compile
+[INFO] |  |     \- net.minidev:accessors-smart:jar:2.4.9:compile
+[INFO] |  |        \- org.ow2.asm:asm:jar:9.3:compile
+[INFO] |  +- jakarta.xml.bind:jakarta.xml.bind-api:jar:2.3.3:compile
+[INFO] |  |  \- jakarta.activation:jakarta.activation-api:jar:1.2.2:compile
+[INFO] |  +- org.assertj:assertj-core:jar:3.19.0:compile
+[INFO] |  +- org.hamcrest:hamcrest:jar:2.2:compile
+[INFO] |  +- org.junit.jupiter:junit-jupiter:jar:5.7.2:compile
+[INFO] |  |  +- org.junit.jupiter:junit-jupiter-api:jar:5.7.2:compile
+[INFO] |  |  |  +- org.apiguardian:apiguardian-api:jar:1.1.0:compile
+[INFO] |  |  |  +- org.opentest4j:opentest4j:jar:1.2.0:compile
+[INFO] |  |  |  \- org.junit.platform:junit-platform-commons:jar:1.7.2:compile
+[INFO] |  |  +- org.junit.jupiter:junit-jupiter-params:jar:5.7.2:compile
+[INFO] |  |  \- org.junit.jupiter:junit-jupiter-engine:jar:5.7.2:runtime
+[INFO] |  |     \- org.junit.platform:junit-platform-engine:jar:1.7.2:runtime
+[INFO] |  +- org.mockito:mockito-core:jar:3.9.0:compile
+[INFO] |  |  +- net.bytebuddy:byte-buddy:jar:1.10.22:compile
+[INFO] |  |  +- net.bytebuddy:byte-buddy-agent:jar:1.10.22:compile
+[INFO] |  |  \- org.objenesis:objenesis:jar:3.2:compile
+[INFO] |  +- org.mockito:mockito-junit-jupiter:jar:3.9.0:compile
+[INFO] |  +- org.skyscreamer:jsonassert:jar:1.5.1:compile
+[INFO] |  |  \- com.vaadin.external.google:android-json:jar:0.0.20131108.vaadin1:compile
+[INFO] |  +- org.springframework:spring-core:jar:5.3.27:compile
+[INFO] |  |  \- org.springframework:spring-jcl:jar:5.3.27:compile
+[INFO] |  +- org.springframework:spring-test:jar:5.3.27:compile
+[INFO] |  \- org.xmlunit:xmlunit-core:jar:2.8.4:compile
+[INFO] +- org.apache.httpcomponents:httpclient:jar:4.5.13:compile
+[INFO] |  +- org.apache.httpcomponents:httpcore:jar:4.4.16:compile
+[INFO] |  \- commons-codec:commons-codec:jar:1.15:compile
+[INFO] +- commons-io:commons-io:jar:2.8.0:compile
+[INFO] +- org.postgresql:postgresql:jar:42.3.7:compile
+[INFO] |  \- org.checkerframework:checker-qual:jar:3.5.0:runtime
+[INFO] +- net.sourceforge.jtds:jtds:jar:1.3.1:runtime
+[INFO] +- com.amazon.redshift:redshift-jdbc42-no-awssdk:jar:1.2.43.1067:compile
+[INFO] +- mysql:mysql-connector-java:jar:8.0.28:compile
+[INFO] +- com.microsoft.sqlserver:sqljdbc4:jar:4.0:compile
+[INFO] +- com.oracle.database.jdbc:ojdbc8:jar:12.2.0.1:compile
+[INFO] |  +- com.oracle.database.jdbc:ucp:jar:21.1.0.0:compile
+[INFO] |  +- com.oracle.database.security:oraclepki:jar:21.1.0.0:compile
+[INFO] |  +- com.oracle.database.security:osdt_cert:jar:21.1.0.0:compile
+[INFO] |  +- com.oracle.database.security:osdt_core:jar:21.1.0.0:compile
+[INFO] |  +- com.oracle.database.ha:simplefan:jar:21.1.0.0:compile
+[INFO] |  \- com.oracle.database.ha:ons:jar:21.1.0.0:compile
+[INFO] +- org.springframework.boot:spring-boot-starter-actuator:jar:2.5.15:compile
+[INFO] |  +- org.springframework.boot:spring-boot-actuator-autoconfigure:jar:2.5.15:compile
+[INFO] |  |  \- org.springframework.boot:spring-boot-actuator:jar:2.5.15:compile
+[INFO] |  \- io.micrometer:micrometer-core:jar:1.7.12:compile
+[INFO] |     +- org.hdrhistogram:HdrHistogram:jar:2.1.12:compile
+[INFO] |     \- org.latencyutils:LatencyUtils:jar:2.0.3:runtime
+[INFO] +- org.jolokia:jolokia-core:jar:1.6.2:compile
+[INFO] |  \- com.googlecode.json-simple:json-simple:jar:1.1.1:compile
+[INFO] +- org.ohdsi.sql:SqlRender:jar:1.12.1:compile
+[INFO] +- org.springframework.boot:spring-boot-starter-aop:jar:2.5.15:compile
+[INFO] |  +- org.springframework:spring-aop:jar:5.3.27:compile
+[INFO] |  \- org.aspectj:aspectjweaver:jar:1.9.7:compile
+[INFO] +- org.springframework.retry:spring-retry:jar:1.3.4:compile
+[INFO] +- com.odysseusinc:data-source-manager:jar:1.21.0-SNAPSHOT:compile
+[INFO] |  +- org.bouncycastle:bcprov-jdk15on:jar:1.69:compile
+[INFO] |  +- org.springframework:spring-jdbc:jar:5.3.27:compile
+[INFO] |  |  \- org.springframework:spring-tx:jar:5.3.27:compile
+[INFO] |  \- org.jasypt:jasypt:jar:1.9.3:compile
+[INFO] +- com.zaxxer:HikariCP:jar:2.7.2:compile
+[INFO] \- org.springframework.boot:spring-boot-configuration-processor:jar:2.5.15:compile (optional) 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.933 s
+[INFO] Finished at: 2023-12-08T12:27:08+01:00
+[INFO] ------------------------------------------------------------------------
