@@ -14,6 +14,7 @@
     <modules>
         <module>engine</module>
         <module>commons</module>
+        <module>data-source-manager</module>
     </modules>
 
 </project>

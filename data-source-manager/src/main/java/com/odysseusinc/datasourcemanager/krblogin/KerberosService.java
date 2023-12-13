@@ -1,4 +1,5 @@
 /*
+ *
  * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +15,18 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Anton Gackovka
- * Created: March 1, 2018
+ * Authors: Anastasiia Klochkova
+ * Created: September 26, 2018
+ *
  */
 
-package com.odysseusinc.arachne.executionengine.scheduler;
+package com.odysseusinc.datasourcemanager.krblogin;
 
-import com.odysseusinc.arachne.executionengine.util.TempHolder;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 
+import java.io.File;
 import java.io.IOException;
 
-@Component
-public class EngineTempHolder extends TempHolder {
-
-    @Scheduled(cron = "${tmp.holder.cron}")
-    public void hold() throws IOException {
-        super.hold();
-    }
+public interface KerberosService {
+    KrbConfig runKinit(DataSourceUnsecuredDTO dataSource, RuntimeServiceMode environmentMode, File workDir) throws IOException;
 }

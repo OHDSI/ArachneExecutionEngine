@@ -34,7 +34,6 @@
         <postgresql.version>42.3.7</postgresql.version>
         <snakeyaml.version>1.33</snakeyaml.version>
 
-        <arachne.commons.version>1.21.0-SNAPSHOT</arachne.commons.version>
     </properties>
 
     <dependencies>
@@ -52,14 +51,14 @@
 
         <!--DTO-->
         <dependency>
-            <groupId>com.odysseusinc.arachne</groupId>
-            <artifactId>execution-engine-commons</artifactId>
+            <groupId>com.odysseusinc.executionengine</groupId>
+            <artifactId>data-source-manager</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
-            <artifactId>arachne-common-utils</artifactId>
-            <version>${arachne.commons.version}</version>
+            <artifactId>execution-engine-commons</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <!--Swagger-->
@@ -163,12 +162,6 @@
         <dependency>
             <groupId>org.springframework.retry</groupId>
             <artifactId>spring-retry</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.odysseusinc</groupId>
-            <artifactId>data-source-manager</artifactId>
-            <version>${arachne.commons.version}</version>
         </dependency>
 
         <dependency>

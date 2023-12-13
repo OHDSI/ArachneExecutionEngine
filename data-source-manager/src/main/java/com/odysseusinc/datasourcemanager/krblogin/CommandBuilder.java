@@ -1,4 +1,5 @@
 /*
+ *
  * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +15,38 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Anton Gackovka
- * Created: March 1, 2018
+ * Authors: Anastasiia Klochkova
+ * Created: September 26, 2018
+ *
  */
 
-package com.odysseusinc.arachne.executionengine.scheduler;
+package com.odysseusinc.datasourcemanager.krblogin;
 
-import com.odysseusinc.arachne.executionengine.util.TempHolder;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.io.IOException;
+public class CommandBuilder {
 
-@Component
-public class EngineTempHolder extends TempHolder {
+    List<String> statements = new ArrayList<>();
 
-    @Scheduled(cron = "${tmp.holder.cron}")
-    public void hold() throws IOException {
-        super.hold();
+    private CommandBuilder() {
+    }
+
+    public static CommandBuilder newCommand() {
+        return new CommandBuilder();
+    }
+
+    public CommandBuilder statement(String statement) {
+        statements.add(statement);
+        return this;
+    }
+
+    public CommandBuilder withParam(String param) {
+        statements.add(param);
+        return this;
+    }
+
+    public String[] build() {
+        return statements.toArray(new String[0]);
     }
 }
