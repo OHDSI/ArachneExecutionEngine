@@ -14,7 +14,7 @@
 
     <artifactId>execution_engine</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.21.0-SNAPSHOT</version>
+    <version>1.21.0-QA</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -34,7 +34,7 @@
         <postgresql.version>42.3.7</postgresql.version>
         <snakeyaml.version>1.33</snakeyaml.version>
 
-        <arachne.commons.version>1.21.0-SNAPSHOT</arachne.commons.version>
+        <arachne.commons.version>1.21.0-QA</arachne.commons.version>
     </properties>
 
     <dependencies>
