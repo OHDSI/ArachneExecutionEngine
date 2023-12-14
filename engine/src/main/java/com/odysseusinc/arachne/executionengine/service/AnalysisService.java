@@ -37,6 +37,4 @@ public interface AnalysisService {
     AnalysisRequestStatusDTO analyze(AnalysisRequestDTO analysis, File analysisDir, Boolean compressedResult, Boolean attachCdmMetadata, Long chunkSize);
 
     int activeTasks();
-
-    String cancelExecution(String containerId);
 }

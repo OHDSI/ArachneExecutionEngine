@@ -92,6 +92,9 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
 
+    @Value("${use.docker}")
+    private boolean useDocker;
+
     private String driverPathExclusions;
     private List<DataSourceAuthResolver> authResolvers;
 
@@ -232,15 +235,6 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
         } catch (Exception e) {
             logger.info("Failed to collect CDM metadata for analysis id={}. {}", analysis.getId(), e);
         }
-    }
-
-    public String cancelExecution(String containerId) {
-        return dockerService.cancelExecution(containerId);
-    }
-
-    private Boolean isUseDocker() {
-        String useDocker = System.getProperty("use.docker");
-        return Boolean.getBoolean(useDocker);
     }
 
     @Override

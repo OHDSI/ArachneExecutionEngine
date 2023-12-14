@@ -112,3 +112,13 @@ callback:
         initial-interval-ms: 5000
         max-interval-ms: 30000
         multiplier: 2.0
+
+docker:
+  registry:
+    url:
+    username:
+    password:
+use:
+  docker: false
+  socket:
+    path: /var/run/docker.sock
