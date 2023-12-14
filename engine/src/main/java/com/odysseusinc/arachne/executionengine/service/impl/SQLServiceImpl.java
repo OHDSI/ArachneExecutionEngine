@@ -81,7 +81,7 @@ public class SQLServiceImpl implements SQLService {
 
     @Override
     @FileDescriptorCount
-    public Future analyze(AnalysisSyncRequestDTO analysis, File file, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback analysisCallback) {
+    public Future<?> analyze(AnalysisSyncRequestDTO analysis, File file, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback analysisCallback) {
 
         return taskExecutor.submit(() -> {
             try {

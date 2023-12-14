@@ -132,7 +132,7 @@ public class AnalysisController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public ResponseEntity analyzeSync(
+    public ResponseEntity<MultiValueMap<String, Object>> analyzeSync(
             @RequestPart("analysisRequest") AnalysisSyncRequestDTO analysisRequest,
             @RequestPart("file") List<MultipartFile> files
     ) throws IOException, InterruptedException {
@@ -158,7 +158,7 @@ public class AnalysisController {
                 }
         );
 
-        Future executionFuture = requestStatus.getExecutionFuture();
+        Future<?> executionFuture = requestStatus.getExecutionFuture();
         while (!executionFuture.isDone()) {
             Thread.sleep(100);
         }
@@ -222,7 +222,7 @@ public class AnalysisController {
      * @param file
      * @return
      */
-    private HttpEntity<?> encodeMultipartFile(MultipartFile file) throws IOException {
+    private HttpEntity<Resource> encodeMultipartFile(MultipartFile file) throws IOException {
         HttpHeaders filePartHeaders = new HttpHeaders();
         filePartHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
 

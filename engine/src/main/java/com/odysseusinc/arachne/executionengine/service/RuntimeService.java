@@ -32,7 +32,7 @@ import java.io.File;
 import java.util.concurrent.Future;
 
 public interface RuntimeService {
-    Future analyze(AnalysisSyncRequestDTO analysis, File file, DescriptorBundle descriptorBundle,
+    Future<?> analyze(AnalysisSyncRequestDTO analysis, File file, DescriptorBundle descriptorBundle,
                    StdoutHandlerParams stdoutHandlerParams, AnalysisCallback callback, KrbConfig krbConfig);
 
     RuntimeServiceMode getRuntimeServiceMode();

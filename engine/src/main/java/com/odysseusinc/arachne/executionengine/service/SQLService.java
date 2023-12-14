@@ -29,5 +29,5 @@ import java.io.File;
 import java.util.concurrent.Future;
 
 public interface SQLService {
-    Future analyze(AnalysisSyncRequestDTO analysis, File file, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback callback);
+    Future<?> analyze(AnalysisSyncRequestDTO analysis, File file, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback callback);
 }

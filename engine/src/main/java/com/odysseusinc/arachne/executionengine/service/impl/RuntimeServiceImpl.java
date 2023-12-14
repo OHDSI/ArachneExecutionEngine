@@ -177,7 +177,7 @@ public class RuntimeServiceImpl implements RuntimeService {
 
     @Override
     @FileDescriptorCount
-    public Future analyze(AnalysisSyncRequestDTO analysis, File file, DescriptorBundle descriptorBundle,
+    public Future<?> analyze(AnalysisSyncRequestDTO analysis, File file, DescriptorBundle descriptorBundle,
                           StdoutHandlerParams stdoutHandlerParams, AnalysisCallback analysisCallback, KrbConfig krbConfig) {
 
         return taskExecutor.submit(() -> {
@@ -312,8 +312,8 @@ public class RuntimeServiceImpl implements RuntimeService {
         }
         String[] command;
         if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
-            command = (String[]) ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(),
-                    new String[]{runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, bundlePath});
+            command = ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(),
+                    runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, bundlePath);
         } else {
             command = new String[]{EXECUTION_COMMAND, fileName};
         }
@@ -419,9 +419,7 @@ public class RuntimeServiceImpl implements RuntimeService {
             final ExecutorService executorService = Executors.newSingleThreadExecutor();
             final StdoutHandler stdoutHandler = new StdoutHandler(process, stdoutHandlerParams);
             final Future<String> future = executorService.submit(stdoutHandler);
-            StringBuilder commandBuilder = new StringBuilder();
-            Arrays.stream(command).forEach(c -> commandBuilder.append(" ").append(c));
-            LOGGER.info(EXECUTING_LOG, commandBuilder.toString());
+            LOGGER.info(EXECUTING_LOG, String.join(" ", command));
             process.waitFor(timeout, TimeUnit.SECONDS);
             if (process.isAlive()) {
                 process.destroy();
@@ -436,6 +434,7 @@ public class RuntimeServiceImpl implements RuntimeService {
             LOGGER.debug(STDOUT_LOG, stdout);
             return new RuntimeFinishState(process.exitValue(), stdout);
         } finally {
+            process.destroy();
             if (Objects.nonNull(process)) {
                 closeQuietly(process.getOutputStream());
                 closeQuietly(process.getInputStream());

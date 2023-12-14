@@ -97,7 +97,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
     private int submissionUpdateInterval;
 
     private String driverPathExclusions;
-    private List<DataSourceAuthResolver> authResolvers;
+    private List<DataSourceAuthResolver<?>> authResolvers;
 
     @Autowired
     public AnalysisServiceImpl(SQLService sqlService,
@@ -130,18 +130,18 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
 
         Validate.notNull(analysis, "analysis can't be null");
         AnalysisRequestTypeDTO status = AnalysisRequestTypeDTO.NOT_RECOGNIZED;
-        Future executionFuture = null;
+        Future<?> executionFuture = null;
         String actualDescriptorId = null;
         try {
             File keystoreDir = new File(analysisDir, "keys");
             keystoreDir.mkdirs();
 
             DataSourceUnsecuredDTO dataSourceData = analysis.getDataSource();
-            List<Optional> results = authResolvers.stream().filter(r -> r.supports(dataSourceData))
+            List<Optional<?>> results = authResolvers.stream().filter(r -> r.supports(dataSourceData))
                     .map(r -> r.resolveAuth(dataSourceData, keystoreDir))
                     .collect(Collectors.toList());
             KrbConfig krbConfig = new KrbConfig();
-            for(Optional val : results){
+            for(Optional<?> val : results){
                 if (val.isPresent() && val.get() instanceof KrbConfig) {
                     krbConfig = (KrbConfig) val.get();
                     break;
