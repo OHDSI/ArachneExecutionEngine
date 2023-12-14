@@ -34,6 +34,7 @@
         <mysql.version>8.0.28</mysql.version>
         <postgresql.version>42.3.7</postgresql.version>
         <snakeyaml.version>1.33</snakeyaml.version>
+        <docker-java.version>3.3.4</docker-java.version>
 
     </properties>
 
@@ -179,6 +180,19 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+        </dependency>
+
+        <!-- Docker -->
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java</artifactId>
+            <version>${docker-java.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-transport-httpclient5</artifactId>
+            <version>${docker-java.version}</version>
         </dependency>
 
     </dependencies>
