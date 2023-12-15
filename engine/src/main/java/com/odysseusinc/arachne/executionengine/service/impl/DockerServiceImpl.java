@@ -11,7 +11,7 @@ import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
-import com.odysseusinc.arachne.executionengine.config.DockerProperties;
+import com.odysseusinc.arachne.executionengine.config.properties.DockerProperties;
 import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
 import com.odysseusinc.arachne.executionengine.service.DockerService;
 import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
@@ -186,7 +186,7 @@ public class DockerServiceImpl implements DockerService
     }
 
     @Override
-    public Future analyze(AnalysisSyncRequestDTO analysis, File file, DescriptorBundle descriptorBundle, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback callback, KrbConfig krbConfig) {
+    public Future<?> analyze(AnalysisSyncRequestDTO analysis, File file, DescriptorBundle descriptorBundle, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback callback, KrbConfig krbConfig) {
         return taskExecutor.submit(() -> {
             try (DockerClient dockerClient = dockerClient()) {
                 LOGGER.info("Execution engine is creating a Docker container from image: " + descriptorBundle.getDescriptor().getBundleName(), analysis);
