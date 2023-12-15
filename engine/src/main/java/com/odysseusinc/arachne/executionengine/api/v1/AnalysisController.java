@@ -66,7 +66,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -83,7 +82,6 @@ public class AnalysisController {
     public static final String REST_API_ANALYZE = "/analyze";
     @SuppressWarnings("WeakerAccess")
     public static final String REST_API_METRICS = "/metrics";
-    public static final String REST_API_CANCEL = "/cancel";
 
     public static final String REST_API_THREAD = "/thread";
 
@@ -221,15 +219,6 @@ public class AnalysisController {
 
         int busy = analysisService.activeTasks();
         return "busy " + busy;
-    }
-
-    @ApiOperation(value = "Cancel docker execution")
-    @RequestMapping(value = REST_API_CANCEL,
-            method = RequestMethod.GET,
-            produces = MediaType.TEXT_PLAIN_VALUE
-    )
-    public String cancelDockerExecution(@PathVariable String containerId) {
-        return analysisService.cancelExecution(containerId);
     }
 
     @RequestMapping(value = REST_API_THREAD, method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
