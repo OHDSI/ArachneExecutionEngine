@@ -45,6 +45,7 @@ public class DescriptorServiceImpl implements DescriptorService {
 
     private final DescriptorBundle defaultDescriptorBundle;
     private final Optional<Path> archiveFolder;
+    // TODO Consider replacing this flag with a dedicated logger
     private final boolean dependencyMatching;
 
     @Autowired
@@ -95,13 +96,8 @@ public class DescriptorServiceImpl implements DescriptorService {
                 Optional.ofNullable(StringUtils.defaultIfEmpty(requestedDescriptorId, null)).map(id ->
                         findRequestedDescriptor(analysisId, available, id)
                 ).orElseGet(() -> {
-                    if (dependencyMatching) {
-                        LOGGER.info("For analysis [{}] no descriptor is requested explicitly, fall back to dependency matching among {} present descriptors", analysisId, available.size());
-                        return findMatchingDescriptor(dir, analysisId, available);
-                    } else {
-                        LOGGER.info("For analysis [{}] no descriptor is requested explicitly, dependency matching is disabled. Using default", analysisId);
-                        return defaultDescriptorBundle;
-                    }
+                    LOGGER.info("For analysis [{}] no descriptor is requested explicitly, fall back to dependency matching among {} present descriptors", analysisId, available.size());
+                    return findMatchingDescriptor(dir, analysisId, available);
                 })
         ).orElseGet(() -> {
             LOGGER.info("For analysis [{}] using default descriptor (no descriptors configured). Requested [{}]", analysisId, requestedDescriptorId);
@@ -134,12 +130,13 @@ public class DescriptorServiceImpl implements DescriptorService {
             ).collect(Collectors.partitioningBy(entry -> entry.getValue() == null));
             List<Map.Entry<Descriptor, String>> matched = results.get(true);
             if (matched.isEmpty()) {
-                List<Map.Entry<Descriptor, String>> notMatched = results.get(false);
                 LOGGER.warn("For analysis [{}] of total [{}] descriptors none matched to requested. Fall back to default", analysisId, available.size());
-
-                notMatched.forEach(mismatch -> {
-                    LOGGER.info("Descriptor [{}] not matched: {}", mismatch.getKey().getLabel(), mismatch.getValue());
-                });
+                if (dependencyMatching) {
+                    List<Map.Entry<Descriptor, String>> notMatched = results.get(false);
+                    notMatched.forEach(mismatch -> {
+                        LOGGER.info("Descriptor [{}] not matched: {}", mismatch.getKey().getLabel(), mismatch.getValue());
+                    });
+                }
                 return Optional.empty();
             } else {
                 return matched.stream().reduce((a, b) -> {
