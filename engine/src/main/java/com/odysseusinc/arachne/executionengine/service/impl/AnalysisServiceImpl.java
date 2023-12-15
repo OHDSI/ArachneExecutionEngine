@@ -106,7 +106,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                                CallbackService callbackService,
                                KerberosService kerberosService,
                                DescriptorService descriptorService,
-                               DockerService dockerService) {
+                               @Autowired(required = false) DockerService dockerService) {
 
         this.sqlService = sqlService;
         this.runtimeService = runtimeService;
@@ -174,14 +174,14 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                 case "r": {
                     DescriptorBundle descriptorBundle = descriptorService.getDescriptorBundle(analysisDir,
                             analysis.getId(), analysis.getRequestedDescriptorId());
-                    if(isUseDocker()){
+                    if(useDocker){
                         executionFuture = dockerService.analyze(analysis, analysisDir, descriptorBundle, stdoutHandlerParams, logCleanupCallback, krbConfig);
                     } else {
                         executionFuture = runtimeService.analyze(analysis, analysisDir, descriptorBundle, stdoutHandlerParams, logCleanupCallback, krbConfig);
                     }
                     status = AnalysisRequestTypeDTO.R;
                     actualDescriptorId = descriptorBundle.getDescriptor().getId();
-                    logger.info("analysis with id={} and actual descriptor='{}' started in R {} Service", analysis.getId(), actualDescriptorId, isUseDocker() ? "Docker" : "Runtime");
+                    logger.info("analysis with id={} and actual descriptor='{}' started in R {} Service", analysis.getId(), actualDescriptorId, useDocker ? "Docker" : "Runtime");
                     break;
                 }
 

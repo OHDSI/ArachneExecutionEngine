@@ -1,4 +1,4 @@
-package com.odysseusinc.arachne.executionengine.config;
+package com.odysseusinc.arachne.executionengine.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
