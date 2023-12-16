@@ -26,10 +26,9 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
@@ -39,27 +38,21 @@ public class DockerServiceImpl implements DockerService
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerServiceImpl.class);
-    private final ThreadPoolTaskExecutor taskExecutor;
+    private final ExecutorService executor;
     private final DockerProperties dockerProperties;
 
     @Autowired
     public DockerServiceImpl(ThreadPoolTaskExecutor taskExecutor, DockerProperties dockerProperties) {
-        this.taskExecutor = taskExecutor;
+        this.executor = Executors.newSingleThreadExecutor();
         this.dockerProperties = dockerProperties;
     }
 
     public DockerClient dockerClient() {
         DefaultDockerClientConfig.Builder builder = DefaultDockerClientConfig.createDefaultConfigBuilder()
                 .withDockerTlsVerify(false);
-        if (dockerProperties.getRegistryUrl() != null) {
-            builder.withRegistryUrl(dockerProperties.getRegistryUrl());
-        }
-        if (dockerProperties.getRegistryPassword() != null) {
-            builder.withRegistryPassword(dockerProperties.getRegistryPassword());
-        }
-        if (dockerProperties.getRegistryUsername() != null) {
-            builder.withRegistryUsername(dockerProperties.getRegistryUsername());
-        }
+        Optional.ofNullable(dockerProperties.getRegistryUrl()).ifPresent(builder::withRegistryUrl);
+        Optional.ofNullable(dockerProperties.getRegistryPassword()).ifPresent(builder::withRegistryPassword);
+        Optional.ofNullable(dockerProperties.getRegistryUsername()).ifPresent(builder::withRegistryUsername);
         DefaultDockerClientConfig config = builder.build();
         DockerHttpClient dockerHttpClient;
         String dockerSocketPath = System.getProperty("use.socket.path");
@@ -187,7 +180,7 @@ public class DockerServiceImpl implements DockerService
 
     @Override
     public Future<?> analyze(AnalysisSyncRequestDTO analysis, File file, DescriptorBundle descriptorBundle, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback callback, KrbConfig krbConfig) {
-        return taskExecutor.submit(() -> {
+        return executor.submit(() -> {
             try (DockerClient dockerClient = dockerClient()) {
                 LOGGER.info("Execution engine is creating a Docker container from image: " + descriptorBundle.getDescriptor().getBundleName(), analysis);
                 String containerId = createContainer(dockerClient, analysis, descriptorBundle.getDescriptor().getBundleName());
