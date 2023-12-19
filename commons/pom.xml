@@ -6,11 +6,11 @@
 
     <groupId>com.odysseusinc.arachne</groupId>
     <artifactId>execution-engine-commons</artifactId>
-    <version>2.x-SNAPSHOT</version>
+    <version>${revision}</version>
     <packaging>jar</packaging>
 
     <properties>
-        <revision>${project.version}</revision>
+        <revision>2.x-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <commons.io.version>2.8.0</commons.io.version>
         <commons.lang.version>3.11</commons.lang.version>
@@ -22,27 +22,6 @@
         <spring.version>5.3.31</spring.version>
         <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
-
-    <profiles>
-        <profile>
-            <id>deploy-commons</id>
-            <properties>
-                <maven.deploy.skip>false</maven.deploy.skip>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <version>2.8.2</version>
-                        <configuration>
-                            <version>${revision}</version>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <build>
         <pluginManagement>

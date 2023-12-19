@@ -4,10 +4,11 @@
 
     <artifactId>execution-engine</artifactId>
     <groupId>com.odysseusinc.executionengine</groupId>
-    <version>2.x-SNAPSHOT</version>
+    <version>${revision}</version>
     <packaging>pom</packaging>
 
     <properties>
+        <revision>2.x-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
