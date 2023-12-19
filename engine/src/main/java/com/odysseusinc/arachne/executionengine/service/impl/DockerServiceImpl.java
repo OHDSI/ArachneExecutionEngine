@@ -26,10 +26,15 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.List;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -119,7 +124,7 @@ public class DockerServiceImpl implements DockerService
         ResultCallback.Adapter<Frame> adapter = getAdapter(analysisDir, analysis, callback);
         try {
             LOGGER.info("Running script: {}", rscriptPath);
-            dockerClient.execStartCmd(runCommandId).exec(adapter).awaitCompletion();
+            dockerClient.execStartCmd(runCommandId).exec(adapter).awaitCompletion(15, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             LOGGER.error("InterruptedException occurred whilst running {} in {}, message: {}", rscriptPath, containerId, e.getMessage());
             callback.execute(AnalysisResultStatusDTO.FAILED, null, analysisDir, e);
