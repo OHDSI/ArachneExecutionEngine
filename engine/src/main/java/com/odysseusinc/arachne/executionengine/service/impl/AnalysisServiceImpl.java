@@ -175,7 +175,7 @@ public class AnalysisServiceImpl implements AnalysisService, InitializingBean {
                     DescriptorBundle descriptorBundle = descriptorService.getDescriptorBundle(analysisDir,
                             analysis.getId(), analysis.getRequestedDescriptorId());
                     if(useDocker){
-                        executionFuture = dockerService.analyze(analysis, analysisDir, descriptorBundle, stdoutHandlerParams, logCleanupCallback, krbConfig);
+                        executionFuture = dockerService.analyze(analysis, analysisDir, stdoutHandlerParams, logCleanupCallback, krbConfig, analysis.getDockerImage());
                     } else {
                         executionFuture = runtimeService.analyze(analysis, analysisDir, descriptorBundle, stdoutHandlerParams, logCleanupCallback, krbConfig);
                     }

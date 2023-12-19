@@ -115,10 +115,10 @@ callback:
 
 docker:
   registry:
-    url:
-    username:
-    password:
+    url: hub.odysseusinc.com
+    username: user
+    password: user
 use:
-  docker: false
+  docker: true
   socket:
     path: /var/run/docker.sock
