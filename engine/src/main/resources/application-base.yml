@@ -115,7 +115,7 @@ callback:
 
 docker:
   registry:
-    url:
+    url: https://registry-1.docker.io
     username:
     password:
 use:

@@ -98,12 +98,13 @@ public class DockerServiceImpl implements DockerService
         LOGGER.info("Starting container: {}", containerId);
         dockerClient.startContainerCmd(containerId).exec();
 
+        String codeDir = "/bin";
         LOGGER.info("Copying study into container: {}", containerId);
         dockerClient.copyArchiveToContainerCmd(containerId)
                 .withHostResource(analysisDir.getPath())
-                .withRemotePath("/code").exec();
+                .withRemotePath(codeDir).exec();
 
-        String baseDir = "/code/" + analysisDir.getName() + "/";
+        String baseDir = codeDir + "/" + analysisDir.getName() + "/";
         String workingDir = baseDir + (execFileName.split("/").length > 1 ? execFileName.split("/")[0] : "");
         LOGGER.info("Working dir {}", workingDir);
         String rscriptPath = baseDir + execFileName;
