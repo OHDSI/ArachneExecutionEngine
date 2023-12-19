@@ -3,8 +3,12 @@ package com.odysseusinc.arachne.executionengine.service.impl;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.PullImageCmd;
+import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.Image;
+import com.github.dockerjava.api.model.PullResponseItem;
+import com.github.dockerjava.api.model.ResponseItem;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
@@ -12,10 +16,10 @@ import com.github.dockerjava.transport.DockerHttpClient;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.executionengine.config.properties.DockerProperties;
-import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
 import com.odysseusinc.arachne.executionengine.service.DockerService;
 import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
+import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,6 +93,22 @@ public class DockerServiceImpl implements DockerService
 
     private String createContainer(DockerClient dockerClient, AnalysisSyncRequestDTO analysis, String imageName) {
         LOGGER.info("Creating container for image: {} and analysis Id: {}", imageName, analysis.getId());
+//        CompletableFuture<Void> cf = new CompletableFuture<>();
+//        dockerClient.pullImageCmd(imageName).exec(new PullImageResultCallback() {
+//            @Override
+//            public void onNext(PullResponseItem item) {
+//                if (item.isPullSuccessIndicated()) {
+//                    LOGGER.info("Pulled [{}]", imageName);
+//                    cf.complete(null);
+//                } else {
+//                    ResponseItem.ErrorDetail error = item.getErrorDetail();
+//                    LOGGER.info("Pull [{}] failed: [{}] {}", imageName, error.getCode(), error.getMessage());
+//                    cf.completeExceptionally(new RuntimeException("Pull failed for [" + imageName + "]"));
+//                }
+//                super.onNext(item);
+//            }
+//        });
+//        cf.join();
         CreateContainerResponse container = dockerClient.createContainerCmd(imageName)
                 .withStdinOpen(true)
                 .withTty(true)
@@ -185,11 +205,11 @@ public class DockerServiceImpl implements DockerService
     }
 
     @Override
-    public Future<?> analyze(AnalysisSyncRequestDTO analysis, File file, DescriptorBundle descriptorBundle, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback callback, KrbConfig krbConfig) {
+    public Future<?> analyze(AnalysisSyncRequestDTO analysis, File file, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback callback, KrbConfig krbConfig, String imageName) {
         return executor.submit(() -> {
             try (DockerClient dockerClient = dockerClient()) {
-                LOGGER.info("Execution engine is creating a Docker container from image: " + descriptorBundle.getDescriptor().getBundleName(), analysis);
-                String containerId = createContainer(dockerClient, analysis, descriptorBundle.getDescriptor().getBundleName());
+                LOGGER.info("Execution engine is creating a Docker container from image: " + imageName, analysis);
+                String containerId = createContainer(dockerClient, analysis, imageName);
                 runContainer(dockerClient, containerId, file, analysis, callback);
                 this.remove(dockerClient, containerId);
             } catch (Exception e) {

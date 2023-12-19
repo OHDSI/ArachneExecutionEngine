@@ -108,7 +108,6 @@ public class AnalysisController {
     public AnalysisRequestStatusDTO analyze(
             @RequestPart("analysisRequest") @Valid AnalysisRequestDTO analysisRequest,
             @RequestPart("file") List<MultipartFile> files,
-            @RequestPart("container") String container,
             @RequestHeader(value = "arachne-compressed", defaultValue = "false") Boolean compressed,
             @RequestHeader(value = "arachne-waiting-compressed-result", defaultValue = "false") Boolean waitCompressedResult,
             @RequestHeader(value = "arachne-attach-cdm-metadata", defaultValue = "true") Boolean attachCdmMetadata,

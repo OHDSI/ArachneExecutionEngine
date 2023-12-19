@@ -11,7 +11,7 @@ import java.util.concurrent.Future;
 
 public interface DockerService {
 
-    Future<?> analyze(AnalysisSyncRequestDTO analysis, File file, DescriptorBundle descriptorBundle,
-                   StdoutHandlerParams stdoutHandlerParams, AnalysisCallback callback, KrbConfig krbConfig);
+    Future<?> analyze(AnalysisSyncRequestDTO analysis, File file,
+                      StdoutHandlerParams stdoutHandlerParams, AnalysisCallback callback, KrbConfig krbConfig, String imageName);
 
 }
