@@ -20,21 +20,30 @@
  *
  */
 
-package com.odysseusinc.arachne.executionengine.service.impl;
+package com.odysseusinc.arachne.executionengine.execution.sql;
+
+import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO.SQL;
 
 import com.odysseusinc.arachne.commons.types.DBMSType;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
+import com.odysseusinc.arachne.executionengine.execution.ExecutionService;
+import com.odysseusinc.arachne.executionengine.execution.r.ROverseer;
 import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
-import com.odysseusinc.arachne.executionengine.service.SQLService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
-import com.odysseusinc.arachne.executionengine.util.AnalysisCallback;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 import org.ohdsi.sql.SqlSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -58,34 +67,106 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 
 @Service
-public class SQLServiceImpl implements SQLService {
+public class SQLService implements ExecutionService {
     private static final PathMatcher SQL_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.sql");
-    private final Logger log = LoggerFactory.getLogger(SQLServiceImpl.class);
-    private final ThreadPoolTaskExecutor taskExecutor;
-    private final ConnectionPoolService poolService;
+    private final Logger log = LoggerFactory.getLogger(SQLService.class);
+    @Autowired
+    @Qualifier("analysisTaskExecutor")
+    private ThreadPoolTaskExecutor taskExecutor;
+    @Autowired
+    private ConnectionPoolService poolService;
 
     @Value("${csv.separator}")
     private char csvSeparator;
 
-    @Autowired
-    public SQLServiceImpl(ThreadPoolTaskExecutor taskExecutor, ConnectionPoolService poolService) {
-
-        this.taskExecutor = taskExecutor;
-        this.poolService = poolService;
+    @Override
+    public String getExtension() {
+        return "sql";
     }
 
     @Override
-    @FileDescriptorCount
-    public Future<?> analyze(AnalysisSyncRequestDTO analysis, File file, StdoutHandlerParams stdoutHandlerParams, AnalysisCallback analysisCallback) {
+    public Optional<ROverseer> getOverseer(Long id) {
+        // TODO Implement overseer to support aborting job
+        return Optional.empty();
+    }
 
-        return taskExecutor.submit(() -> {
+    @Override
+    public AnalysisRequestStatusDTO analyze(AnalysisSyncRequestDTO analysis, File dir, BiConsumer<String, String> callback, Integer updateInterval) {
+        Supplier<ExecutionOutcome> task = () -> {
             try {
-                AnalysisResultStatusDTO status = AnalysisResultStatusDTO.EXECUTED;
+                StringBuilder stdout = new StringBuilder();
+                DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
+
+                try (Connection conn = poolService.getDataSource(dataSource).getConnection()) {
+
+                    List<File> files = AnalisysUtils.getDirectoryItemsFiltered(dir, SQL_MATCHER);
+                    for (File sqlFile : files) {
+                        final String sqlFileName = sqlFile.getName();
+                        try {
+                            SqlExecutor sqlExecutor;
+
+                            if (analysis.getDataSource().getType().equals(DBMSType.ORACLE) ||
+                                    analysis.getDataSource().getType().equals(DBMSType.BIGQUERY)) {
+                                sqlExecutor = new SingleStatementSqlExecutor();
+                            } else {
+                                sqlExecutor = new DefaultSqlExecutor();
+                            }
+                            List<Path> resultFileList = sqlExecutor.runSql(conn, sqlFile);
+                            //
+                            stdout.append(sqlFileName).append("\r\n\r\n").append("has been executed correctly").append("\r\n");
+                            if (resultFileList.size() > 0) {
+                                stdout.append("has result file: ").append(resultFileList.stream().map(rf -> rf.getFileName().toString()).collect(Collectors.joining(", ")));
+                            } else {
+                                stdout.append("does not have a result file");
+                            }
+                        } catch (IOException ex) {
+                            String errorMessage = sqlFileName + "\r\n\r\nError reading file: " + ex.getMessage();
+                            log.error(errorMessage);
+                            if (log.isDebugEnabled()) {
+                                log.debug("Stacktrace: ", ex);
+                            }
+                            stdout.append(errorMessage);
+                            callback.accept(Stage.EXECUTE, stdout.toString());
+                            return new ExecutionOutcome(Stage.EXECUTE, errorMessage, stdout.toString());
+                        } catch (SQLException ex) {
+                            String errorMessage = sqlFileName + "\r\n\r\nError executing query: " + ex.getMessage();
+                            log.error(errorMessage);
+                            if (log.isDebugEnabled()) {
+                                log.debug("Stacktrace: ", ex);
+                            }
+                            stdout.append(errorMessage);
+                            callback.accept(Stage.EXECUTE, stdout.toString());
+                            return new ExecutionOutcome(Stage.EXECUTE, errorMessage, stdout.toString());
+                        }
+                    }
+                    return new ExecutionOutcome(Stage.COMPLETED, null, stdout.toString());
+                } catch (SQLException ex) {
+                    String errorMessage = "Error getting connection to CDM: " + ex.getMessage();
+                    log.error(errorMessage);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Stacktrace: ", ex);
+                    }
+                    stdout.append(errorMessage).append("\r\n");
+                    return new ExecutionOutcome(Stage.EXECUTE, "SQLException: " + ex.getMessage(), stdout.toString());
+                }
+            } catch (Throwable t) {
+                return new ExecutionOutcome(Stage.EXECUTE, "Error: " + t.getMessage(), null);
+            }
+        };
+
+        CompletableFuture<ExecutionOutcome> future = CompletableFuture.supplyAsync(task, taskExecutor);
+        log.info("Execution [{}] started in SQL Service", analysis.getId());
+        return new AnalysisRequestStatusDTO(analysis.getId(), SQL, future, null);
+    }
+
+    @FileDescriptorCount
+    public CompletableFuture<ExecutionOutcome> analyze(AnalysisSyncRequestDTO analysis, File file, BiConsumer<String, String> callback) {
+        Supplier<ExecutionOutcome> task = () -> {
+            try {
                 StringBuilder stdout = new StringBuilder();
                 DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
 
@@ -117,34 +198,36 @@ public class SQLServiceImpl implements SQLService {
                             if (log.isDebugEnabled()) {
                                 log.debug("Stacktrace: ", ex);
                             }
-                            status = AnalysisResultStatusDTO.FAILED;
                             stdout.append(errorMessage);
+                            callback.accept(Stage.EXECUTE, stdout.toString());
+                            return new ExecutionOutcome(Stage.EXECUTE, errorMessage, stdout.toString());
                         } catch (SQLException ex) {
                             String errorMessage = sqlFileName + "\r\n\r\nError executing query: " + ex.getMessage();
                             log.error(errorMessage);
                             if (log.isDebugEnabled()) {
                                 log.debug("Stacktrace: ", ex);
                             }
-                            status = AnalysisResultStatusDTO.FAILED;
                             stdout.append(errorMessage);
+                            callback.accept(Stage.EXECUTE, stdout.toString());
+                            return new ExecutionOutcome(Stage.EXECUTE, errorMessage, stdout.toString());
                         }
-                        stdout.append("\r\n---\r\n\r\n");
-                        stdoutHandlerParams.getCallback().accept(stdout.toString());
                     }
+                    return new ExecutionOutcome(Stage.COMPLETED, null, stdout.toString());
                 } catch (SQLException ex) {
                     String errorMessage = "Error getting connection to CDM: " + ex.getMessage();
                     log.error(errorMessage);
                     if (log.isDebugEnabled()) {
                         log.debug("Stacktrace: ", ex);
                     }
-                    status = AnalysisResultStatusDTO.FAILED;
                     stdout.append(errorMessage).append("\r\n");
+                    return new ExecutionOutcome(Stage.EXECUTE, "SQLException: " + ex.getMessage(), stdout.toString());
                 }
-                analysisCallback.execute(status, stdout.toString(), file, null);
             } catch (Throwable t) {
-                analysisCallback.execute(null, null, file, t);
+                return new ExecutionOutcome(Stage.EXECUTE, "Error: " + t.getMessage(), null);
             }
-        });
+        };
+        return CompletableFuture.supplyAsync(task, taskExecutor);
+
     }
 
     public abstract class SqlExecutor {

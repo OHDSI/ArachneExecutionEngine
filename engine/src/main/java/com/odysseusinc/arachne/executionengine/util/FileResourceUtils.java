@@ -22,38 +22,9 @@
 
 package com.odysseusinc.arachne.executionengine.util;
 
-import com.odysseusinc.arachne.executionengine.exceptions.ExecutionEngineRuntimeException;
-import org.apache.commons.io.IOUtils;
-import org.springframework.core.io.ResourceLoader;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-
 public class FileResourceUtils {
 
     private FileResourceUtils() {
     }
 
-    public static File extractResourceToTempFile(ResourceLoader loader, String resourceName, String prefix, String suffix) throws IOException {
-
-        File runFile = Files.createTempFile(prefix, suffix).toFile();
-        try (final InputStream in = loader.getResource(resourceName).getInputStream();
-             final FileOutputStream fos = new FileOutputStream(runFile)) {
-            IOUtils.copy(in, fos);
-        }
-        return runFile;
-    }
-
-    public static String loadStringResource(String resourcePath) {
-
-        try {
-            return IOUtils.toString(FileResourceUtils.class.getResourceAsStream(resourcePath), StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new ExecutionEngineRuntimeException("Cannot load resource: " + resourcePath, e);
-        }
-    }
 }

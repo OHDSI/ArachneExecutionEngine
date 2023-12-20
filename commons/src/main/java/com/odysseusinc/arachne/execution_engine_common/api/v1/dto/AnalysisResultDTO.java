@@ -22,64 +22,35 @@
 
 package com.odysseusinc.arachne.execution_engine_common.api.v1.dto;
 
-import java.util.Collection;
 import java.util.Date;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class AnalysisResultDTO {
-
+    /**
+     * Execution id, as provided in the request
+     */
     private Long id;
+    /**
+     * The stage when the execution has concluded. See {@link Stage} for list of possible stages.
+     * Consumers MUST NOT assume this is a closed list, new falues might be added in the future.
+     */
+    private String stage;
+    /**
+     * Error, if any, otherwise null. Note that even terminal stage can have an error.
+     * A COMPLETED execution might still have an error when packing the results or doing some
+     * post-processing, such as cleanup. No assumption should be made by consumers.
+     */
+    private String error;
     private String stdout;
+    /**
+     * @deprecated Use {@link #stage} and {@link #error} to inspect status detail
+     */
     private AnalysisResultStatusDTO status;
     private Date requested;
 
-    public AnalysisResultDTO() {
-
-    }
-
-    public AnalysisResultDTO(Long id, String stdout, Collection<String> filenames, AnalysisResultStatusDTO status) {
-
-        this.id = id;
-        this.stdout = stdout;
-        this.status = status;
-    }
-
-    public Long getId() {
-
-        return id;
-    }
-
-    public void setId(Long id) {
-
-        this.id = id;
-    }
-
-    public String getStdout() {
-
-        return stdout;
-    }
-
-    public void setStdout(String stdout) {
-
-        this.stdout = stdout;
-    }
-
-    public AnalysisResultStatusDTO getStatus() {
-
-        return status;
-    }
-
-    public void setStatus(AnalysisResultStatusDTO status) {
-
-        this.status = status;
-    }
-
-    public void setRequested(Date requested) {
-
-        this.requested = requested;
-    }
-
-    public Date getRequested() {
-
-        return requested;
-    }
 }

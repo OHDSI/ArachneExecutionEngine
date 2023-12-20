@@ -25,73 +25,22 @@ package com.odysseusinc.arachne.execution_engine_common.api.v1.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AnalysisRequestStatusDTO {
     private Long id;
     private AnalysisRequestTypeDTO type;
     @JsonIgnore
-    private Future executionFuture;
+    private CompletableFuture<ExecutionOutcome> executionFuture;
     private String actualDescriptorId;
 
-    public AnalysisRequestStatusDTO() {
-
-    }
-
-    public AnalysisRequestStatusDTO(Long id, AnalysisRequestTypeDTO type) {
-
-        this.id = id;
-        this.type = type;
-    }
-
-    public AnalysisRequestStatusDTO(Long id, AnalysisRequestTypeDTO type, Future executionFuture) {
-
-        this(id, type);
-        this.executionFuture = executionFuture;
-    }
-
-    public AnalysisRequestStatusDTO(Long id, AnalysisRequestTypeDTO type, Future executionFuture, String actualDescriptorId) {
-
-        this(id, type, executionFuture);
-        this.actualDescriptorId = actualDescriptorId;
-    }
-
-    public Long getId() {
-
-        return id;
-    }
-
-    public void setId(Long id) {
-
-        this.id = id;
-    }
-
-    public AnalysisRequestTypeDTO getType() {
-
-        return type;
-    }
-
-    public void setType(AnalysisRequestTypeDTO type) {
-
-        this.type = type;
-    }
-
-    public Future getExecutionFuture() {
-
-        return executionFuture;
-    }
-
-    public void setExecutionFuture(Future executionFuture) {
-
-        this.executionFuture = executionFuture;
-    }
-
-    public String getActualDescriptorId() {
-        return actualDescriptorId;
-    }
-
-    public void setActualDescriptorId(String actualDescriptorId) {
-        this.actualDescriptorId = actualDescriptorId;
-    }
 }

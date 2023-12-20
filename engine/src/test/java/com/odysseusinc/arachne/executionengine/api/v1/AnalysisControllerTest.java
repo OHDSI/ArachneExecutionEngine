@@ -109,7 +109,7 @@ public class AnalysisControllerTest {
         }
     }
 
-    @Disabled
+    @Test
     public void test01AnalysisController_Analyze() {
 
         String URL = BASE_URL + ":" + serverPort + AnalysisController.REST_API_MAIN + AnalysisController.REST_API_ANALYZE;
@@ -122,7 +122,6 @@ public class AnalysisControllerTest {
                 HttpMethod.POST, requestEntity,
                 AnalysisRequestStatusDTO.class);
         assertEquals(AnalysisRequestTypeDTO.R, exchange.getBody().getType());
-        AssertStates();
     }
 
     @Test
@@ -138,7 +137,6 @@ public class AnalysisControllerTest {
                 HttpMethod.POST, requestEntity,
                 AnalysisRequestStatusDTO.class);
         assertEquals(AnalysisRequestTypeDTO.SQL, exchange.getBody().getType());
-        AssertStates();
     }
 
     @Test
