@@ -24,10 +24,10 @@ package com.odysseusinc.arachne.executionengine.api.v1;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
-import com.odysseusinc.arachne.executionengine.service.AnalysisService;
-import com.odysseusinc.arachne.executionengine.service.CallbackService;
-import com.odysseusinc.arachne.executionengine.service.impl.StdoutHandlerParams;
+import com.odysseusinc.arachne.executionengine.execution.AnalysisService;
+import com.odysseusinc.arachne.executionengine.execution.CallbackService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -39,7 +39,8 @@ import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -119,8 +122,8 @@ public class AnalysisController {
             return result;
         } catch (IOException e) {
             log.info("Request [{}] NOT accepted due to [{}]: {}", id, e.getClass().getName(), e.getMessage());
-            // TODO Abstraction failure here: using `null` value for 'analysisDir' to
-            callbackService.sendFailedResult(analysisRequest, e, null, waitCompressedResult, chunkSize);
+            AnalysisResultDTO result = analysisService.buildResult(analysisRequest, null, e);
+            callbackService.sendResults(result, null, analysisRequest.getResultCallback(), analysisRequest.getCallbackPassword());
             log.info("Request [{}] completed: negative callback sent", id);
             throw e;
         }
@@ -132,36 +135,24 @@ public class AnalysisController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public ResponseEntity analyzeSync(
+    public ResponseEntity<MultiValueMap<String, Object>> analyzeSync(
             @RequestPart("analysisRequest") AnalysisSyncRequestDTO analysisRequest,
             @RequestPart("file") List<MultipartFile> files
-    ) throws IOException, InterruptedException {
+    ) throws IOException {
 
         log.info("Started processing request for synchronous analysis ID = {}", analysisRequest.getId());
         final File analysisDir = AnalisysUtils.extractFiles(files, false);
         log.info("Extracted files for synchronous analysis ID = {}", analysisRequest.getId());
 
         StringBuilder stdoutBuilder = new StringBuilder();
-        StdoutHandlerParams stdoutHandlerParams = new StdoutHandlerParams(
-                100,
-                stdoutDiff -> stdoutBuilder.append(stdoutDiff).append("\r\n")
-        );
+        BiConsumer<String, String> callback = (stage, stdoutDiff) -> stdoutBuilder.append(stdoutDiff).append("\r\n");
 
         long startTime = System.currentTimeMillis();
 
-        AnalysisRequestStatusDTO requestStatus = analysisService.analyze(
-                analysisRequest,
-                analysisDir,
-                false,
-                stdoutHandlerParams,
-                (resultingStatus, stdout, resultDir, ex) -> {
-                }
-        );
+        AnalysisRequestStatusDTO requestStatus = analysisService.analyze(analysisRequest, analysisDir, false, callback, 100);
 
-        Future executionFuture = requestStatus.getExecutionFuture();
-        while (!executionFuture.isDone()) {
-            Thread.sleep(100);
-        }
+        CompletableFuture<?> executionFuture = requestStatus.getExecutionFuture();
+        executionFuture.join();
 
         long elapsedTime = System.currentTimeMillis() - startTime;
 
@@ -189,6 +180,17 @@ public class AnalysisController {
         results.add("status", encodeJsonObject(requestStatus));
 
         return new ResponseEntity<>(results, HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Abort running analysis job")
+    @PostMapping(value = "/abort/{id}")
+    public ResponseEntity<AnalysisResultDTO> cancel(
+            @PathVariable("id") String analysisId
+    ) {
+        Long id = Long.parseLong(analysisId);
+        return analysisService.abort(id).map(ResponseEntity::ok).orElseGet(() ->
+                ResponseEntity.notFound().build()
+        );
     }
 
     @ApiOperation(value = "Prometheus compatible metrics")
@@ -222,7 +224,7 @@ public class AnalysisController {
      * @param file
      * @return
      */
-    private HttpEntity<?> encodeMultipartFile(MultipartFile file) throws IOException {
+    private HttpEntity<Resource> encodeMultipartFile(MultipartFile file) throws IOException {
         HttpHeaders filePartHeaders = new HttpHeaders();
         filePartHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
 

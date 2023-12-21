@@ -23,43 +23,20 @@
 package com.odysseusinc.arachne.execution_engine_common.api.v1.dto;
 
 import java.util.Date;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class AnalysisExecutionStatusDTO {
 
     private Long id;
+    private String stage;
     private String stdout;
     private Date stdoutDate;
 
-    public AnalysisExecutionStatusDTO() {
-    }
-
-    public AnalysisExecutionStatusDTO(Long id, String stdout, Date stdoutDate) {
-        this.id = id;
-        this.stdout = stdout;
-        this.stdoutDate = stdoutDate;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getStdout() {
-        return stdout;
-    }
-
-    public void setStdout(String stdout) {
-        this.stdout = stdout;
-    }
-
-    public Date getStdoutDate() {
-        return stdoutDate;
-    }
-
-    public void setStdoutDate(Date stdoutDate) {
-        this.stdoutDate = stdoutDate;
-    }
 }
