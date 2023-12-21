@@ -57,8 +57,10 @@ public class DescriptorServiceTest {
 
     @Test
     public void matchingDisabledStrategus() {
-        DescriptorServiceImpl subj = new DescriptorServiceImpl(DEFAULT, ENVS, false);
-        Assertions.assertEquals(DEFAULT, subj.getDescriptorBundle(analysisFolder("strategus-match"), 1L, null));
+        // DependencyMatching flag controls logging, not matching!
+        DescriptorServiceImpl subj = new DescriptorServiceImpl(DEFAULT, ENVS, true);
+        DescriptorBundle bundle = subj.getDescriptorBundle(analysisFolder("strategus-match"), 1L, null);
+        Assertions.assertEquals("descriptor_strategus_0.0.6", bundle.getDescriptor().getId());
     }
 
     @Test
