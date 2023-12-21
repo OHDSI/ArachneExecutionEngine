@@ -138,7 +138,6 @@ public class AnalysisService {
             return new ExecutionOutcome(Stage.ABORT, "Waiting for abort interrupted", overseer.getStdout());
         } catch (ExecutionException e) {
             log.info("Execution [{}] abort attempt failed", id, e);
-            overseer.getStdout();
             return new ExecutionOutcome(Stage.ABORT, e.getMessage(), overseer.getStdout() + "\n" + getStackTrace(e.getCause()));
         } catch (TimeoutException e) {
             log.info("Execution [{}] waiting for abort timed out", id);

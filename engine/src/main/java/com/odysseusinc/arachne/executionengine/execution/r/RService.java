@@ -101,6 +101,8 @@ public class RService implements ExecutionService {
     private static final String RUNTIME_BQ_KEYFILE = "BQ_KEYFILE";
     private static final String RUNTIME_ANALYSIS_ID = "ANALYSIS_ID";
 
+    @Value("${runtime.killTimeoutSec:30}")
+    private int killTimeoutSec;
     @Value("${runtime.timeOutSec}")
     private int runtimeTimeOutSec;
     @Value("${bulkload.enableMPP}")
@@ -196,7 +198,7 @@ public class RService implements ExecutionService {
             pb.environment().putAll(envp);
             log.info("Execution [{}] start R process: {}", id, command);
             Process process = pb.start();
-            ROverseer overseer = new ROverseer(id, process, runtimeTimeOutSec, callback, updateInterval, started);
+            ROverseer overseer = new ROverseer(id, process, runtimeTimeOutSec, callback, updateInterval, started, killTimeoutSec);
             overseers.put(id, overseer);
             return overseer.getResult().thenApply(outcome ->
                     // TODO It is weird to see cleanup logic only applied on success, but this is the original behaviour.

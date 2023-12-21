@@ -32,6 +32,7 @@ public class ROverseer implements Overseer {
     private final CompletableFuture<ExecutionOutcome> result;
     @Getter
     private final Instant started;
+    private final int killTimeout;
 
     /**
      * Creates a new process overseer.
@@ -42,17 +43,19 @@ public class ROverseer implements Overseer {
      * @param callback       Consumer to send progress. First argument is current stage, second is log.
      * @param updateInterval Log polling interval, in milliseconds.
      * @param started        The moment when execution has been requested
+     * @param killTimeout    Timeout (in seconds to wait for the process to die after trying to kill it).
      */
-    public ROverseer(long id, Process process, int timeout, BiConsumer<String, String> callback, int updateInterval, Instant started) {
+    public ROverseer(long id, Process process, int timeout, BiConsumer<String, String> callback, int updateInterval, Instant started, int killTimeout) {
         this.id = id;
         this.process = process;
         reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         this.callback = callback;
         this.started = started;
+        this.killTimeout = killTimeout;
 
         result = new CompletableFuture<>();
 
-        ScheduledFuture<?> watchdog = executor.schedule(() -> {
+        executor.schedule(() -> {
             if (process.isAlive()) {
                 log.info("Terminating [{}] after {} seconds of inactivity", id, timeout);
                 terminate();
@@ -142,7 +145,7 @@ public class ROverseer implements Overseer {
             // Will not kill whole process tree on windows. The fundamental problem here is that (unlike Unix)
             // Windows doesn't maintain parent-child relationships between processes. A process can kill
             // its own immediate children, but not 'grand-children' because it has no way of finding them.
-            return process.destroyForcibly().waitFor(30, TimeUnit.SECONDS);
+            return process.destroyForcibly().waitFor(killTimeout, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             log.info("Overseer [{}] interrupted waiting for process termination", id);
             return false;
