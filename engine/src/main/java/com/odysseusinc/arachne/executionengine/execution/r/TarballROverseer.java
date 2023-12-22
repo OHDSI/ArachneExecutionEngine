@@ -1,8 +1,9 @@
 package com.odysseusinc.arachne.executionengine.execution.r;
 
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
-import com.odysseusinc.arachne.executionengine.execution.Overseer;
+import com.odysseusinc.arachne.executionengine.execution.AbstractOverseer;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,48 +14,36 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ROverseer implements Overseer {
+public class TarballROverseer extends AbstractOverseer {
     private final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1) {{
         setRemoveOnCancelPolicy(true);
     }};
 
-    private final long id;
     private final Process process;
     private final BufferedReader reader;
-    private final StringBuffer stdout = new StringBuffer();
-    private final BiConsumer<String, String> callback;
     private final ScheduledFuture<?> logFlush;
-    @Getter
-    private final CompletableFuture<ExecutionOutcome> result;
-    @Getter
-    private final Instant started;
-    private final int killTimeout;
 
     /**
      * Creates a new process overseer.
-     *
-     * @param id             Execution identifier, for logging.
+     *  @param id             Execution identifier, for logging.
      * @param process        Process to manage
      * @param timeout        Timeout (in seconds). Once this amount of time is passed, the process will be terminated.
      * @param callback       Consumer to send progress. First argument is current stage, second is log.
      * @param updateInterval Log polling interval, in milliseconds.
      * @param started        The moment when execution has been requested
+     * @param environment    Id of the descriptor used for execution
      * @param killTimeout    Timeout (in seconds to wait for the process to die after trying to kill it).
      */
-    public ROverseer(long id, Process process, int timeout, BiConsumer<String, String> callback, int updateInterval, Instant started, int killTimeout) {
-        this.id = id;
+    public TarballROverseer(
+            long id, Process process, int timeout, BiConsumer<String, String> callback, int updateInterval, Instant started, String environment, int killTimeout
+    ) {
+        super(id, callback, started, environment, killTimeout, new CompletableFuture<ExecutionOutcome>());
         this.process = process;
+
         reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        this.callback = callback;
-        this.started = started;
-        this.killTimeout = killTimeout;
-
-        result = new CompletableFuture<>();
-
         executor.schedule(() -> {
             if (process.isAlive()) {
                 log.info("Terminating [{}] after {} seconds of inactivity", id, timeout);
@@ -67,11 +56,16 @@ public class ROverseer implements Overseer {
     }
 
     @Override
+    public AnalysisRequestTypeDTO getType() {
+        return AnalysisRequestTypeDTO.R;
+    }
+
+    @Override
     public CompletableFuture<ExecutionOutcome> abort() {
         if (process.isAlive()) {
             log.info("Overseer [{}] processing abort request", id);
             if (terminate()) {
-                result.complete(new ExecutionOutcome(Stage.ABORTED, null, stdout.toString()));
+                outcome.complete(new ExecutionOutcome(Stage.ABORTED, null, stdout.toString()));
             } else {
                 callback.accept(Stage.ABORT, "Timed out waiting for termination");
             }
@@ -79,11 +73,6 @@ public class ROverseer implements Overseer {
             log.info("Overseer [{}] received abort, but process exited already", id);
         }
         return result;
-    }
-
-    @Override
-    public String getStdout() {
-        return stdout.toString();
     }
 
     private void writeLogs(String stage) {
@@ -122,7 +111,7 @@ public class ROverseer implements Overseer {
         ExecutionOutcome outcome = (exitValue == 0)
                 ? new ExecutionOutcome(Stage.COMPLETED, null, stdout.toString())
                 : new ExecutionOutcome(Stage.EXECUTE, "Exit code " + exitValue, stdout.toString());
-        result.complete(outcome);
+        this.outcome.complete(outcome);
     }
 
     private boolean terminate() {
