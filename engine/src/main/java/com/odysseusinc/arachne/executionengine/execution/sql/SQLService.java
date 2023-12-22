@@ -25,29 +25,16 @@ package com.odysseusinc.arachne.executionengine.execution.sql;
 import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO.SQL;
 
 import com.odysseusinc.arachne.commons.types.DBMSType;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
-import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
+import com.odysseusinc.arachne.executionengine.execution.AbstractOverseer;
 import com.odysseusinc.arachne.executionengine.execution.ExecutionService;
-import com.odysseusinc.arachne.executionengine.execution.r.ROverseer;
+import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
-import org.ohdsi.sql.SqlSplit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Service;
-
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -65,9 +52,22 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import org.ohdsi.sql.SqlSplit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
 
 
 @Service
@@ -89,16 +89,11 @@ public class SQLService implements ExecutionService {
     }
 
     @Override
-    public Optional<ROverseer> getOverseer(Long id) {
-        // TODO Implement overseer to support aborting job
-        return Optional.empty();
-    }
-
-    @Override
-    public AnalysisRequestStatusDTO analyze(AnalysisSyncRequestDTO analysis, File dir, BiConsumer<String, String> callback, Integer updateInterval) {
+    public Overseer analyze(AnalysisSyncRequestDTO analysis, File dir, BiConsumer<String, String> callback, Integer updateInterval) {
+        Instant started = Instant.now();
+        StringBuffer stdout = new StringBuffer();
         Supplier<ExecutionOutcome> task = () -> {
             try {
-                StringBuilder stdout = new StringBuilder();
                 DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
 
                 try (Connection conn = poolService.getDataSource(dataSource).getConnection()) {
@@ -160,74 +155,7 @@ public class SQLService implements ExecutionService {
 
         CompletableFuture<ExecutionOutcome> future = CompletableFuture.supplyAsync(task, taskExecutor);
         log.info("Execution [{}] started in SQL Service", analysis.getId());
-        return new AnalysisRequestStatusDTO(analysis.getId(), SQL, future, null);
-    }
-
-    @FileDescriptorCount
-    public CompletableFuture<ExecutionOutcome> analyze(AnalysisSyncRequestDTO analysis, File file, BiConsumer<String, String> callback) {
-        Supplier<ExecutionOutcome> task = () -> {
-            try {
-                StringBuilder stdout = new StringBuilder();
-                DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
-
-                try (Connection conn = poolService.getDataSource(dataSource).getConnection()) {
-
-                    List<File> files = AnalisysUtils.getDirectoryItemsFiltered(file, SQL_MATCHER);
-                    for (File sqlFile : files) {
-                        final String sqlFileName = sqlFile.getName();
-                        try {
-                            SqlExecutor sqlExecutor;
-
-                            if (analysis.getDataSource().getType().equals(DBMSType.ORACLE) ||
-                                    analysis.getDataSource().getType().equals(DBMSType.BIGQUERY)) {
-                                sqlExecutor = new SingleStatementSqlExecutor();
-                            } else {
-                                sqlExecutor = new DefaultSqlExecutor();
-                            }
-                            List<Path> resultFileList = sqlExecutor.runSql(conn, sqlFile);
-                            //
-                            stdout.append(sqlFileName).append("\r\n\r\n").append("has been executed correctly").append("\r\n");
-                            if (resultFileList.size() > 0) {
-                                stdout.append("has result file: ").append(resultFileList.stream().map(rf -> rf.getFileName().toString()).collect(Collectors.joining(", ")));
-                            } else {
-                                stdout.append("does not have a result file");
-                            }
-                        } catch (IOException ex) {
-                            String errorMessage = sqlFileName + "\r\n\r\nError reading file: " + ex.getMessage();
-                            log.error(errorMessage);
-                            if (log.isDebugEnabled()) {
-                                log.debug("Stacktrace: ", ex);
-                            }
-                            stdout.append(errorMessage);
-                            callback.accept(Stage.EXECUTE, stdout.toString());
-                            return new ExecutionOutcome(Stage.EXECUTE, errorMessage, stdout.toString());
-                        } catch (SQLException ex) {
-                            String errorMessage = sqlFileName + "\r\n\r\nError executing query: " + ex.getMessage();
-                            log.error(errorMessage);
-                            if (log.isDebugEnabled()) {
-                                log.debug("Stacktrace: ", ex);
-                            }
-                            stdout.append(errorMessage);
-                            callback.accept(Stage.EXECUTE, stdout.toString());
-                            return new ExecutionOutcome(Stage.EXECUTE, errorMessage, stdout.toString());
-                        }
-                    }
-                    return new ExecutionOutcome(Stage.COMPLETED, null, stdout.toString());
-                } catch (SQLException ex) {
-                    String errorMessage = "Error getting connection to CDM: " + ex.getMessage();
-                    log.error(errorMessage);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Stacktrace: ", ex);
-                    }
-                    stdout.append(errorMessage).append("\r\n");
-                    return new ExecutionOutcome(Stage.EXECUTE, "SQLException: " + ex.getMessage(), stdout.toString());
-                }
-            } catch (Throwable t) {
-                return new ExecutionOutcome(Stage.EXECUTE, "Error: " + t.getMessage(), null);
-            }
-        };
-        return CompletableFuture.supplyAsync(task, taskExecutor);
-
+        return new SqlOverseer(analysis.getId(), started, stdout, future);
     }
 
     public abstract class SqlExecutor {
@@ -316,5 +244,33 @@ public class SQLService implements ExecutionService {
             }
             return resultFileList;
         }
+    }
+
+    @Getter
+    public static class SqlOverseer extends AbstractOverseer {
+        private final StringBuffer stdout;
+
+        public SqlOverseer(long id, Instant started, StringBuffer stdout, CompletableFuture<ExecutionOutcome> result) {
+            super(id, (stage, out) -> {}, started, null, 0, result);
+            this.stdout = stdout;
+        }
+
+        @Override
+        public String getStdout() {
+            return stdout.toString();
+        }
+
+        @Override
+        public CompletableFuture<ExecutionOutcome> abort() {
+            return result.isDone() ? result : CompletableFuture.completedFuture(
+                    new ExecutionOutcome(Stage.ABORT, "Abort is not supported for SQL analysis", null)
+            );
+        }
+
+        @Override
+        public AnalysisRequestTypeDTO getType() {
+            return SQL;
+        }
+
     }
 }

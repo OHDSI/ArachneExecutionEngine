@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.executionengine.execution;
 import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO.NOT_RECOGNIZED;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
+import com.google.common.cache.CacheBuilder;
 import com.google.common.io.Files;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
@@ -35,13 +36,13 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnse
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
-import com.odysseusinc.arachne.executionengine.execution.r.ROverseer;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.util.AutoCloseWrapper;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -68,6 +69,7 @@ import java.util.stream.Stream;
 @Service
 public class AnalysisService {
     private final Map<String, ExecutionService> executionServices;
+    private final ConcurrentMap<Long, Overseer> overseers;
 
     @Autowired
     @Qualifier("analysisTaskExecutor")
@@ -83,53 +85,50 @@ public class AnalysisService {
     private int submissionUpdateInterval;
 
     @Autowired
-    public AnalysisService(List<ExecutionService> executionServices) {
+    public AnalysisService(
+            List<ExecutionService> executionServices,
+            @Value("${runtime.timeOutSec:259200}") long runtimeTimeout
+    ) {
         this.executionServices = executionServices.stream().collect(
                 Collectors.toMap(ExecutionService::getExtension, Function.identity())
         );
+        // Double the runtime timeout to ensure entries stay in map for some time after timeout completion,
+        // so that status information is still available
+        overseers = CacheBuilder.newBuilder().expireAfterWrite(
+                2 * runtimeTimeout, TimeUnit.SECONDS
+        ).<Long, Overseer>build().asMap();
     }
 
-    public AnalysisRequestStatusDTO analyze(
+    public Optional<Overseer> analyze(
             AnalysisSyncRequestDTO analysis, File analysisDir, Boolean attachCdmMetadata, BiConsumer<String, String> callback, Integer updateInterval
     ) {
         Validate.notNull(analysis, "analysis can't be null");
-        try {
 
-            String executableFileName = analysis.getExecutableFileName();
-            String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
+        String executableFileName = analysis.getExecutableFileName();
+        String fileExtension = Files.getFileExtension(executableFileName).toLowerCase();
 
-            analysis.setResultExclusions(Stream.of(analysis.getResultExclusions(), drivers.getPathExclusions())
-                    .filter(StringUtils::isNotBlank).collect(Collectors.joining(",")));
+        analysis.setResultExclusions(Stream.of(analysis.getResultExclusions(), drivers.getPathExclusions())
+                .filter(StringUtils::isNotBlank).collect(Collectors.joining(",")));
 
-            return Optional.ofNullable(executionServices.get(fileExtension)).map(executionService -> {
-                AnalysisRequestStatusDTO dto = executionService.analyze(analysis, analysisDir, callback, updateInterval);
+        return Optional.ofNullable(executionServices.get(fileExtension)).map(executionService -> {
+            Overseer overseer = executionService.analyze(analysis, analysisDir, callback, updateInterval).whenComplete((outcome, throwable) -> {
                 if (attachCdmMetadata) {
-                    dto.setExecutionFuture(dto.getExecutionFuture().whenComplete((outcome, throwable) -> {
-                        attachMetadata(analysis, analysisDir);
-                    }));
+                    attachMetadata(analysis, analysisDir);
                 }
-                return dto;
-            }).orElseGet(() -> {
-                log.info("Execution [{}] runtime file type [{}] is not recognized. Skipping", analysis.getId(), fileExtension);
-                return new AnalysisRequestStatusDTO(analysis.getId(), NOT_RECOGNIZED, null, null);
             });
-
-        } catch (Throwable e) {
-            log.error("Execution [{}] failed to execute", analysis.getId(), e);
-            return new AnalysisRequestStatusDTO(analysis.getId(), NOT_RECOGNIZED, null, null);
-        }
+            overseers.put(analysis.getId(), overseer);
+            return overseer;
+        });
     }
 
     public Optional<AnalysisResultDTO> abort(Long id) {
-        return executionServices.values().stream().flatMap(service ->
-                service.getOverseer(id).map(Stream::of).orElseGet(Stream::of)
-        ).map(overseer -> {
+        return Optional.ofNullable(overseers.get(id)).map(overseer -> {
             ExecutionOutcome outcome = abort(id, overseer);
             return buildResult(id, Date.from(overseer.getStarted()), fromOutcome(outcome));
-        }).findFirst();
+        });
     }
 
-    private ExecutionOutcome abort(Long id, ROverseer overseer) {
+    private ExecutionOutcome abort(Long id, Overseer overseer) {
         CompletableFuture<ExecutionOutcome> future = overseer.abort();
         try {
             return future.get(30, TimeUnit.SECONDS);
@@ -161,21 +160,31 @@ public class AnalysisService {
     ) {
         String password = analysis.getCallbackPassword();
         BiConsumer<String, String> callback = (stage, log) -> callbackService.updateAnalysisStatus(analysis, stage, log);
-        AnalysisRequestStatusDTO dto = analyze(analysis, analysisDir, attachCdmMetadata, callback, submissionUpdateInterval);
-        dto.getExecutionFuture().whenComplete((outcome, throwable) -> {
-            AnalysisResultDTO result = buildResult(analysis, outcome, throwable);
-            String url = analysis.getResultCallback();
-            try (AutoCloseWrapper<List<FileSystemResource>> results = callbackService.packResults(analysis, analysisDir, compressedResult, chunkSize)) {
-                callbackService.sendResults(result, results.getValue(), url, password);
-            } catch (ZipException | RuntimeException exception) {
-                result.setError(outcome.addError("Error processing result files: " + exception.getMessage()).getError());
-                callbackService.sendResults(result, null, url, password);
-            }
-        });
-        return dto;
+        try {
+            return analyze(analysis, analysisDir, attachCdmMetadata, callback, submissionUpdateInterval).map(overseer -> {
+                overseer.whenComplete((outcome, throwable) -> {
+                    log.info("Execution [{}] completed, sending results...", analysis.getId());
+                    AnalysisResultDTO result = buildResult(analysis, outcome, throwable);
+                    String url = analysis.getResultCallback();
+                    try (AutoCloseWrapper<List<FileSystemResource>> results = callbackService.packResults(analysis, analysisDir, compressedResult, chunkSize)) {
+                        callbackService.sendResults(result, results.getValue(), url, password);
+                    } catch (ZipException | RuntimeException exception) {
+                        result.setError(outcome.addError("Error processing result files: " + exception.getMessage()).getError());
+                        callbackService.sendResults(result, null, url, password);
+                    }
+                });
+                return new AnalysisRequestStatusDTO(analysis.getId(), overseer.getType(), overseer.getEnvironment());
+            }).orElseGet(() -> {
+                log.info("Execution [{}] runtime file type is not recognized.", analysis.getId());
+                return new AnalysisRequestStatusDTO(analysis.getId(), NOT_RECOGNIZED, null);
+            });
+        } catch (Throwable e) {
+            log.error("Execution [{}] init failed", analysis.getId(), e);
+            return new AnalysisRequestStatusDTO(analysis.getId(), NOT_RECOGNIZED, null);
+        }
     }
 
-    public AnalysisResultDTO buildResult(AnalysisRequestDTO analysis, ExecutionOutcome outcome, Throwable throwable) {
+    public AnalysisResultDTO buildResult(AnalysisSyncRequestDTO analysis, ExecutionOutcome outcome, Throwable throwable) {
         Consumer<AnalysisResultDTO> strategy = throwable != null ? fromError(throwable) : fromOutcome(outcome);
         return buildResult(analysis.getId(), analysis.getRequested(), strategy);
     }

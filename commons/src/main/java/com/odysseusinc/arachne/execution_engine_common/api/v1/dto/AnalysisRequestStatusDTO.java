@@ -34,13 +34,18 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AnalysisRequestStatusDTO {
     private Long id;
     private AnalysisRequestTypeDTO type;
+    /** @deprecated */
     @JsonIgnore
     private CompletableFuture<ExecutionOutcome> executionFuture;
     private String actualDescriptorId;
 
+    public AnalysisRequestStatusDTO(Long id, AnalysisRequestTypeDTO type, String actualDescriptorId) {
+        this.id = id;
+        this.type = type;
+        this.actualDescriptorId = actualDescriptorId;
+    }
 }

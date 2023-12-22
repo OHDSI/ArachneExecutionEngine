@@ -22,12 +22,15 @@
 
 package com.odysseusinc.arachne.executionengine.api.v1;
 
+import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO.NOT_RECOGNIZED;
+
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.executionengine.execution.AnalysisService;
 import com.odysseusinc.arachne.executionengine.execution.CallbackService;
+import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -39,9 +42,9 @@ import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import javax.validation.Valid;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,24 +143,37 @@ public class AnalysisController {
             @RequestPart("file") List<MultipartFile> files
     ) throws IOException {
 
-        log.info("Started processing request for synchronous analysis ID = {}", analysisRequest.getId());
+        Long id = analysisRequest.getId();
+        log.info("Started processing request for synchronous analysis ID = {}", id);
         final File analysisDir = AnalisysUtils.extractFiles(files, false);
-        log.info("Extracted files for synchronous analysis ID = {}", analysisRequest.getId());
+        log.info("Extracted files for synchronous analysis ID = {}", id);
 
         StringBuilder stdoutBuilder = new StringBuilder();
         BiConsumer<String, String> callback = (stage, stdoutDiff) -> stdoutBuilder.append(stdoutDiff).append("\r\n");
 
         long startTime = System.currentTimeMillis();
 
-        AnalysisRequestStatusDTO requestStatus = analysisService.analyze(analysisRequest, analysisDir, false, callback, 100);
+        try {
+            AnalysisRequestStatusDTO stat = analysisService.analyze(analysisRequest, analysisDir, false, callback, 100).map(overseer -> {
+                overseer.getResult().join();
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                log.info("Execution of synchronous analysis ID = {} took: {} sec", id, elapsedTime / 1000);
+                return new AnalysisRequestStatusDTO(id, overseer.getType(), overseer.getEnvironment());
+            }).orElseGet(() ->
+                    new AnalysisRequestStatusDTO(id, NOT_RECOGNIZED, null)
+            );
+            return results(analysisDir, stdoutBuilder, stat);
+        } catch (Throwable e) {
+            log.info("Execution [{}] init failed: ", id, e);
+            AnalysisRequestStatusDTO status = new AnalysisRequestStatusDTO(id, NOT_RECOGNIZED, ExceptionUtils.getStackTrace(e));
+            return results(analysisDir, stdoutBuilder, status);
+        }
 
-        CompletableFuture<?> executionFuture = requestStatus.getExecutionFuture();
-        executionFuture.join();
+    }
 
-        long elapsedTime = System.currentTimeMillis() - startTime;
-
-        log.info("Execution of synchronous analysis ID = {} took: {} sec", analysisRequest.getId(), elapsedTime / 1000);
-
+    private ResponseEntity<MultiValueMap<String, Object>> results(
+            File analysisDir, StringBuilder stdoutBuilder, AnalysisRequestStatusDTO status
+    ) throws IOException {
         final MultiValueMap<String, Object> results = new LinkedMultiValueMap<>();
 
         // Encode and attach result files
@@ -177,8 +193,7 @@ public class AnalysisController {
         results.add("stdout", encodeMultipartFile(new MockMultipartFile("stdout.txt", "stdout.txt", null, stdoutBuilder.toString().getBytes())));
 
         // Encode and attach status DTO
-        results.add("status", encodeJsonObject(requestStatus));
-
+        results.add("status", encodeJsonObject(status));
         return new ResponseEntity<>(results, HttpStatus.OK);
     }
 

@@ -23,6 +23,8 @@ public class AnalysisSyncRequestDTO {
 
     private String resultExclusions = "";
 
+    private String dockerImage;
+
     public Long getId() {
 
         return id;
@@ -79,5 +81,13 @@ public class AnalysisSyncRequestDTO {
 
     public void setRequestedDescriptorId(String requestedDescriptorId) {
         this.requestedDescriptorId = requestedDescriptorId;
+    }
+
+    public String getDockerImage() {
+        return dockerImage;
+    }
+
+    public void setDockerImage(String dockerImage) {
+        this.dockerImage = dockerImage;
     }
 }
