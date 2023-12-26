@@ -14,7 +14,6 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -24,8 +23,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Slf4j
+@Service
 public abstract class RService implements ExecutionService {
     private static final String RUNTIME_ENV_DATA_SOURCE_NAME = "DATA_SOURCE_NAME";
     private static final String RUNTIME_ENV_DBMS_USERNAME = "DBMS_USERNAME";

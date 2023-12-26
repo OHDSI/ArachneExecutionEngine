@@ -75,7 +75,7 @@ public class AnalisysConfig {
     }
 
     @Bean
-    ExecutionService runtimeServise() {
+    ExecutionService runtimeService() {
         return useDocker ? new DockerService() : new TarballRService();
     }
 }
