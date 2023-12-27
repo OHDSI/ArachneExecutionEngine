@@ -1,13 +1,12 @@
 package com.odysseusinc.arachne.executionengine.execution.r;
 
-import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO.SQL;
+import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO.R;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.model.Frame;
-import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
@@ -20,12 +19,8 @@ import com.odysseusinc.arachne.executionengine.execution.sql.SQLService;
 import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.Map;
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import lombok.Getter;
@@ -33,26 +28,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Slf4j
+@Service
 public class DockerService extends RService {
     @Autowired
     @Qualifier("analysisTaskExecutor")
     private ThreadPoolTaskExecutor executor;
     @Autowired
     private DockerProperties dockerProperties;
-
-    private static final String DOCKER_ENV_APP_DEBUG = "RUNTIME_ENV_APP_DEBUG";
-    private static final String DOCKER_ENV_MEMORY_LIMIT_KEY = "RUNTIME_ENV_DOCKER_MEMORY_LIMIT";
-    private static final String DOCKER_ENV_CPU_LIMIT_KEY = "RUNTIME_ENV_DOCKER_CPU_LIMIT";
-    private static final String DOCKER_ENV_MEMORY_LIMIT_VALUE = "512m";
-    private static final String DOCKER_ENV_CPU_LIMIT_VALUE = "0.5";
 
     @Override
     public Overseer analyze(
@@ -67,7 +57,7 @@ public class DockerService extends RService {
         CompletableFuture<ExecutionOutcome> future = CompletableFuture.supplyAsync(() -> {
             try (DockerClient client = dockerClient()) {
                 String image = analysis.getDockerImage();
-                pullImageIfNotExists(image);
+                pullImage(image);
                 log.info("Creating container for image: {} and analysis Id: {}", image, analysis.getId());
                 CreateContainerResponse container = client.createContainerCmd(image)
                         .withStdinOpen(true)
@@ -76,7 +66,6 @@ public class DockerService extends RService {
                 log.info("Container created for image {} with container id {}", image, container.getId());
                 String containerId = container.getId();
                 runContainer(client, containerId, file, analysis, callbackWithStdOut);
-                remove(client, containerId);
                 return new ExecutionOutcome(Stage.COMPLETED, null, "");
             } catch (IOException e) {
                 log.error("Execution [{}] failed:", analysis.getId(), e);
@@ -120,6 +109,7 @@ public class DockerService extends RService {
             callback.accept(Stage.EXECUTE, e.getMessage());
         } finally {
             stop(dockerClient, containerId);
+            remove(dockerClient, containerId);
         }
     }
 
@@ -169,31 +159,7 @@ public class DockerService extends RService {
                 .exec();
     }
 
-    public void pullImageIfNotExists(String imageName) {
-        try (DockerClient client = dockerClient()) {
-            List<String> available = listImages(client);
-            boolean exists = available.stream().anyMatch(n -> n.equals(imageName));
-            if (!exists) {
-                log.info("Image " + imageName + " not found locally");
-                pullImage(client, imageName);
-                log.info("Image " + imageName + " downloaded");
-            }
-        } catch (IOException ex) {
-            log.error(ex.toString());
-            throw new RuntimeException("Failed to pull image if not exists" + ex.getMessage(), ex);
-
-        }
-    }
-
-    public List<String> listImages(DockerClient client) {
-        List<Image> images = client.listImagesCmd().exec();
-        if (images == null) {
-            return Collections.emptyList();
-        }
-        return images.stream().map(Image::getRepoTags).filter(Objects::nonNull).flatMap(Arrays::stream).collect(Collectors.toList());
-    }
-
-    public void pullImage(DockerClient client, String imageName) {
+    public void pullImage(String imageName) {
         log.info("Downloading " + imageName + " ... this may take some time, but we only need to do it once");
         PullImageResultCallback callback = new PullImageResultCallback() {
             @Override
@@ -202,9 +168,9 @@ public class DockerService extends RService {
                 super.onError(throwable);
             }
         };
-        try {
+        try (DockerClient client = dockerClient()) {
             client.pullImageCmd(imageName).exec(callback).awaitCompletion();
-        } catch (InterruptedException ex) {
+        } catch (IOException | InterruptedException ex) {
             log.error(ex.toString());
             throw new RuntimeException("Failed to pull image" + ex.getMessage(), ex);
         }
@@ -247,22 +213,18 @@ public class DockerService extends RService {
         @Override
         public CompletableFuture<ExecutionOutcome> abort() {
             return result.isDone() ? result : CompletableFuture.completedFuture(
-                    new ExecutionOutcome(Stage.ABORT, "Abort is not supported for SQL analysis", null)
+                    new ExecutionOutcome(Stage.ABORT, "Abort is not supported for R analysis", null)
             );
         }
 
         @Override
         public AnalysisRequestTypeDTO getType() {
-            return SQL;
+            return R;
         }
 
     }
 
     protected Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, Map<String, String> krbProps) {
-        Map<String, String> environment = super.buildRuntimeEnvVariables(dataSource, krbProps);
-        environment.put(DOCKER_ENV_MEMORY_LIMIT_KEY, DOCKER_ENV_MEMORY_LIMIT_VALUE);
-        environment.put(DOCKER_ENV_CPU_LIMIT_KEY, DOCKER_ENV_CPU_LIMIT_VALUE);
-        environment.put(DOCKER_ENV_APP_DEBUG, "info");
-        return environment;
+        return super.buildRuntimeEnvVariables(dataSource, krbProps);
     }
 }
