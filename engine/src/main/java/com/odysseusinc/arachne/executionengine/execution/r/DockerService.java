@@ -7,6 +7,7 @@ import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.model.Frame;
+import com.github.dockerjava.api.model.StreamType;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
@@ -15,9 +16,10 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.*;
 import com.odysseusinc.arachne.executionengine.config.properties.DockerProperties;
 import com.odysseusinc.arachne.executionengine.execution.AbstractOverseer;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
-import com.odysseusinc.arachne.executionengine.execution.sql.SQLService;
 import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
+
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Map;
@@ -28,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +37,6 @@ import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Service
 public class DockerService extends RService {
     @Autowired
     @Qualifier("analysisTaskExecutor")
@@ -50,6 +50,7 @@ public class DockerService extends RService {
             KrbConfig krbConfig, BiConsumer<String, String> callback, Integer updateInterval) {
         Instant started = Instant.now();
         StringBuffer stdout = new StringBuffer();
+        DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
         BiConsumer<String, String> callbackWithStdOut = callback.andThen((stage, out) -> {
             stdout.append(out);
         });
@@ -57,6 +58,7 @@ public class DockerService extends RService {
         CompletableFuture<ExecutionOutcome> future = CompletableFuture.supplyAsync(() -> {
             try (DockerClient client = dockerClient()) {
                 String image = analysis.getDockerImage();
+                buildRuntimeEnvVariables(dataSource, krbConfig.getIsolatedRuntimeEnvs());
                 pullImage(image);
                 log.info("Creating container for image: {} and analysis Id: {}", image, analysis.getId());
                 CreateContainerResponse container = client.createContainerCmd(image)
@@ -73,7 +75,7 @@ public class DockerService extends RService {
                 return new ExecutionOutcome(Stage.COMPLETED, e.getMessage(), "");
             }
         }, executor);
-        return new SQLService.SqlOverseer(analysis.getId(), started, stdout, future);
+        return new DockerService.DockerOverseer(analysis.getId(), started, stdout, future);
     }
 
     private void runContainer(DockerClient dockerClient, String containerId, File analysisDir, AnalysisSyncRequestDTO analysis, BiConsumer<String, String> callback) {
@@ -119,10 +121,13 @@ public class DockerService extends RService {
             public void onNext(Frame item) {
                 log.info(item.toString(), analysis);
                 try {
-                    String output = new String(item.getPayload());
+                    String output = new String(item.getPayload(), StandardCharsets.UTF_8);
+                    if (item.getStreamType() == StreamType.STDERR) {
+                        output = "ERROR: " + output;
+                    }
                     log.info("Execution output: {}", output);
                     callback.accept(Stage.EXECUTE, output);
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     log.error("Error processing execution output", e);
                     callback.accept(Stage.EXECUTE, e.getMessage());
                 }
@@ -130,10 +135,9 @@ public class DockerService extends RService {
 
             @Override
             public void onError(Throwable throwable) {
-                log.error("Error during execution", throwable);
                 String error = throwable.getMessage();
                 log.error("Execution error: {}", error);
-                callback.accept(Stage.EXECUTE, error);
+                callback.accept(Stage.ABORTED, error);
             }
 
             @Override
@@ -184,7 +188,7 @@ public class DockerService extends RService {
         Optional.ofNullable(dockerProperties.getRegistryUsername()).ifPresent(builder::withRegistryUsername);
         DefaultDockerClientConfig config = builder.build();
 
-        URI host = Optional.ofNullable(System.getProperty("use.socket.path")).map(path ->
+        URI host = Optional.ofNullable(System.getProperty("docker.socket")).map(path ->
                 URI.create("unix://" + path)
         ).orElseGet(config::getDockerHost);
         DockerHttpClient dockerHttpClient = new ApacheDockerHttpClient.Builder()
@@ -215,6 +219,7 @@ public class DockerService extends RService {
             return result.isDone() ? result : CompletableFuture.completedFuture(
                     new ExecutionOutcome(Stage.ABORT, "Abort is not supported for R analysis", null)
             );
+
         }
 
         @Override

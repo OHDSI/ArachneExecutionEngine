@@ -49,7 +49,7 @@ public class AnalisysConfig {
     private String kinitPath;
     @Value("${kerberos.configPath}")
     private String configPath;
-    @Value("${use.docker}")
+    @Value("${docker.enabled}")
     private boolean useDocker;
 
     @Bean(name = "analysisTaskExecutor")

@@ -118,7 +118,5 @@ docker:
     url: https://registry-1.docker.io
     username:
     password:
-use:
-  docker: false
-  socket:
-    path: /var/run/docker.sock
+  enabled: false
+  socket: /var/run/docker.sock
