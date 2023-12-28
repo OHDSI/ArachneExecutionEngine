@@ -8,7 +8,7 @@ import lombok.Getter;
 
 public abstract class AbstractOverseer implements Overseer {
     protected final long id;
-    protected final StringBuffer stdout = new StringBuffer();
+    protected final StringBuffer stdout;
     protected final BiConsumer<String, String> callback;
     /**
      * A pure execution result
@@ -25,13 +25,14 @@ public abstract class AbstractOverseer implements Overseer {
     @Getter
     protected volatile CompletableFuture<ExecutionOutcome> result;
 
-    public AbstractOverseer(long id, BiConsumer<String, String> callback, Instant started, String environment, int killTimeout, CompletableFuture<ExecutionOutcome> outcome) {
+    public AbstractOverseer(long id, BiConsumer<String, String> callback, Instant started, String environment, int killTimeout, StringBuffer stdout, CompletableFuture<ExecutionOutcome> outcome) {
         this.id = id;
         this.callback = callback;
         this.started = started;
         this.environment = environment;
         this.killTimeout = killTimeout;
         result = this.outcome = outcome;
+        this.stdout = stdout;
     }
 
     @Override

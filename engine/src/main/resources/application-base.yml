@@ -12,6 +12,7 @@ server:
 logging:
   level:
     root: info
+    com.odysseusinc.arachne.executionengine.execution.DockerOverseer: debug
   descriptor:
     count:
       enabled: false
@@ -114,11 +115,7 @@ callback:
         multiplier: 2.0
 
 docker:
+  enable: true
+  socket: unix:///var/run/docker.sock
   registry:
     url: https://registry-1.docker.io
-    username:
-    password:
-use:
-  docker: false
-  socket:
-    path: /var/run/docker.sock

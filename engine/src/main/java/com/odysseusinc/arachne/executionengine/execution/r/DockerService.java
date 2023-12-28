@@ -1,230 +1,166 @@
 package com.odysseusinc.arachne.executionengine.execution.r;
 
-import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO.R;
+import static com.github.dockerjava.api.model.ResponseItem.ProgressDetail;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.PullImageResultCallback;
-import com.github.dockerjava.api.model.Frame;
+import com.github.dockerjava.api.model.Bind;
+import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.PullResponseItem;
+import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.*;
-import com.odysseusinc.arachne.executionengine.config.properties.DockerProperties;
-import com.odysseusinc.arachne.executionengine.execution.AbstractOverseer;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
+import com.odysseusinc.arachne.executionengine.config.properties.DockerRegistryProperties;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
-import com.odysseusinc.arachne.executionengine.execution.sql.SQLService;
-import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
+import java.io.File;
+import java.net.URI;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
-import lombok.Getter;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Service
-public class DockerService extends RService {
+public class DockerService extends RService implements AutoCloseable {
+    private static final String WORKDIR = "/etc/analysis";
+    private final DockerClient client;
+    /**
+     * Directory prefix on HOST where the analysis files are unpacked.
+     */
+    @Value("${analysis.mount}")
+    private String analysisMount;
+    /**
+     * Socket to connect
+     */
+    @Value("${docker.host:#{null}}")
+    private String host;
+
+    @Value("${docker.image.default}")
+    private String defaultImage;
+
     @Autowired
     @Qualifier("analysisTaskExecutor")
     private ThreadPoolTaskExecutor executor;
-    @Autowired
-    private DockerProperties dockerProperties;
 
-    @Override
-    public Overseer analyze(
-            AnalysisSyncRequestDTO analysis, File file, DescriptorBundle bundle,
-            KrbConfig krbConfig, BiConsumer<String, String> callback, Integer updateInterval) {
-        Instant started = Instant.now();
-        StringBuffer stdout = new StringBuffer();
-        BiConsumer<String, String> callbackWithStdOut = callback.andThen((stage, out) -> {
-            stdout.append(out);
-        });
-
-        CompletableFuture<ExecutionOutcome> future = CompletableFuture.supplyAsync(() -> {
-            try (DockerClient client = dockerClient()) {
-                String image = analysis.getDockerImage();
-                pullImage(image);
-                log.info("Creating container for image: {} and analysis Id: {}", image, analysis.getId());
-                CreateContainerResponse container = client.createContainerCmd(image)
-                        .withStdinOpen(true)
-                        .withTty(true)
-                        .exec();
-                log.info("Container created for image {} with container id {}", image, container.getId());
-                String containerId = container.getId();
-                runContainer(client, containerId, file, analysis, callbackWithStdOut);
-                return new ExecutionOutcome(Stage.COMPLETED, null, "");
-            } catch (IOException e) {
-                log.error("Execution [{}] failed:", analysis.getId(), e);
-                callbackWithStdOut.accept(Stage.EXECUTE, e.getMessage());
-                return new ExecutionOutcome(Stage.COMPLETED, e.getMessage(), "");
-            }
-        }, executor);
-        return new SQLService.SqlOverseer(analysis.getId(), started, stdout, future);
-    }
-
-    private void runContainer(DockerClient dockerClient, String containerId, File analysisDir, AnalysisSyncRequestDTO analysis, BiConsumer<String, String> callback) {
-        String execFileName = analysis.getExecutableFileName();
-
-        log.info("Starting container: {}", containerId);
-        dockerClient.startContainerCmd(containerId).exec();
-
-        String codeDir = "/bin";
-        log.info("Copying study into container: {}", containerId);
-        dockerClient.copyArchiveToContainerCmd(containerId)
-                .withHostResource(analysisDir.getPath())
-                .withRemotePath(codeDir).exec();
-
-        String baseDir = codeDir + "/" + analysisDir.getName() + "/";
-        String workingDir = baseDir + (execFileName.split("/").length > 1 ? execFileName.split("/")[0] : "");
-        log.info("Working dir {}", workingDir);
-        String rscriptPath = baseDir + execFileName;
-        log.info("Script path {}", rscriptPath);
-        String runCommandId = dockerClient.execCreateCmd(containerId)
-                .withAttachStdout(true)
-                .withAttachStderr(true)
-                .withCmd("Rscript", rscriptPath)
-                .withWorkingDir(workingDir).exec()
-                .getId();
-
-        ResultCallback.Adapter<Frame> adapter = getAdapter(analysis, callback);
-        try {
-            log.info("Running script: {}", rscriptPath);
-            dockerClient.execStartCmd(runCommandId).exec(adapter).awaitCompletion(runtimeTimeOutSec, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            log.error("InterruptedException occurred whilst running {} in {}, message: {}", rscriptPath, containerId, e.getMessage());
-            callback.accept(Stage.EXECUTE, e.getMessage());
-        } finally {
-            stop(dockerClient, containerId);
-            remove(dockerClient, containerId);
-        }
-    }
-
-    private ResultCallback.Adapter<Frame> getAdapter(AnalysisSyncRequestDTO analysis, BiConsumer<String, String> callback) {
-        return new ResultCallback.Adapter<Frame>() {
-            @Override
-            public void onNext(Frame item) {
-                log.info(item.toString(), analysis);
-                try {
-                    String output = new String(item.getPayload());
-                    log.info("Execution output: {}", output);
-                    callback.accept(Stage.EXECUTE, output);
-                } catch (Exception e) {
-                    log.error("Error processing execution output", e);
-                    callback.accept(Stage.EXECUTE, e.getMessage());
-                }
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-                log.error("Error during execution", throwable);
-                String error = throwable.getMessage();
-                log.error("Execution error: {}", error);
-                callback.accept(Stage.EXECUTE, error);
-            }
-
-            @Override
-            public void onComplete() {
-                log.info("Execution completed");
-            }
-
-            @Override
-            public void close() throws IOException {
-                super.close();
-            }
-        };
-    }
-
-    private void stop(DockerClient dockerClient, String containerId) {
-        log.info("Stopping container: {}", containerId);
-        dockerClient.stopContainerCmd(containerId).exec();
-    }
-
-    private void remove(DockerClient dockerClient, String containerId) {
-        dockerClient.removeContainerCmd(containerId)
-                .withRemoveVolumes(true)
-                .exec();
-    }
-
-    public void pullImage(String imageName) {
-        log.info("Downloading " + imageName + " ... this may take some time, but we only need to do it once");
-        PullImageResultCallback callback = new PullImageResultCallback() {
-            @Override
-            public void onError(Throwable throwable) {
-                log.error("Failed to pull image" + throwable.getMessage());
-                super.onError(throwable);
-            }
-        };
-        try (DockerClient client = dockerClient()) {
-            client.pullImageCmd(imageName).exec(callback).awaitCompletion();
-        } catch (IOException | InterruptedException ex) {
-            log.error(ex.toString());
-            throw new RuntimeException("Failed to pull image" + ex.getMessage(), ex);
-        }
-    }
-
-    public DockerClient dockerClient() {
+    public DockerService(DockerRegistryProperties properties) {
         DefaultDockerClientConfig.Builder builder = DefaultDockerClientConfig.createDefaultConfigBuilder()
-                .withDockerTlsVerify(false);
-        Optional.ofNullable(dockerProperties.getRegistryUrl()).ifPresent(builder::withRegistryUrl);
-        Optional.ofNullable(dockerProperties.getRegistryPassword()).ifPresent(builder::withRegistryPassword);
-        Optional.ofNullable(dockerProperties.getRegistryUsername()).ifPresent(builder::withRegistryUsername);
+                .withDockerTlsVerify(false)
+                .withRegistryUrl(properties.getUrl())
+                .withRegistryPassword(properties.getPasword())
+                .withRegistryUsername(properties.getUsername());
+        Optional.ofNullable(host).ifPresent(builder::withDockerHost);
         DefaultDockerClientConfig config = builder.build();
 
-        URI host = Optional.ofNullable(System.getProperty("use.socket.path")).map(path ->
-                URI.create("unix://" + path)
-        ).orElseGet(config::getDockerHost);
+        URI host = config.getDockerHost();
         DockerHttpClient dockerHttpClient = new ApacheDockerHttpClient.Builder()
                 .dockerHost(host)
                 .sslConfig(config.getSSLConfig())
                 .maxConnections(50)
                 .build();
-
-        return DockerClientImpl.getInstance(config, dockerHttpClient);
+        client = DockerClientImpl.getInstance(config, dockerHttpClient);
+        log.info("Initialized docker interface [{}]", host);
     }
 
-    @Getter
-    public static class DockerOverseer extends AbstractOverseer {
-        private final StringBuffer stdout;
+    @Override
+    protected Overseer analyze(
+            AnalysisSyncRequestDTO analysis, File analysisDir, BiConsumer<String, String> sendCallback, Integer updateInterval, KrbConfig krbConfig
+    ) {
+        List<String> env = buildRuntimeEnvVariables(analysis.getDataSource(), krbConfig.getIsolatedRuntimeEnvs()).entrySet().stream().map(entry ->
+                entry.getKey() + "=" + entry.getValue()).collect(Collectors.toList()
+        );
+        Instant started = Instant.now();
+        Long id = analysis.getId();
+        String image = Optional.ofNullable(analysis.getDockerImage()).orElse(defaultImage);
 
-        public DockerOverseer(long id, Instant started, StringBuffer stdout, CompletableFuture<ExecutionOutcome> result) {
-            super(id, (stage, out) -> {}, started, null, 0, result);
-            this.stdout = stdout;
-        }
+        StringBuffer stdout = new StringBuffer();
+        String script = WORKDIR + "/" + analysis.getExecutableFileName();
+        BiConsumer<String, String> callback = (stage, out) -> {
+            stdout.append(out);
+            sendCallback.accept(stage, out);
+        };
 
-        @Override
-        public String getStdout() {
-            return stdout.toString();
-        }
+        CompletableFuture<String> init = CompletableFuture.supplyAsync(
+                () -> {
+                    log.info("Execution [{}] use docker image [{}]", id, image);
+                    pullImage(callback, id, image, stdout, client);
+                    callback.accept(Stage.INITIALIZE, "Pull complete, creating container\n");
+                    log.info("Execution [{}] creating container with image [{}]", id, image);
+                    String containerId = createContainer(analysisDir, env, image, script);
+                    log.info("Execution [{}] created container [{}]", id, containerId);
+                    callback.accept(Stage.INITIALIZE, "Container [" + containerId + "] created with [" + analysisDir.getPath() + "] mounted for execution\n");
+                    client.startContainerCmd(containerId).exec();
+                    return containerId;
+                },
+                executor
+        );
 
-        @Override
-        public CompletableFuture<ExecutionOutcome> abort() {
-            return result.isDone() ? result : CompletableFuture.completedFuture(
-                    new ExecutionOutcome(Stage.ABORT, "Abort is not supported for R analysis", null)
-            );
-        }
-
-        @Override
-        public AnalysisRequestTypeDTO getType() {
-            return R;
-        }
-
+        return new DockerOverseer(id, client, started, runtimeTimeOutSec, stdout, init, updateInterval, sendCallback, image, killTimeoutSec);
     }
 
-    protected Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, Map<String, String> krbProps) {
-        return super.buildRuntimeEnvVariables(dataSource, krbProps);
+    private void pullImage(BiConsumer<String, String> callback, Long id, String image, StringBuffer stdout, DockerClient client) {
+        try {
+            callback.accept(Stage.INITIALIZE, "Pulling image [" + image + "]\n");
+            client.pullImageCmd(image).exec(new PullImageResultCallback() {
+                @Override
+                public void onNext(PullResponseItem item) {
+                    super.onNext(item);
+                    ProgressDetail progress = item.getProgressDetail();
+                    if (progress != null) {
+                        log.info("Downloading [{}]: {} / {}", image, progress.getCurrent(), progress.getTotal());
+                        stdout.append(" -> ").append(progress.getCurrent());
+                    }
+                }
+
+                @Override
+                public void onComplete() {
+                    super.onComplete();
+                    log.info("Completed pulling [{}]", image);
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+                    log.error("Failed to pull image [{}]: {}", image, throwable.getMessage());
+                    super.onError(throwable);
+                }
+            }).awaitCompletion();
+        } catch (InterruptedException e) {
+            log.error("Execution [{}] failed:", id, e);
+            callback.accept(Stage.INITIALIZE, ExceptionUtils.getStackTrace(e));
+            throw new RuntimeException("Execution [" + id + "] failed to initialize", e);
+        }
+    }
+
+    private String createContainer(File analysisDir, List<String> env, String image, String script) {
+        String hostPath = analysisMount + "/" + analysisDir.getName();
+        HostConfig hostConfig = HostConfig.newHostConfig()
+                .withBinds(new Bind(hostPath, new Volume(WORKDIR)))
+                .withAutoRemove(true);
+        CreateContainerResponse container = client.createContainerCmd(image)
+                .withHostConfig(hostConfig)
+                .withEnv(env)
+                .withAttachStdout(true)
+                .withAttachStderr(true)
+                .withCmd(RService.EXECUTION_COMMAND, script)
+                .withWorkingDir(WORKDIR)
+                .exec();
+        return container.getId();
+    }
+
+    @Override
+    public void close() throws Exception {
+        client.close();
     }
 }

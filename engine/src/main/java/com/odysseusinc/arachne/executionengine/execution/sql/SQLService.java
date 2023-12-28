@@ -251,7 +251,7 @@ public class SQLService implements ExecutionService {
         private final StringBuffer stdout;
 
         public SqlOverseer(long id, Instant started, StringBuffer stdout, CompletableFuture<ExecutionOutcome> result) {
-            super(id, (stage, out) -> {}, started, null, 0, result);
+            super(id, (stage, out) -> {}, started, null, 0, new StringBuffer(), result);
             this.stdout = stdout;
         }
 

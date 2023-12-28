@@ -4,13 +4,11 @@ import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
-import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.properties.HiveBulkLoadProperties;
 import com.odysseusinc.arachne.executionengine.execution.DriverLocations;
 import com.odysseusinc.arachne.executionengine.execution.ExecutionService;
 import com.odysseusinc.arachne.executionengine.execution.KerberosSupport;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
-import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import java.io.File;
@@ -26,6 +24,8 @@ import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 public abstract class RService implements ExecutionService {
+    protected static final String EXECUTION_COMMAND = "Rscript";
+
     private static final String RUNTIME_ENV_DATA_SOURCE_NAME = "DATA_SOURCE_NAME";
     private static final String RUNTIME_ENV_DBMS_USERNAME = "DBMS_USERNAME";
     private static final String RUNTIME_ENV_DBMS_PASSWORD = "DBMS_PASSWORD";
@@ -53,8 +53,6 @@ public abstract class RService implements ExecutionService {
     protected int runtimeTimeOutSec;
 
     @Autowired
-    private DescriptorService descriptorService;
-    @Autowired
     private KerberosSupport kerberosSupport;
     @Value("${bulkload.enableMPP}")
     private boolean enableMPP;
@@ -75,26 +73,16 @@ public abstract class RService implements ExecutionService {
         File keystoreDir = new File(analysisDir, "keys");
         KrbConfig krbConfig = kerberosSupport.getConfig(analysis, keystoreDir);
 
-        DescriptorBundle bundle = descriptorService.getDescriptorBundle(analysisDir,
-                analysis.getId(), analysis.getRequestedDescriptorId()
-        );
-        Overseer overseer = analyze(
-                analysis, analysisDir, bundle, krbConfig, callback, updateInterval
-        ).whenComplete((outcome, throwable) -> {
+        Overseer overseer = analyze(analysis, analysisDir, callback, updateInterval, krbConfig).whenComplete((outcome, throwable) -> {
             // Keystore folder must be deleted before zipping results
             FileUtils.deleteQuietly(keystoreDir);
         });
 
-        String actualDescriptorId = bundle.getDescriptor().getId();
-        log.info("Execution [{}] with actual descriptor='{}' started in R Runtime Service", analysis.getId(), actualDescriptorId);
+        log.info("Execution [{}] started in R Runtime Service", analysis.getId());
         return overseer;
     }
 
-    @FileDescriptorCount
-    public abstract Overseer analyze(
-            AnalysisSyncRequestDTO analysis, File file, DescriptorBundle descriptorBundle,
-            KrbConfig krbConfig, BiConsumer<String, String> callback, Integer updateInterval
-    );
+    protected abstract Overseer analyze(AnalysisSyncRequestDTO analysis, File analysisDir, BiConsumer<String, String> callback, Integer updateInterval, KrbConfig krbConfig);
 
     protected Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, Map<String, String> krbProps) {
 

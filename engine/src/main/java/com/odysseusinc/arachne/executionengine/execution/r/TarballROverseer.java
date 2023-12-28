@@ -40,7 +40,7 @@ public class TarballROverseer extends AbstractOverseer {
     public TarballROverseer(
             long id, Process process, int timeout, BiConsumer<String, String> callback, int updateInterval, Instant started, String environment, int killTimeout
     ) {
-        super(id, callback, started, environment, killTimeout, new CompletableFuture<ExecutionOutcome>());
+        super(id, callback, started, environment, killTimeout, new StringBuffer(), new CompletableFuture<ExecutionOutcome>());
         this.process = process;
 
         reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
