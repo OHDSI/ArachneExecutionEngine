@@ -39,7 +39,7 @@ public class FileDescriptorCountAspect {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileDescriptorCountAspect.class);
 
-    @Value("${logging.descriptor.count.enabled}")
+    @Value("${logging.descriptor.count.enabled:false}")
     private boolean enabled;
 
     @Around("@annotation(com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount)")

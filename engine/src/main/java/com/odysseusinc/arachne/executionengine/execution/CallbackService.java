@@ -123,9 +123,9 @@ public class CallbackService {
                 ctx -> {
                     Throwable t = ctx.getLastThrowable();
                     if (t == null) {
-                        log.warn("Execution [{}], send result: {} - {}", id, result.getStage(), result.getError());
+                        log.warn("Execution [{}] send result: {} - {}", id, result.getStage(), result.getError());
                     } else {
-                        log.info("Execution [{}], retry send result after error: {}", id, t.getMessage());
+                        log.info("Execution [{}] retry send result after error: {}", id, t.getMessage());
                     }
                     ResponseEntity<String> sent = executeSend(result, files, url, password);
                     log.info("Execution [{}] result status sent, response HTTP {}", id, sent.getStatusCode());
