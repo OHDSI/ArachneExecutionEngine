@@ -31,21 +31,24 @@ public class DockerOverseer extends AbstractOverseer {
     }};
     private final CompletableFuture<String> init;
 
+    /**
+     * Last position in stdout that was submitted to callback.
+     */
     private volatile int pos;
     private final DockerClient client;
 
     public DockerOverseer(
-            long id, DockerClient client, Instant started, int timeout, StringBuffer stdout, CompletableFuture<String> init,
-            int updateInterval, BiConsumer<String, String> callback, String image, int killTimeout
+            long id, DockerClient client, Instant started, int timeoutSec, StringBuffer stdout, CompletableFuture<String> init,
+            int updateInterval, BiConsumer<String, String> callback, String image, int killTimeoutSec
     ) {
-        super(id, callback, started, image, killTimeout, new StringBuffer(), init.handle((containerId, throwable) -> {
+        super(id, callback, started, image, killTimeoutSec, stdout, init.handle((containerId, throwable) -> {
             if (throwable != null) {
-                String out = stdout.append("\n").append(ExceptionUtils.getStackTrace(throwable)).toString();
+                String out = stdout.append("\r\n").append(ExceptionUtils.getStackTrace(throwable)).toString();
                 return new ExecutionOutcome(Stage.INITIALIZE, throwable.getMessage(), out);
             } else {
                 LogContainerCmd cmd = client.logContainerCmd(containerId).withStdOut(true).withStdErr(true).withFollowStream(true);
                 cmd.exec(logAdapter(id, stdout));
-                Integer exitCode = client.waitContainerCmd(containerId).exec(new WaitContainerResultCallback()).awaitStatusCode(timeout, TimeUnit.SECONDS);
+                Integer exitCode = client.waitContainerCmd(containerId).exec(new WaitContainerResultCallback()).awaitStatusCode(timeoutSec, TimeUnit.SECONDS);
                 log.info("Execution [{}] Rscript exit code {}", id, exitCode);
                 String out = stdout.toString();
                 return (exitCode == 0)
@@ -54,7 +57,6 @@ public class DockerOverseer extends AbstractOverseer {
             }
         }));
         pos = stdout.length();
-        this.stdout.append(stdout);
         this.client = client;
         init.thenAccept(containerId ->
                 executor.scheduleWithFixedDelay(this::writeLogs, updateInterval, updateInterval, TimeUnit.MILLISECONDS)

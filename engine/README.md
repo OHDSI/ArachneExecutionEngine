@@ -25,7 +25,7 @@ For using Docker execution environments:
     -e DOCKER_IMAGE_DEFAULT=odysseusinc/r-hades:2023q3v3             // Default image to use for running executions 
     -e ANALYSIS_MOUNT=/etc/ee                                        // Provide container location of the host directory for executions to allow mounting it spawn Docker containers
     -e DOCKER_REGISTRY_URL=...                                       // (Optional) url to Docker registry for pulling image runtime files
-    -e DOCKER_REGISTRY_USERNAME=...                                  // (Optional) username to connect to Docker registry
+    -e **DOCKER**_REGISTRY_USERNAME=...                                  // (Optional) username to connect to Docker registry
     -e DOCKER_REGISTRY_PASSWORD=...                                  // (Optional) password to connect to Docker registry
 
 ## Build with Impala JDBC driver

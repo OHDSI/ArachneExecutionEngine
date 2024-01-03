@@ -9,7 +9,6 @@ import com.odysseusinc.arachne.executionengine.execution.DriverLocations;
 import com.odysseusinc.arachne.executionengine.execution.ExecutionService;
 import com.odysseusinc.arachne.executionengine.execution.KerberosSupport;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
-import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import java.io.File;
 import java.util.HashMap;

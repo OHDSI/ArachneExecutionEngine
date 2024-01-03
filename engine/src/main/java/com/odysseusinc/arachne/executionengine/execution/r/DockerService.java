@@ -48,6 +48,9 @@ public class DockerService extends RService implements AutoCloseable {
     @Value("${docker.host:#{null}}")
     private String host;
 
+    @Value("docker.certPath:#{null}")
+    private String certPath;
+
     @Value("${docker.image.default}")
     private String defaultImage;
 
@@ -57,10 +60,11 @@ public class DockerService extends RService implements AutoCloseable {
 
     public DockerService(DockerRegistryProperties properties) {
         DefaultDockerClientConfig.Builder builder = DefaultDockerClientConfig.createDefaultConfigBuilder()
-                .withDockerTlsVerify(false)
+                .withDockerTlsVerify(certPath != null)
+                .withDockerCertPath(certPath)
                 .withRegistryUrl(properties.getUrl())
-                .withRegistryPassword(properties.getPasword())
-                .withRegistryUsername(properties.getUsername());
+                .withRegistryUsername(properties.getUsername())
+                .withRegistryPassword(properties.getPasword());
         Optional.ofNullable(host).ifPresent(builder::withDockerHost);
         DefaultDockerClientConfig config = builder.build();
 
@@ -71,7 +75,7 @@ public class DockerService extends RService implements AutoCloseable {
                 .maxConnections(50)
                 .build();
         client = DockerClientImpl.getInstance(config, dockerHttpClient);
-        log.info("Initialized docker interface [{}]", host);
+        log.info("Initialized Docker interface [{}]", host);
     }
 
     @Override
@@ -94,13 +98,13 @@ public class DockerService extends RService implements AutoCloseable {
 
         CompletableFuture<String> init = CompletableFuture.supplyAsync(
                 () -> {
-                    log.info("Execution [{}] use docker image [{}]", id, image);
+                    log.info("Execution [{}] use Docker image [{}]", id, image);
                     pullImage(callback, id, image, stdout, client);
-                    callback.accept(Stage.INITIALIZE, "Pull complete, creating container\n");
+                    callback.accept(Stage.INITIALIZE, "Pull complete, creating container\r\n");
                     log.info("Execution [{}] creating container with image [{}]", id, image);
                     String containerId = createContainer(analysisDir, env, image, script);
                     log.info("Execution [{}] created container [{}]", id, containerId);
-                    callback.accept(Stage.INITIALIZE, "Container [" + containerId + "] created with [" + analysisDir.getPath() + "] mounted for execution\n");
+                    callback.accept(Stage.INITIALIZE, "Container [" + containerId + "] created with [" + analysisDir.getPath() + "] mounted for execution\r\n");
                     client.startContainerCmd(containerId).exec();
                     return containerId;
                 },
@@ -112,7 +116,7 @@ public class DockerService extends RService implements AutoCloseable {
 
     private void pullImage(BiConsumer<String, String> callback, Long id, String image, StringBuffer stdout, DockerClient client) {
         try {
-            callback.accept(Stage.INITIALIZE, "Pulling image [" + image + "]\n");
+            callback.accept(Stage.INITIALIZE, "Pulling image [" + image + "]\r\n");
             client.pullImageCmd(image).exec(new PullImageResultCallback() {
                 @Override
                 public void onNext(PullResponseItem item) {
