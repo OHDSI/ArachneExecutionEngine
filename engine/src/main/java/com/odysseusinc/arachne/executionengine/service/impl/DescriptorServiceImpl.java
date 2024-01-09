@@ -113,10 +113,10 @@ public class DescriptorServiceImpl implements DescriptorService {
                     analysisId, id, a.getBundleName(), b.getBundleName());
             throw new RuntimeException("For analysis [" + analysisId + "], multiple descriptors found for requested id [" + id + "]");
         }).map(descriptor -> {
-            LOGGER.info("For analysis [{}]], using requested descriptor [{}] found under [{}]", analysisId, id, descriptor.getBundleName());
+            LOGGER.info("For analysis [{}], using requested descriptor [{}] found under [{}]", analysisId, id, descriptor.getBundleName());
             return toBundle(descriptor);
         }).orElseGet(() -> {
-            LOGGER.warn("For analysis [{}]], requested descriptor [{}] not found", analysisId, id);
+            LOGGER.warn("For analysis [{}], requested descriptor [{}] not found", analysisId, id);
             return null;
         });
     }

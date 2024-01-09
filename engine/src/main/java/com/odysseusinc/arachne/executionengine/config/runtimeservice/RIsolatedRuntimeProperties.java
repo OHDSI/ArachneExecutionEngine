@@ -13,7 +13,7 @@ public class RIsolatedRuntimeProperties {
     // Path to default runtime environment
     private String archive;
     // Path to folder with custom runtime environments
-    private String archiveFolder;
+    private String archiveFolder = "/runtimes";
     // Flag for showing difference between dependencies
     private boolean applyRuntimeDependenciesComparisonLogic;
 

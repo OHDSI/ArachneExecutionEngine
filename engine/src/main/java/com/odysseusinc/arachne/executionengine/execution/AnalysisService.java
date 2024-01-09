@@ -38,7 +38,9 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.util.AutoCloseWrapper;
+import java.io.File;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -49,6 +51,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.lang3.StringUtils;
@@ -59,11 +63,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -137,10 +136,10 @@ public class AnalysisService {
             return new ExecutionOutcome(Stage.ABORT, "Waiting for abort interrupted", overseer.getStdout());
         } catch (ExecutionException e) {
             log.info("Execution [{}] abort attempt failed", id, e);
-            return new ExecutionOutcome(Stage.ABORT, e.getMessage(), overseer.getStdout() + "\n" + getStackTrace(e.getCause()));
+            return new ExecutionOutcome(Stage.ABORT, e.getMessage(), overseer.getStdout() + "\r\n" + getStackTrace(e.getCause()));
         } catch (TimeoutException e) {
             log.info("Execution [{}] waiting for abort timed out", id);
-            return new ExecutionOutcome(Stage.ABORT, e.getMessage(), overseer.getStdout() + "\n" + getStackTrace(e.getCause()));
+            return new ExecutionOutcome(Stage.ABORT, e.getMessage(), overseer.getStdout() + "\r\n" + getStackTrace(e.getCause()));
         }
     }
 

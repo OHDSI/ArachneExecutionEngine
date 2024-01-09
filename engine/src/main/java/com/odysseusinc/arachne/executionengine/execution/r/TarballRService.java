@@ -27,7 +27,6 @@ import static org.apache.commons.io.IOUtils.closeQuietly;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
-import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
 import com.odysseusinc.arachne.executionengine.execution.ExecutionService;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
@@ -36,6 +35,7 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle
 import com.odysseusinc.arachne.executionengine.model.descriptor.ExecutionRuntime;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.RDependency;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRuntime;
+import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
 import java.io.File;
@@ -57,14 +57,14 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
 public class TarballRService extends RService implements ExecutionService {
-    private static final String EXECUTION_COMMAND = "Rscript";
 
     private static final String RUNTIME_ANALYSIS_ID = "ANALYSIS_ID";
+
+    @Autowired
+    private DescriptorService descriptorService;
 
     @Autowired
     private ResourceLoader resourceLoader;
@@ -82,11 +82,10 @@ public class TarballRService extends RService implements ExecutionService {
     }
 
     @Override
-    @FileDescriptorCount
-    public Overseer analyze(
-            AnalysisSyncRequestDTO analysis, File file, DescriptorBundle descriptorBundle,
-            KrbConfig krbConfig, BiConsumer<String, String> callback, Integer updateInterval
-    ) {
+    protected Overseer analyze(AnalysisSyncRequestDTO analysis, File file, BiConsumer<String, String> callback, Integer updateInterval, KrbConfig krbConfig) {
+        DescriptorBundle descriptorBundle = descriptorService.getDescriptorBundle(
+                file, analysis.getId(), analysis.getRequestedDescriptorId()
+        );
         Long id = analysis.getId();
         String executableFileName = analysis.getExecutableFileName();
         DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
@@ -228,5 +227,4 @@ public class TarballRService extends RService implements ExecutionService {
         }
         return runFile;
     }
-
 }

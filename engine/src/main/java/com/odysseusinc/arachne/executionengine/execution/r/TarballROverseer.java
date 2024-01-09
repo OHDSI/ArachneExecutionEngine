@@ -40,7 +40,7 @@ public class TarballROverseer extends AbstractOverseer {
     public TarballROverseer(
             long id, Process process, int timeout, BiConsumer<String, String> callback, int updateInterval, Instant started, String environment, int killTimeout
     ) {
-        super(id, callback, started, environment, killTimeout, new CompletableFuture<ExecutionOutcome>());
+        super(id, callback, started, environment, killTimeout, new StringBuffer(), new CompletableFuture<ExecutionOutcome>());
         this.process = process;
 
         reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -134,7 +134,7 @@ public class TarballROverseer extends AbstractOverseer {
             // Will not kill whole process tree on windows. The fundamental problem here is that (unlike Unix)
             // Windows doesn't maintain parent-child relationships between processes. A process can kill
             // its own immediate children, but not 'grand-children' because it has no way of finding them.
-            return process.destroyForcibly().waitFor(killTimeout, TimeUnit.SECONDS);
+            return process.destroyForcibly().waitFor(killTimeoutSec, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             log.info("Overseer [{}] interrupted waiting for process termination", id);
             return false;

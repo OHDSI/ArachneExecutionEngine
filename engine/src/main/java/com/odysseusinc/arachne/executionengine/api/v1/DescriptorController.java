@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -32,6 +33,9 @@ public class DescriptorController {
 
     private static final DescriptorConverter descriptorConverter = new DescriptorConverter();
 
+    @Value("${docker.enable:false}")
+    private boolean useDocker;
+
     public DescriptorController(DescriptorService descriptorService) {
         this.descriptorService = descriptorService;
     }
@@ -40,7 +44,7 @@ public class DescriptorController {
     @RequestMapping(value = REST_API_DESCRIPTORS, method = RequestMethod.GET)
     public RuntimeEnvironmentDescriptorsDTO getDescriptors() {
         Stream<Descriptor> descriptors = descriptorService.getDescriptors().map(Collection::stream).orElseGet(Stream::of);
-        return new RuntimeEnvironmentDescriptorsDTO(descriptors.map(descriptorConverter::toDto).collect(Collectors.toList()));
+        return new RuntimeEnvironmentDescriptorsDTO(useDocker, descriptors.map(descriptorConverter::toDto).collect(Collectors.toList()));
     }
 
     @ApiOperation(value = "Runtimes with identifier for analysis")
@@ -50,6 +54,6 @@ public class DescriptorController {
         List<RuntimeEnvironmentDescriptorDTO> descriptorDTOS = descriptors.stream()
                 .map(descriptorConverter::toDto)
                 .collect(Collectors.toList());
-        return new RuntimeEnvironmentDescriptorsDTO(descriptorDTOS);
+        return new RuntimeEnvironmentDescriptorsDTO(useDocker, descriptorDTOS);
     }
 }

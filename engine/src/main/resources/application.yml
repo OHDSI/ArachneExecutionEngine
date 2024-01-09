@@ -1,3 +1,115 @@
+# suppress inspection "SpringBootApplicationProperties" for whole file
+server:
+  ssl:
+    enabled: true
+    strictMode: false
+    key-store: classpath:keystore.jks
+    key-store-password: odysseus
+    key-password: odysseus
+    key-alias: arachne
+  port: 8888
+
+logging:
+  level:
+    root: INFO
+    com.odysseusinc.arachne.executionengine.execution.r.DockerOverseer: DEBUG
 spring:
-  profiles:
-    active: base,@env@
+  jmx:
+    unique-names: true
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
+
+executor:
+  corePoolSize: 4
+  maxPoolSize: 8
+  queueCapacity: 200
+
+submission:
+  update.interval: 10000
+  cleanupResults: true
+
+connectionpool:
+  ttl:
+    minutes: 60
+  capacity:
+    min: 4
+    max: 10
+
+runtime:
+  timeOutSec: 259200
+
+swagger:
+  enable: false
+
+csv:
+  separator: ','
+
+management:
+  endpoint:
+    jolokia:
+      enabled: true
+  server:
+    port: 9999
+  endpoints:
+    web:
+      path-mapping:
+        jolokia: /jolokia
+
+runtimeservice:
+  dist:
+    runCmd: bash
+    jailSh:
+    cleanupSh:
+    archive:
+tmp:
+  holder:
+    cron: 0 * * ? * *
+
+kerberos:
+  timeout: 60
+  kinitPath:
+  configPath: /etc/krb5.conf
+
+drivers:
+  location:
+    impala: /impala
+    bq: /bigquery
+    netezza: /netezza
+    hive: /hive
+    postgresql: /postgresql
+    mssql: /mssql
+    redshift: /redshift
+    oracle: /oracle
+    snowflake: /snowflake
+bulkload:
+  enableMPP: false
+  hive:
+    host:
+    ssh:
+      port: 2222
+      username:
+      password:
+      keyfile:
+    hadoop:
+      port: 8020
+      username:
+callback:
+  retry:
+    success:
+      max-attempts: 10
+      backoff-policy:
+        initial-interval-ms: 5000
+        max-interval-ms: 900000
+        multiplier: 2.71828
+    failure:
+      max-attempts: 3
+      backoff-policy:
+        initial-interval-ms: 5000
+        max-interval-ms: 30000
+        multiplier: 2.0
+
+docker:
+  registry:
+    url: https://registry-1.docker.io

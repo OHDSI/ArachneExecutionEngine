@@ -48,6 +48,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
@@ -89,6 +90,9 @@ public class AnalysisController {
     private final CallbackService callbackService;
     private final ThreadPoolTaskExecutor threadPoolExecutor;
 
+    @Value("${analysis.dir:/etc/executions}")
+    private String analysisParentDir;
+
     @Autowired
     public AnalysisController(AnalysisService analysisService, CallbackService callbackService,
                               ThreadPoolTaskExecutor threadPoolExecutor) {
@@ -104,6 +108,7 @@ public class AnalysisController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
+
     public AnalysisRequestStatusDTO analyze(
             @RequestPart("analysisRequest") @Valid AnalysisRequestDTO analysisRequest,
             @RequestPart("file") List<MultipartFile> files,
@@ -116,10 +121,9 @@ public class AnalysisController {
         Long id = analysisRequest.getId();
         try {
             log.info("Request [{}] for [{}] received", id, analysisRequest.getResultCallback());
-            final File analysisDir = AnalisysUtils.extractFiles(files, compressed);
-            log.info("Request [{}] extracted {} files", id,
-                    Optional.ofNullable(analysisDir.list()).map(dir -> dir.length).orElse(-1)
-            );
+            File analysisDir = AnalisysUtils.extractFiles(files, analysisParentDir, compressed);
+            Integer extracted = Optional.ofNullable(analysisDir.list()).map(dir -> dir.length).orElse(-1);
+            log.info("Request [{}] extracted {} files to [{}]", id, extracted, analysisDir.getAbsolutePath());
             AnalysisRequestStatusDTO result = analysisService.analyze(analysisRequest, analysisDir, waitCompressedResult, attachCdmMetadata, chunkSize);
             log.info("Request [{}] of type [{}] accepted into processing", id, result.getType());
             return result;
@@ -145,7 +149,7 @@ public class AnalysisController {
 
         Long id = analysisRequest.getId();
         log.info("Started processing request for synchronous analysis ID = {}", id);
-        final File analysisDir = AnalisysUtils.extractFiles(files, false);
+        final File analysisDir = AnalisysUtils.extractFiles(files, analysisParentDir, false);
         log.info("Extracted files for synchronous analysis ID = {}", id);
 
         StringBuilder stdoutBuilder = new StringBuilder();

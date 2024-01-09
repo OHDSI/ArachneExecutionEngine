@@ -1,6 +1,33 @@
 # ArachneExecutionEngine
 Arachne Execution Engine is a component used to execute remote SQL or R code. It is used by both Arachne Data Node as well as WebAPI
 
+## Configuration
+
+### Sample options for creating a container for running locally
+
+Generic options:
+
+    --rm                                                             // Remove on exit
+    -p 8888:8888                                                     // Bind host port to container port
+    --add-host=host.docker.internal:host-gateway                     // Allow access to DB running on host bare
+
+For using tarball execution environments:
+
+    -e RUNTIMESERVICE_DIST_ARCHIVE=/dist/r_base_focal_amd64.tar.gz   // Name of the default execution environment  
+    -v /etc/environments:/runtimes                                   // Mount host directory volume 
+
+For using Docker execution environments:
+
+    --privileged                                                     // Allow spawning other containers 
+    -v /var/run/docker.sock:/var/run/docker.sock                     // Mount socket to connect to host Docker from inside container 
+    -v /etc/ee:/etc/executions                                       // Mount host directory /etc/ee to volume /etc/executions in container to hold executions 
+    -e DOCKER_ENABLE=true                                            // Enable execution in Docker container                                           
+    -e DOCKER_IMAGE_DEFAULT=odysseusinc/r-hades:2023q3v3             // Default image to use for running executions 
+    -e ANALYSIS_MOUNT=/etc/ee                                        // Provide container location of the host directory for executions to allow mounting it spawn Docker containers
+    -e DOCKER_REGISTRY_URL=...                                       // (Optional) url to Docker registry for pulling image runtime files
+    -e **DOCKER**_REGISTRY_USERNAME=...                                  // (Optional) username to connect to Docker registry
+    -e DOCKER_REGISTRY_PASSWORD=...                                  // (Optional) password to connect to Docker registry
+
 ## Build with Impala JDBC driver
 
 1. Download Cloudera JDBC Connector using the following link:
@@ -38,3 +65,33 @@ of the following dbms types with `cdm.dbms` parameter:
 - implala
 - bigquery
 - netezza
+
+## Process R files with Docker (locally)
+
+- You can use the following template for testing purposes:
+
+```bash
+curl --location 'https://localhost:8888/api/v1/analyze' \
+--header 'arachne-compressed: false' \
+--header 'arachne-waiting-compressed-result: false' \
+--header 'arachne-attach-cdm-metadata: true' \
+--header 'arachne-result-chunk-size-mb: 10485760' \
+--form 'analysisRequest="{
+      \"id\": 123,
+      \"executableFileName\": \"main.R\",
+      \"dataSource\": {
+      \"id\": 123,
+      \"name\": \"Data Source\",
+      \"url\": \"https://test.com"
+      },
+      \"requested\": \"2023-12-19T10:00:00Z\",
+      \"requestedDescriptorId\": \"789\",
+      \"resultExclusions\": \"exclude_result1,exclude_result2\",
+      \"dockerImage\": \"r-base\",
+      \"callbackPassword\": \"callback-password\",
+      \"updateStatusCallback\": \"https://callback-url.com/update\",
+      \"resultCallback\": \"https://callback-url.com/result\"
+      }";type=application/json' \
+--form 'file=@"/Downloads/main.R"' \
+--form 'container="r-base"'
+```  

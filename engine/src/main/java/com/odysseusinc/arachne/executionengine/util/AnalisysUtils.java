@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileAttribute;
 import java.util.*;
 import java.util.function.Function;
 import net.lingala.zip4j.exception.ZipException;
@@ -89,10 +90,10 @@ public class AnalisysUtils {
         return getDirectoryItems(parentDir, p -> exclude.matches(p) ? Optional.empty() : Optional.of(p.toFile()));
     }
 
-    public static File extractFiles(List<MultipartFile> files, boolean compressed)
-            throws IOException, ZipException {
-
-        File temporaryDir = com.google.common.io.Files.createTempDir();
+    public static File extractFiles(List<MultipartFile> files, String parentDir, boolean compressed) throws IOException {
+        Path parent = new File(parentDir).toPath();
+        Path directory = Files.createTempDirectory(parent, "exec-");
+        File temporaryDir = directory.toFile();
         if (compressed) {
             decompressToDir(temporaryDir, files);
         } else {
