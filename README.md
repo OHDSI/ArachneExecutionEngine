@@ -1,5 +1,11 @@
 # ArachneExecutionEngine
-Arachne Execution Engine is a component used to execute remote SQL or R code. It is used by both Arachne Data Node as well as WebAPI
+ARACHNE Execution Engine is a component used to execute remote SQL or R code. It is used by both Arachne Data Node as well as WebAPI.
+
+ARACHNE Execution Engine is able to use local or Docker Image/tar ball pre-built R environments to execute your R code.
+
+## Installation
+- Option 1. Build from the sources
+- Option 2. [Use Docker Image](https://hub.docker.com/r/odysseusinc/execution_engine)
 
 ## Configuration
 
@@ -14,18 +20,18 @@ Generic options:
 For using tarball execution environments:
 
     -e RUNTIMESERVICE_DIST_ARCHIVE=/dist/r_base_focal_amd64.tar.gz   // Name of the default execution environment  
-    -v /etc/environments:/runtimes                                   // Mount host directory volume 
+    -v ~/R-environments:/runtimes                                   // Mount host directory volume 
 
 For using Docker execution environments:
 
     --privileged                                                     // Allow spawning other containers 
     -v /var/run/docker.sock:/var/run/docker.sock                     // Mount socket to connect to host Docker from inside container 
-    -v /etc/ee:/etc/executions                                       // Mount host directory /etc/ee to volume /etc/executions in container to hold executions 
+    -v ~/executions:/etc/executions                                       // Mount host directory /etc/ee to volume /etc/executions in container to hold executions 
     -e DOCKER_ENABLE=true                                            // Enable execution in Docker container                                           
-    -e DOCKER_IMAGE_DEFAULT=odysseusinc/r-hades:2023q3v3             // Default image to use for running executions 
+    -e DOCKER_IMAGE_DEFAULT=odysseusinc/r-hades:latest             // Default image to use for running executions 
     -e ANALYSIS_MOUNT=/etc/ee                                        // Provide container location of the host directory for executions to allow mounting it spawn Docker containers
     -e DOCKER_REGISTRY_URL=...                                       // (Optional) url to Docker registry for pulling image runtime files
-    -e **DOCKER**_REGISTRY_USERNAME=...                                  // (Optional) username to connect to Docker registry
+    -e DOCKER_REGISTRY_USERNAME=...                                  // (Optional) username to connect to Docker registry
     -e DOCKER_REGISTRY_PASSWORD=...                                  // (Optional) password to connect to Docker registry
 
 ## Build with Impala JDBC driver
@@ -65,6 +71,7 @@ of the following dbms types with `cdm.dbms` parameter:
 - implala
 - bigquery
 - netezza
+- snowflake
 
 ## Process R files with Docker (locally)
 
