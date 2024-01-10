@@ -6,6 +6,7 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.LogContainerCmd;
 import com.github.dockerjava.api.command.WaitContainerResultCallback;
+import com.github.dockerjava.api.exception.DockerException;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Frame;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
@@ -66,9 +67,40 @@ public class DockerOverseer extends AbstractOverseer {
 
     @Override
     public CompletableFuture<ExecutionOutcome> abort() {
-        return result.isDone() ? result : CompletableFuture.completedFuture(
-                new ExecutionOutcome(Stage.ABORT, "Abort is not yet supported for docker analysis", null)
-        );
+        if (!init.isDone()) {
+            init.cancel(true);
+        }
+
+        return init.handle((containerId, throwable) -> {
+            if (containerId == null) {
+                if (throwable != null) {
+                    log.error("Error during initialization: {}", throwable.getMessage(), throwable);
+                    stdout.append("\r\n\"Initialization failed: ").append(throwable.getMessage());
+                    return new ExecutionOutcome(Stage.INITIALIZE, "Initialization failed: " + throwable.getMessage(), stdout.toString());
+                } else {
+                    stdout.append("\r\nContainer initialization was canceled");
+                    return new ExecutionOutcome(Stage.ABORTED, null, stdout.toString());
+                }
+            } else {
+                if (result.isDone()) {
+                    return result.join();
+                } else {
+                    try {
+                        client.stopContainerCmd(containerId).exec();
+                        stdout.append("\r\nDocker container aborted successfully");
+                        return new ExecutionOutcome(Stage.ABORTED, null, stdout.toString());
+                    } catch (NotFoundException e) {
+                        log.info("Container not found or already stopped: " + e.getMessage());
+                        return result.join();
+                    } catch (DockerException e) {
+                        log.error("Error stopping the Docker container: {}", e.getMessage());
+                        stdout.append("\r\n\"Error aborting Docker container:").append(e.getMessage());
+                        return new ExecutionOutcome(Stage.ABORT, "Error aborting Docker container: " + e.getMessage(), stdout.toString());
+                    }
+                }
+            }
+        });
+
     }
 
     private static ResultCallback.Adapter<Frame> logAdapter(long id, StringBuffer stdout) {
