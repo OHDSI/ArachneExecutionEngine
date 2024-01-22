@@ -10,6 +10,11 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.ParseStrategy;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.REnvParseStrategy;
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import com.odysseusinc.arachne.executionengine.util.ZipInputSubStream;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,21 +30,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 @Service
-@Slf4j
 public class DescriptorServiceImpl implements DescriptorService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DescriptorServiceImpl.class);
     private static final List<ParseStrategy> STRATEGIES = Arrays.asList(
@@ -49,7 +46,6 @@ public class DescriptorServiceImpl implements DescriptorService {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private DescriptorBundle defaultDescriptorBundle;
     private final Optional<Path> archiveFolder;
     private final String defaultDescriptorFile;
     // TODO Consider replacing this flag with a dedicated logger
@@ -58,27 +54,21 @@ public class DescriptorServiceImpl implements DescriptorService {
     @Autowired
     public DescriptorServiceImpl(RIsolatedRuntimeProperties rIsolatedRuntimeProps) {
         this(
-                new DescriptorBundle(rIsolatedRuntimeProps.getArchive(), new DefaultDescriptor()),
                 Optional.ofNullable(rIsolatedRuntimeProps.getArchiveFolder()).map(name -> new File(name).toPath()),
                 rIsolatedRuntimeProps.getDefaultDescriptorFile(),
                 rIsolatedRuntimeProps.isApplyRuntimeDependenciesComparisonLogic()
         );
     }
 
-    public DescriptorServiceImpl(DescriptorBundle defaultDescriptorBundle,
-                                 Optional<Path> archiveFolder,
-                                 boolean dependencyMatching
-    ) {
-        this(defaultDescriptorBundle, archiveFolder, null, dependencyMatching);
+    public DescriptorServiceImpl(Optional<Path> archiveFolder, boolean dependencyMatching) {
+        this(archiveFolder, null, dependencyMatching);
     }
 
     public DescriptorServiceImpl(
-            DescriptorBundle defaultDescriptorBundle,
             Optional<Path> archiveFolder,
             String defaultDescriptorFile,
             boolean dependencyMatching
     ) {
-        this.defaultDescriptorBundle = defaultDescriptorBundle;
         this.archiveFolder = archiveFolder;
         this.dependencyMatching = dependencyMatching;
         this.defaultDescriptorFile = defaultDescriptorFile;
@@ -86,20 +76,11 @@ public class DescriptorServiceImpl implements DescriptorService {
 
     @Override
     public Optional<List<Descriptor>> getDescriptors() {
-        if (defaultDescriptorFile == null) {
-            log.warn("*** Property runtimeservice.dist.defaultDescriptorFile is not set. Empty default descriptor will used.");
-        }
         return archiveFolder.map(dir -> {
             try (Stream<Path> files = Files.list(dir)) {
                 return files.map(Path::toFile).filter(file ->
                                 file.getName().startsWith(DESCRIPTOR_PREFIX) && file.isFile()
                         ).map(deserializeDescriptor())
-                        .peek(d -> {
-                            if (Objects.equals(d.getLeft().getName(), defaultDescriptorFile)) {
-                                this.defaultDescriptorBundle = toBundle(d.getRight());
-                            }
-                        })
-                        .map(Pair::getRight)
                         .collect(Collectors.toList());
             } catch (IOException e) {
                 LOGGER.info("Error traversing [{}]: {}", dir, e.getMessage());
@@ -108,10 +89,10 @@ public class DescriptorServiceImpl implements DescriptorService {
         });
     }
 
-    private Function<File, Pair<File, Descriptor>> deserializeDescriptor() {
+    private Function<File, Descriptor> deserializeDescriptor() {
         return file -> {
             try (InputStream is = Files.newInputStream(file.toPath())) {
-                return Pair.of(file, mapper.readValue(is, Descriptor.class));
+                return mapper.readValue(is, Descriptor.class);
             } catch (IOException e) {
                 throw new RuntimeException("Error getting descriptor from file: " + file.getName(), e);
             }
@@ -132,12 +113,29 @@ public class DescriptorServiceImpl implements DescriptorService {
                         findRequestedDescriptor(analysisId, available, id)
                 ).orElseGet(() -> {
                     LOGGER.info("For analysis [{}] no descriptor is requested explicitly, fall back to dependency matching among {} present descriptors", analysisId, available.size());
-                    return findMatchingDescriptor(dir, analysisId, available);
+                    return findMatchingDescriptor(dir, analysisId, available, requestedDescriptorId);
                 })
-        ).orElseGet(() -> {
+        ).orElseGet(getDefaultBundle(analysisId, requestedDescriptorId));
+    }
+
+    private Supplier<DescriptorBundle> getDefaultBundle(Long analysisId, String requestedDescriptorId) {
+        return () -> {
             LOGGER.info("For analysis [{}] using default descriptor (no descriptors configured). Requested [{}]", analysisId, requestedDescriptorId);
-            return defaultDescriptorBundle;
-        });
+            DescriptorBundle defaultBundle = new DescriptorBundle(archiveFolder.map(Path::toString).orElse(""), new DefaultDescriptor());
+            return Optional.ofNullable(defaultDescriptorFile)
+                    .map(f -> archiveFolder.map(a -> a.resolve(f))
+                            .filter(Files::isRegularFile)
+                            .map(Path::toFile)
+                            .map(deserializeDescriptor())
+                            .map(this::toBundle)
+                            .orElseGet(() -> {
+                                LOGGER.warn("*** Property runtimeservice.dist.archiveFolder is not set or not exist. Empty default descriptor will used.");
+                                return defaultBundle;
+                            })).orElseGet(() -> {
+                        LOGGER.warn("*** Property runtimeservice.dist.defaultDescriptorFile is not set. Empty default descriptor will used.");
+                        return defaultBundle;
+                    });
+        };
     }
 
     private DescriptorBundle findRequestedDescriptor(Long analysisId, List<Descriptor> available, String id) {
@@ -156,7 +154,7 @@ public class DescriptorServiceImpl implements DescriptorService {
         });
     }
 
-    private DescriptorBundle findMatchingDescriptor(File dir, Long analysisId, List<Descriptor> available) {
+    private DescriptorBundle findMatchingDescriptor(File dir, Long analysisId, List<Descriptor> available, String requestedDescriptorId) {
         return getRuntime(dir).flatMap(runtime -> {
             Map<Boolean, List<Map.Entry<Descriptor, String>>> results = available.stream().flatMap(descriptor ->
                     descriptor.getExecutionRuntimes().stream().<Map.Entry<Descriptor, String>>map(runtime1 ->
@@ -182,7 +180,7 @@ public class DescriptorServiceImpl implements DescriptorService {
                     return match;
                 });
             }
-        }).map(Map.Entry::getKey).map(this::toBundle).orElse(defaultDescriptorBundle);
+        }).map(Map.Entry::getKey).map(this::toBundle).orElseGet(getDefaultBundle(analysisId, requestedDescriptorId));
     }
 
     private DescriptorBundle toBundle(Descriptor descriptor) {
