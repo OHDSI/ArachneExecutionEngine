@@ -18,6 +18,8 @@ public class DescriptorServiceTest {
         DescriptorServiceImpl subj = new DescriptorServiceImpl(DEFAULT, ENVS, true);
         DescriptorBundle bundle = subj.getDescriptorBundle(analysisFolder("strategus-match"), 1L, "hades_0.0.1");
         Assertions.assertEquals("hades_0.0.1", bundle.getDescriptor().getId());
+        Assertions.assertNotNull(bundle.getDescriptor());
+        Assertions.assertFalse(bundle.getDescriptor().getExecutionRuntimes().isEmpty(), "Execution Runtimes is empty");
     }
 
     @Test
