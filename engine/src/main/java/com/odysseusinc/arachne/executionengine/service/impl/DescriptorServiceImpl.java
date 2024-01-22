@@ -10,6 +10,7 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.ParseStrategy;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.REnvParseStrategy;
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import com.odysseusinc.arachne.executionengine.util.ZipInputSubStream;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -23,17 +24,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class DescriptorServiceImpl implements DescriptorService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DescriptorServiceImpl.class);
     private static final List<ParseStrategy> STRATEGIES = Arrays.asList(
@@ -43,8 +49,9 @@ public class DescriptorServiceImpl implements DescriptorService {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private final DescriptorBundle defaultDescriptorBundle;
+    private DescriptorBundle defaultDescriptorBundle;
     private final Optional<Path> archiveFolder;
+    private final String defaultDescriptorFile;
     // TODO Consider replacing this flag with a dedicated logger
     private final boolean dependencyMatching;
 
@@ -53,34 +60,62 @@ public class DescriptorServiceImpl implements DescriptorService {
         this(
                 new DescriptorBundle(rIsolatedRuntimeProps.getArchive(), new DefaultDescriptor()),
                 Optional.ofNullable(rIsolatedRuntimeProps.getArchiveFolder()).map(name -> new File(name).toPath()),
+                rIsolatedRuntimeProps.getDefaultDescriptorFile(),
                 rIsolatedRuntimeProps.isApplyRuntimeDependenciesComparisonLogic()
         );
     }
 
-    public DescriptorServiceImpl(DescriptorBundle defaultDescriptorBundle, Optional<Path> archiveFolder, boolean dependencyMatching) {
+    public DescriptorServiceImpl(DescriptorBundle defaultDescriptorBundle,
+                                 Optional<Path> archiveFolder,
+                                 boolean dependencyMatching
+    ) {
+        this(defaultDescriptorBundle, archiveFolder, null, dependencyMatching);
+    }
+
+    public DescriptorServiceImpl(
+            DescriptorBundle defaultDescriptorBundle,
+            Optional<Path> archiveFolder,
+            String defaultDescriptorFile,
+            boolean dependencyMatching
+    ) {
         this.defaultDescriptorBundle = defaultDescriptorBundle;
         this.archiveFolder = archiveFolder;
         this.dependencyMatching = dependencyMatching;
+        this.defaultDescriptorFile = defaultDescriptorFile;
     }
 
     @Override
     public Optional<List<Descriptor>> getDescriptors() {
+        if (defaultDescriptorFile == null) {
+            log.warn("*** Property runtimeservice.dist.defaultDescriptorFile is not set. Empty default descriptor will used.");
+        }
         return archiveFolder.map(dir -> {
             try (Stream<Path> files = Files.list(dir)) {
                 return files.map(Path::toFile).filter(file ->
-                        file.getName().startsWith(DESCRIPTOR_PREFIX) && file.isFile()
-                ).map(file -> {
-                    try (InputStream is = new FileInputStream(file)) {
-                        return mapper.readValue(is, Descriptor.class);
-                    } catch (IOException e) {
-                        throw new RuntimeException("Error getting descriptor from file: " + file.getName(), e);
-                    }
-                }).collect(Collectors.toList());
+                                file.getName().startsWith(DESCRIPTOR_PREFIX) && file.isFile()
+                        ).map(deserializeDescriptor())
+                        .peek(d -> {
+                            if (Objects.equals(d.getLeft().getName(), defaultDescriptorFile)) {
+                                this.defaultDescriptorBundle = toBundle(d.getRight());
+                            }
+                        })
+                        .map(Pair::getRight)
+                        .collect(Collectors.toList());
             } catch (IOException e) {
                 LOGGER.info("Error traversing [{}]: {}", dir, e.getMessage());
                 throw new RuntimeException("Error traversing [" + dir + "]: " + e.getMessage());
             }
         });
+    }
+
+    private Function<File, Pair<File, Descriptor>> deserializeDescriptor() {
+        return file -> {
+            try (InputStream is = Files.newInputStream(file.toPath())) {
+                return Pair.of(file, mapper.readValue(is, Descriptor.class));
+            } catch (IOException e) {
+                throw new RuntimeException("Error getting descriptor from file: " + file.getName(), e);
+            }
+        };
     }
 
     @Override
@@ -154,12 +189,10 @@ public class DescriptorServiceImpl implements DescriptorService {
         String bundleName = descriptor.getBundleName();
         String path = archiveFolder.map(folder -> folder.resolve(bundleName).toFile().getPath()).orElse(bundleName);
         File bundle = new File(path);
-        if (bundle.exists() && bundle.isFile()) {
-            return new DescriptorBundle(path, descriptor);
-        } else {
-            LOGGER.info("Descriptor [{}] matched, but bundle [{}] not found", descriptor.getLabel(), path);
-            return null;
+        if (!bundle.exists() || !bundle.isFile()) {
+            LOGGER.warn("Descriptor [{}] matched, but bundle [{}] not found", descriptor.getLabel(), path);
         }
+        return new DescriptorBundle(path, descriptor);
     }
 
     private Optional<ExecutionRuntime> getRuntime(File dir) {

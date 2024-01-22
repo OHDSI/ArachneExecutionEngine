@@ -38,6 +38,7 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRunt
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -50,7 +51,10 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -130,7 +134,7 @@ public class TarballRService extends RService implements ExecutionService {
         final String lineDelimiter = StringUtils.repeat("-", 32);
         try (FileWriter fw = new FileWriter(new File(workDir, "environment.txt")); PrintWriter pw = new PrintWriter(fw)) {
             pw.printf("Analysis Runtime Environment is %s(%s):[%s]\n", descriptor.getBundleName(), descriptor.getLabel(), descriptor.getId());
-            if (descriptor.getOsLibraries() != null) {
+            if (descriptor.getOsLibraries() != null && !descriptor.getOsLibraries().isEmpty()) {
                 pw.println(lineDelimiter);
                 pw.println("Operating System Libraries:");
                 pw.println(lineDelimiter);
@@ -143,7 +147,14 @@ public class TarballRService extends RService implements ExecutionService {
                     pw.println(lineDelimiter);
                     RExecutionRuntime rRuntime = (RExecutionRuntime) runtime;
                     for (RDependency rDependency : rRuntime.getDependencies()) {
-                        pw.println(rDependency.getName() + " " + rDependency.getVersion() + " " + rDependency.getOwner() + " " + rDependency.getDependencySourceType());
+                        pw.println(Stream.of(
+                                        rDependency.getName(),
+                                        rDependency.getVersion(),
+                                        rDependency.getOwner(),
+                                        rDependency.getDependencySourceType())
+                                .filter(Objects::nonNull)
+                                .map(Objects::toString)
+                                .collect(Collectors.joining(" ")));
                     }
                 }
             }
