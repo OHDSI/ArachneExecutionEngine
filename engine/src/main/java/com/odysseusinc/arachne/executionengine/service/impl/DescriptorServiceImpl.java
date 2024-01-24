@@ -131,7 +131,8 @@ public class DescriptorServiceImpl implements DescriptorService {
                             .orElseGet(() -> {
                                 LOGGER.warn("*** Property runtimeservice.dist.archiveFolder is not set or not exist. Empty default descriptor will used.");
                                 return defaultBundle;
-                            })).orElseGet(() -> {
+                            })
+                    ).orElseGet(() -> {
                         LOGGER.warn("*** Property runtimeservice.dist.defaultDescriptorFile is not set. Empty default descriptor will used.");
                         return defaultBundle;
                     });
