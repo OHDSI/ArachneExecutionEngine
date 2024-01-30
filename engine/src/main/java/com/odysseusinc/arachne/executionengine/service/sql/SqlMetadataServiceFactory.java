@@ -38,6 +38,7 @@ public class SqlMetadataServiceFactory {
         SqlMetadataService result;
         switch (type) {
             case SNOWFLAKE:
+            case SPARK:
             case POSTGRESQL:
                 result = new PostgreSqlMetadataService(dataSource);
                 break;

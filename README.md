@@ -72,6 +72,7 @@ of the following dbms types with `cdm.dbms` parameter:
 - bigquery
 - netezza
 - snowflake
+- spark
 
 ## Process R files with Docker (locally)
 
