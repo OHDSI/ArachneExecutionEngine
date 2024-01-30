@@ -28,6 +28,7 @@ public final class ConnectionParamsParser {
             case NETEZZA:
             case PDW:
             case SNOWFLAKE:
+            case SPARK:
             case SYNAPSE:
                 return new GenericParser();
             case REDSHIFT:
