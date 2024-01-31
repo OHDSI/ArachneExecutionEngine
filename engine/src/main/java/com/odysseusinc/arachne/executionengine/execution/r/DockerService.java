@@ -99,8 +99,13 @@ public class DockerService extends RService implements AutoCloseable {
         CompletableFuture<String> init = CompletableFuture.supplyAsync(
                 () -> {
                     log.info("Execution [{}] use Docker image [{}]", id, image);
-                    pullImage(callback, id, image, stdout, client);
-                    callback.accept(Stage.INITIALIZE, "Pull complete, creating container\r\n");
+                    if (client.authConfig().getRegistryAddress() != null) {
+                        pullImage(callback, id, image, stdout, client);
+                        callback.accept(Stage.INITIALIZE, "Pull complete, creating container\r\n");
+                    } else {
+                        log.info("Execution [{}] pull skipped,  no docker registry configured", id);
+                        callback.accept(Stage.INITIALIZE, "Pull skipped, no docker registry configured\r\n");
+                    }
                     log.info("Execution [{}] creating container with image [{}]", id, image);
                     String containerId = createContainer(analysisDir, env, image, script);
                     log.info("Execution [{}] created container [{}]", id, containerId);
