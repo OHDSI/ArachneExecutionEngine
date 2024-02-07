@@ -188,10 +188,12 @@ public class DescriptorServiceImpl implements DescriptorService {
         String bundleName = descriptor.getBundleName();
         String path = archiveFolder.map(folder -> folder.resolve(bundleName).toFile().getPath()).orElse(bundleName);
         File bundle = new File(path);
-        if (!bundle.exists() || !bundle.isFile()) {
-            LOGGER.warn("Descriptor [{}] matched, but bundle [{}] not found", descriptor.getLabel(), path);
+        if (bundle.exists() && bundle.isFile()) {
+            return new DescriptorBundle(path, descriptor);
+        } else {
+            LOGGER.info("Descriptor [{}] matched, but bundle [{}] not found", descriptor.getLabel(), path);
+            return null;
         }
-        return new DescriptorBundle(path, descriptor);
     }
 
     private Optional<ExecutionRuntime> getRuntime(File dir) {
