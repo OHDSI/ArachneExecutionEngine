@@ -139,7 +139,7 @@ public class AnalysisService {
             return new ExecutionOutcome(Stage.ABORT, e.getMessage(), overseer.getStdout() + "\r\n" + getStackTrace(e.getCause()));
         } catch (TimeoutException e) {
             log.info("Execution [{}] waiting for abort timed out", id);
-            return new ExecutionOutcome(Stage.ABORT, e.getMessage(), overseer.getStdout() + "\r\n" + getStackTrace(e.getCause()));
+            return new ExecutionOutcome(Stage.ABORT, e.getMessage(), overseer.getStdout() + "\r\n" + getStackTrace(e));
         }
     }
 
