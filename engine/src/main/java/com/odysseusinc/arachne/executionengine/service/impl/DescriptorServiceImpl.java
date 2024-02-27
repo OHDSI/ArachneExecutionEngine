@@ -168,9 +168,10 @@ public class DescriptorServiceImpl implements DescriptorService {
 
     private DescriptorBundle toBundle(Descriptor descriptor) {
         String bundleName = descriptor.getBundleName();
-        File bundle = archiveFolder.resolve(bundleName).toFile();
+        Path path = archiveFolder.resolve(bundleName);
+        File bundle = path.toFile();
         if (bundle.exists() && bundle.isFile()) {
-            return new DescriptorBundle(bundle.getName(), descriptor);
+            return new DescriptorBundle(path.toString(), descriptor);
         } else {
             log.info("For descriptor [{}] bundle [{}] not found", descriptor.getLabel(), bundle.getName());
             return null;
