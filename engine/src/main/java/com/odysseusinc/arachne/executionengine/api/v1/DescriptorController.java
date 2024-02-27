@@ -7,7 +7,6 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.converter.Descri
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -43,7 +42,7 @@ public class DescriptorController {
     @ApiOperation(value = "Runtimes for analysis")
     @RequestMapping(value = REST_API_DESCRIPTORS, method = RequestMethod.GET)
     public RuntimeEnvironmentDescriptorsDTO getDescriptors() {
-        Stream<Descriptor> descriptors = descriptorService.getDescriptors().map(Collection::stream).orElseGet(Stream::of);
+        Stream<Descriptor> descriptors = descriptorService.getDescriptors().stream();
         return new RuntimeEnvironmentDescriptorsDTO(useDocker, descriptors.map(descriptorConverter::toDto).collect(Collectors.toList()));
     }
 

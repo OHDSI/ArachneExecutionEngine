@@ -1,17 +1,15 @@
 package com.odysseusinc.arachne.executionengine.service;
 
-import com.odysseusinc.arachne.executionengine.model.descriptor.DefaultDescriptor;
 import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
 import com.odysseusinc.arachne.executionengine.service.impl.DescriptorServiceImpl;
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class DescriptorServiceTest {
     private final static String DEFAULT = "Default";
-    private final static Optional<Path> ENVS = Optional.of(new File("src/test/resources/environments").toPath());
+    private final static Path ENVS = new File("src/test/resources/environments").toPath();
 
     @Test
     public void requestedHades() {
@@ -24,14 +22,14 @@ public class DescriptorServiceTest {
 
     @Test
     public void requestedUnknownFallbackToMatching() {
-        DescriptorServiceImpl subj = new DescriptorServiceImpl(ENVS, true);
+        DescriptorServiceImpl subj = new DescriptorServiceImpl(ENVS,  true);
         DescriptorBundle bundle = subj.getDescriptorBundle(analysisFolder("strategus-match"), 1L, "foo");
         Assertions.assertEquals("descriptor_strategus_0.0.6", bundle.getDescriptor().getId());
     }
 
     @Test
     public void requestedUnknownFallbackToMatchingFails() {
-        DescriptorServiceImpl subj = new DescriptorServiceImpl(ENVS, true);
+        DescriptorServiceImpl subj = new DescriptorServiceImpl(ENVS, "descriptor_base.json", true);
         DescriptorBundle bundle = subj.getDescriptorBundle(analysisFolder("strategus-mismatch"), 1L, "foo");
         Assertions.assertEquals(DEFAULT, bundle.getDescriptor().getId());
     }
@@ -67,7 +65,7 @@ public class DescriptorServiceTest {
 
     @Test
     public void matchingEnabledStrategusMismatch() {
-        DescriptorServiceImpl subj = new DescriptorServiceImpl(ENVS, true);
+        DescriptorServiceImpl subj = new DescriptorServiceImpl(ENVS, "descriptor_base.json", true);
         Assertions.assertEquals(DEFAULT, subj.getDescriptorBundle(analysisFolder("strategus-mismatch"), 1L, null).getDescriptor().getId());
     }
 
