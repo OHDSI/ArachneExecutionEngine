@@ -14,7 +14,8 @@ RUN mkdir /impala
 ADD Cloudera_ImpalaJDBC4_2.5.41.zip /impala/impala-jdbc.zip
 RUN cd /impala && unzip impala-jdbc.zip && rm -f impala-jdbc.zip
 RUN mkdir /runtimes
-COPY ../descriptor/*.json /runtimes/
+COPY ../descriptor/ /runtimes/
+RUN ls -la /runtimes/*
 COPY run.sh /run.sh
 RUN dos2unix /run.sh && chmod +x /run.sh
 RUN apt-get remove -y unzip \
