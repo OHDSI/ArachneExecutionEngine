@@ -2,7 +2,6 @@ FROM eclipse-temurin:8-jdk
 LABEL maintainer="Odysseus Data Services, Inc: support@odysseusinc.com"
 VOLUME /tmp
 VOLUME /libs-r
-VOLUME /dist
 ADD krb5.conf /etc/
 ADD R-with-krb.sh /etc/
 RUN apt-get update && apt-get upgrade -y && DEBIAN_FRONTEND=noninteractive apt-get install -yq sudo unzip krb5-user dos2unix cron rsyslog logrotate systemctl
@@ -14,7 +13,8 @@ ADD execution-engine-exec.jar /execution-engine.jar
 RUN mkdir /impala
 ADD Cloudera_ImpalaJDBC4_2.5.41.zip /impala/impala-jdbc.zip
 RUN cd /impala && unzip impala-jdbc.zip && rm -f impala-jdbc.zip
-EXPOSE 8888
+RUN mkdir /runtimes
+COPY ../descriptor/* /runtimes/
 COPY run.sh /run.sh
 RUN dos2unix /run.sh && chmod +x /run.sh
 RUN apt-get remove -y unzip \
@@ -22,4 +22,5 @@ RUN apt-get remove -y unzip \
     && apt-get autoremove -y \
     && apt-get autoclean -y \
     && rm -rf /var/lib/apt/lists/*
+EXPOSE 8888
 CMD ["/run.sh"]
