@@ -38,7 +38,6 @@ public class SqlMetadataServiceFactory {
         SqlMetadataService result;
         switch (type) {
             case SNOWFLAKE:
-            case SPARK:
             case POSTGRESQL:
                 result = new PostgreSqlMetadataService(dataSource);
                 break;
@@ -55,6 +54,7 @@ public class SqlMetadataServiceFactory {
                 break;
             case IMPALA:
             case BIGQUERY:
+            case SPARK:
             case HIVE:
                 result = new ImpalaMetadataService(dataSource);
                 break;
