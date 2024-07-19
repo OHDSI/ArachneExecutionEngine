@@ -24,6 +24,7 @@ REDSHIFT_PATH=../extras/redshift/
 ORACLE_PATH=../extras/oracle/
 MSSQL_PATH=../extras/mssql/
 SNOWFLAKE_PATH=../extras/snowflake/
+SPARK_PATH=../extras/spark/
 
 function print_help {
 	echo "Usage: run_build.sh [OPTIONS]"
@@ -45,13 +46,14 @@ function print_help {
 	echo -e "  -m PATH \t\tPath to MS SQL drivers"
 	echo -e "  -o PATH \t\tPath to Oracle drivers"
 	echo -e "  -w PATH \t\tPath to Snowflake drivers"
+	echo -e "  -k PATH \t\tPath to Spark drivers"
 	echo -e "  -u BITBUCKET_USER \t\tBitbucket username"
 	echo -e "  -t BITBUCKET_PASSWORD \t\tBitbucket app password"
 	echo -e "  -h \t\t\tPrints this"
 }
 
 OPTIND=1
-while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o:w:u:t" opt; do
+while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o:w:k:u:t" opt; do
 	case $opt in 
 		a)
 			ARCH=$OPTARG
@@ -105,6 +107,9 @@ while getopts ":a:d:r:c:j:l:b:f:h:g:i:n:p:s:m:o:w:u:t" opt; do
 		w)
 		    SNOWFLAKE_PATH=$OPTARG
 		    ;;
+		k)
+        SPARK_PATH=$OPTARG
+        ;;
 		u)
 		    BITBUCKET_USER=$OPTARG
 		    ;;
@@ -221,6 +226,10 @@ cp $MSSQL_PATH/*.jar $BUILD_PATH/mssql/
 # Snowflake drivers
 mkdir $BUILD_PATH/snowflake/
 cp $SNOWFLAKE_PATH/*.jar $BUILD_PATH/snowflake/
+
+# Spark drivers
+mkdir $BUILD_PATH/spark/
+cp $SPARK_PATH/*.jar $BUILD_PATH/spark/
 
 sudo chmod +x $BUILD_PATH/root/install_packages.sh
 sudo chroot $BUILD_PATH /root/install_packages.sh $CRAN_DIST $CRAN_URL $JDBC_TEST

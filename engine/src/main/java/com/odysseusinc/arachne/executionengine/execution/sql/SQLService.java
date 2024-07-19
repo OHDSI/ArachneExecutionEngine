@@ -54,6 +54,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
@@ -72,6 +73,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class SQLService implements ExecutionService {
+    private static final List<DBMSType> SINLGLE_STATEMENT_TYPES = Arrays.asList(DBMSType.ORACLE, DBMSType.BIGQUERY, DBMSType.SPARK);
     private static final PathMatcher SQL_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.sql");
     private final Logger log = LoggerFactory.getLogger(SQLService.class);
     @Autowired
@@ -104,8 +106,7 @@ public class SQLService implements ExecutionService {
                         try {
                             SqlExecutor sqlExecutor;
 
-                            if (analysis.getDataSource().getType().equals(DBMSType.ORACLE) ||
-                                    analysis.getDataSource().getType().equals(DBMSType.BIGQUERY)) {
+                            if (SINLGLE_STATEMENT_TYPES.contains(analysis.getDataSource().getType())) {
                                 sqlExecutor = new SingleStatementSqlExecutor();
                             } else {
                                 sqlExecutor = new DefaultSqlExecutor();

@@ -54,6 +54,7 @@ public class SqlMetadataServiceFactory {
                 break;
             case IMPALA:
             case BIGQUERY:
+            case SPARK:
             case HIVE:
                 result = new ImpalaMetadataService(dataSource);
                 break;
