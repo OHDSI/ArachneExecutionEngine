@@ -28,9 +28,9 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.EngineStatus;
 import com.odysseusinc.arachne.executionengine.execution.AnalysisService;
 import com.odysseusinc.arachne.executionengine.execution.CallbackService;
-import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -60,11 +60,13 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -100,6 +102,12 @@ public class AnalysisController {
         this.analysisService = analysisService;
         this.callbackService = callbackService;
         this.threadPoolExecutor = threadPoolExecutor;
+    }
+
+    @ApiOperation(value = "Status for analysis")
+    @GetMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
+    public EngineStatus status(@RequestParam(value = "id", required = false) List<Long> ids) {
+        return analysisService.getStatus(ids);
     }
 
     @ApiOperation(value = "Files for analysis")
