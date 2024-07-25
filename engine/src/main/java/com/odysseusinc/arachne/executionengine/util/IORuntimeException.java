@@ -1,4 +1,5 @@
 /*
+ *
  * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +15,26 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Anton Gackovka
- * Created: March 1, 2018
+ * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
+ * Created: August 08, 2017
+ *
  */
 
-package com.odysseusinc.arachne.executionengine.scheduler;
+package com.odysseusinc.arachne.executionengine.util;
 
-import com.odysseusinc.arachne.executionengine.util.TempHolder;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+public class IORuntimeException extends RuntimeException {
+    public IORuntimeException() {
 
-import java.io.IOException;
+        super();
+    }
 
-@Component
-public class EngineTempHolder extends TempHolder {
+    public IORuntimeException(String message) {
 
-    @Scheduled(cron = "${tmp.holder.cron}")
-    public void hold() throws IOException {
-        super.hold();
+        super(message);
+    }
+
+    public IORuntimeException(String message, Throwable cause) {
+
+        super(message, cause);
     }
 }
