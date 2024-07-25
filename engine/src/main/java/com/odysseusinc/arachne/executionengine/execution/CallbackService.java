@@ -26,14 +26,15 @@ import com.google.common.io.Files;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisExecutionStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
-import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
 import com.odysseusinc.arachne.executionengine.util.AutoCloseWrapper;
+import com.odysseusinc.arachne.executionengine.util.ZipUtils;
 import java.io.File;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
@@ -95,7 +96,8 @@ public class CallbackService {
             List<File> files = compressedResult
                     ? getCompressedResults(analysis, resultDir, chunkSize, id, zipDir)
                     : AnalisysUtils.getDirectoryItemsExclude(resultDir, AnalisysUtils.EXCLUDE_JARS_MATCHER);
-            return AutoCloseWrapper.of(CommonFileUtils.getFSResources(files), cleanup);
+            List<FileSystemResource> resources = files.stream().map(FileSystemResource::new).collect(Collectors.toList());
+            return AutoCloseWrapper.of(resources, cleanup);
         } catch (RuntimeException | ZipException e) {
             cleanup.run();
             throw e;
@@ -106,7 +108,7 @@ public class CallbackService {
         final File archive = new File(zipDir, id + "_result.zip");
         log.info("Adding folder [{}] to zip [{}] with chunk size = {}", resultDir.getAbsolutePath(), archive.getAbsolutePath(), chunkSize);
         try {
-            final File dir = CommonFileUtils.compressAndSplit(resultDir, archive, chunkSize, analysis.getResultExclusions());
+            final File dir = ZipUtils.compressAndSplit(resultDir, archive, chunkSize, analysis.getResultExclusions());
             return AnalisysUtils.getDirectoryItemsExclude(dir, AnalisysUtils.EXCLUDE_JARS_MATCHER);
         } catch (ZipException ex) {
             log.error(ex.getMessage());
@@ -153,4 +155,5 @@ public class CallbackService {
         Long submissionId = analysisResult.getId();
         return nodeRestTemplate.exchange(url, HttpMethod.POST, entity, String.class, submissionId, password);
     }
+
 }

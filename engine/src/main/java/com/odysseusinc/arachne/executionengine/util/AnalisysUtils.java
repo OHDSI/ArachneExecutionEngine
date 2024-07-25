@@ -22,7 +22,6 @@
 
 package com.odysseusinc.arachne.executionengine.util;
 
-import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -32,13 +31,14 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileAttribute;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import net.lingala.zip4j.exception.ZipException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.web.multipart.MultipartFile;
 
 public class AnalisysUtils {
@@ -121,27 +121,11 @@ public class AnalisysUtils {
             // TODO. Temp solution - this will not work correct with splitted archives
             List<File> fileList = getDirectoryItems(temporaryDir);
             for (File zippedFile : fileList) {
-                CommonFileUtils.unzipFiles(zippedFile, parent);
+                ZipUtils.unzipFiles(zippedFile, parent);
             }
         } finally {
             org.apache.commons.io.FileUtils.deleteQuietly(temporaryDir);
         }
     }
 
-    public static List<FileSystemResource> getFileSystemResources(
-            Long id, File file, Boolean compressedResult, Long chunkSize, File dir, String resultExclusions
-    ) throws ZipException {
-
-        List<File> resultFiles;
-        if (compressedResult) {
-            final File zipArchive = new File(dir, String.valueOf(id) + "_result.zip");
-            log.info("Adding folder \"{}\" to zip \"{}\" with chunk size = {}", file.getAbsolutePath(),
-                    zipArchive.getAbsolutePath(), chunkSize);
-            final File zipDir = CommonFileUtils.compressAndSplit(file, zipArchive, chunkSize, resultExclusions);
-            resultFiles = AnalisysUtils.getDirectoryItemsExclude(zipDir, EXCLUDE_JARS_MATCHER);
-        } else {
-            resultFiles = AnalisysUtils.getDirectoryItemsExclude(file, EXCLUDE_JARS_MATCHER);
-        }
-        return CommonFileUtils.getFSResources(resultFiles);
-    }
 }

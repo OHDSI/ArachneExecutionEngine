@@ -20,50 +20,40 @@
  *
  */
 
-package com.odysseusinc.arachne.execution_engine_common.util;
+package com.odysseusinc.arachne.executionengine.util;
 
 import static org.apache.commons.lang3.StringUtils.split;
 
-import com.odysseusinc.arachne.execution_engine_common.exception.IORuntimeException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.CompressionMethod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.AntPathMatcher;
 
-public class CommonFileUtils {
-
-    private static final Logger log = LoggerFactory.getLogger(CommonFileUtils.class);
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class ZipUtils {
     private static final AntPathMatcher matcher = new AntPathMatcher();
     private static final String DELETE_IN_ZIP_ERROR = "Error deleting file in zip archive. Skipped";
     private static final PathMatcher ZIP_FILES_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.zip");
     private static final PathMatcher RENV_FILES_MATCHER = FileSystems.getDefault()
             .getPathMatcher("glob:{,**/}renv{,/**}");
-
-    private CommonFileUtils() {
-
-    }
-
-    public static List<FileSystemResource> getFSResources(List<File> files) {
-
-        return files.stream()
-                .map(FileSystemResource::new)
-                .collect(Collectors.toList());
-    }
 
     public static void unzipFiles(File zipArchive, File destination) throws FileNotFoundException {
 
@@ -77,16 +67,6 @@ public class CommonFileUtils {
         } catch (ZipException ex) {
             log.error(ex.getMessage(), ex);
         }
-    }
-
-    public static boolean isValidZipFile(File file) {
-        ZipFile zipFile = new ZipFile(file);
-        return zipFile.isValidZipFile();
-    }
-
-    public static File compressAndSplit(File folder, File zipArchive, Long maximumSize) throws ZipException {
-
-        return compressAndSplit(folder, zipArchive, maximumSize, "");
     }
 
     public static File compressAndSplit(File folder, File zipArchive, Long maximumSize, String exclusions)
