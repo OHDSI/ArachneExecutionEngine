@@ -1,16 +1,24 @@
 package com.odysseusinc.arachne.executionengine.execution.r;
 
 import com.odysseusinc.arachne.commons.types.DBMSType;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
 import com.odysseusinc.arachne.executionengine.config.properties.HiveBulkLoadProperties;
 import com.odysseusinc.arachne.executionengine.execution.DriverLocations;
 import com.odysseusinc.arachne.executionengine.execution.ExecutionService;
+import com.odysseusinc.arachne.executionengine.execution.FailedOverseer;
 import com.odysseusinc.arachne.executionengine.execution.KerberosSupport;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
+import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -24,6 +32,8 @@ import org.springframework.beans.factory.annotation.Value;
 @Slf4j
 public abstract class RService implements ExecutionService {
     protected static final String EXECUTION_COMMAND = "Rscript";
+
+    private static final String HOST_DOCKER_INTERNAL = "host.docker.internal";
 
     private static final String RUNTIME_ENV_DATA_SOURCE_NAME = "DATA_SOURCE_NAME";
     private static final String RUNTIME_ENV_DBMS_USERNAME = "DBMS_USERNAME";
@@ -58,6 +68,8 @@ public abstract class RService implements ExecutionService {
     @Autowired
     private HiveBulkLoadProperties hiveBulkLoadProperties;
     @Autowired
+    private ConnectionPoolService poolService;
+    @Autowired
     private DriverLocations drivers;
 
     private static String sanitizeFilename(String filename) {
@@ -69,6 +81,27 @@ public abstract class RService implements ExecutionService {
     }
 
     public Overseer analyze(AnalysisSyncRequestDTO analysis, File analysisDir, BiConsumer<String, String> callback, Integer updateInterval) {
+        Long id = analysis.getId();
+        DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
+        String jdbcUrl = dataSource.getConnectionString();
+        if (jdbcUrl.contains(HOST_DOCKER_INTERNAL)) {
+            try {
+                String address = InetAddress.getByName(HOST_DOCKER_INTERNAL).getHostAddress();
+                String newUrl = jdbcUrl.replace(HOST_DOCKER_INTERNAL, address);
+                log.info("Resolved {} = [{}]", HOST_DOCKER_INTERNAL, address);
+                dataSource.setConnectionString(newUrl);
+            } catch (UnknownHostException e) {
+                return new FailedOverseer(Instant.now(), "Unable to resolve to [" + HOST_DOCKER_INTERNAL + "]", AnalysisRequestTypeDTO.R, e);
+            }
+        }
+        log.info("Execution [{}] checking connection to [{}]", id, dataSource.getConnectionString());
+        try (Connection conn = poolService.getDataSource(dataSource).getConnection()) {
+            String name = conn.getMetaData().getDatabaseProductName();
+            log.info("Execution [{}] connection verified, engine: [{}]", id, name);
+        } catch (SQLException e) {
+            log.info("Execution [{}] connection verification failed [{}]", id, e.getMessage());
+        }
+
         File keystoreDir = new File(analysisDir, "keys");
         KrbConfig krbConfig = kerberosSupport.getConfig(analysis, keystoreDir);
 

@@ -33,12 +33,15 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.EngineStatus;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.util.AutoCloseWrapper;
 import java.io.File;
+import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -152,6 +156,22 @@ public class AnalysisService {
         }
     }
 
+    public EngineStatus getStatus(List<Long> idsMaybe) {
+        Map<Long, ExecutionOutcome> statuses = Optional.ofNullable(idsMaybe).map(ids ->
+                ids.stream().flatMap(id ->
+                        Optional.ofNullable(overseers.get(id)).map(overseer ->
+                                Stream.of(Pair.of(id, getStatus(overseer)))
+                        ).orElseGet(Stream::of)
+                ).collect(Collectors.toMap(Pair::getKey, Pair::getValue))
+        ).orElseGet(Collections::emptyMap);
+        return new EngineStatus(Instant.now(), statuses);
+    }
+
+    private static ExecutionOutcome getStatus(Overseer overseer) {
+        return Optional.ofNullable(overseer.getResult().getNow(null)).orElseGet(() ->
+                new ExecutionOutcome(Stage.EXECUTE, null, overseer.getStdout())
+        );
+    }
 
     @FileDescriptorCount
     public AnalysisRequestStatusDTO analyze(
