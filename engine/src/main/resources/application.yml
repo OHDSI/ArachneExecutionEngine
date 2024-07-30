@@ -84,6 +84,7 @@ drivers:
     oracle: /oracle
     snowflake: /snowflake
     spark: /spark
+    iris: /iris
 bulkload:
   enableMPP: false
   hive:
