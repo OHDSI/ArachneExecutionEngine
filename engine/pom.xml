@@ -25,7 +25,7 @@
 
         <start-class>com.odysseusinc.arachne.executionengine.ExecutionEngineStarter</start-class>
 
-        <springfox.swagger2.version>2.9.2</springfox.swagger2.version>
+        <springfox.swagger2.version>2.10.0</springfox.swagger2.version>
 
         <docker.image.prefix>odysseusinc</docker.image.prefix>
         <commons.lang3.version>3.11</commons.lang3.version>
