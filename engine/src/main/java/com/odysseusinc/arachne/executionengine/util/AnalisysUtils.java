@@ -22,6 +22,10 @@
 
 package com.odysseusinc.arachne.executionengine.util;
 
+import lombok.extern.slf4j.Slf4j;
+import net.lingala.zip4j.exception.ZipException;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -36,13 +40,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import net.lingala.zip4j.exception.ZipException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 public class AnalisysUtils {
-    private static final Logger log = LoggerFactory.getLogger(AnalisysUtils.class);
     private static final String VISITOR_ACCESS_ERROR = "Access error when access to file '{}'. Skipped";
     public static final PathMatcher EXCLUDE_JARS_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.jar");
 

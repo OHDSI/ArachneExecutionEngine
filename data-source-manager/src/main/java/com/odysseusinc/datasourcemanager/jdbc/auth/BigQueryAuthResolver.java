@@ -3,6 +3,9 @@ package com.odysseusinc.datasourcemanager.jdbc.auth;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,13 +13,9 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.Objects;
 import java.util.Optional;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class BigQueryAuthResolver implements DataSourceAuthResolver<File> {
-
-	private static final Logger logger = LoggerFactory.getLogger(BigQueryAuthResolver.class);
 
 	@Override
 	public boolean supports(DataSourceUnsecuredDTO dataSourceData) {
@@ -37,7 +36,7 @@ public class BigQueryAuthResolver implements DataSourceAuthResolver<File> {
 			dataSourceData.setConnectionString(connStr);
 			return Optional.of(keyFile);
 		} catch (IOException e) {
-			logger.error("Failed to resolve BigQuery authentication for Source: [{}]", dataSourceData.getName(), e);
+			log.error("Failed to resolve BigQuery authentication for Source: [{}]", dataSourceData.getName(), e);
 			throw new RuntimeException(e);
 		}
 	}

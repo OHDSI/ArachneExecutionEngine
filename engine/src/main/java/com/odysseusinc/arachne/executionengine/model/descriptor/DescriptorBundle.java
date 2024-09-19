@@ -1,7 +1,5 @@
 package com.odysseusinc.arachne.executionengine.model.descriptor;
 
-import com.odysseusinc.arachne.executionengine.model.descriptor.Descriptor;
-
 public class DescriptorBundle {
     private String path;
     private Descriptor descriptor;

@@ -9,6 +9,11 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.ParseStrategy;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.REnvParseStrategy;
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import com.odysseusinc.arachne.executionengine.util.ZipInputSubStream;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,17 +30,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 public class DescriptorServiceImpl implements DescriptorService {
-    /** @deprecated */
-    private static final Logger LOGGER = log;
     private static final List<ParseStrategy> STRATEGIES = Arrays.asList(
             new REnvParseStrategy()
     );
@@ -128,11 +126,11 @@ public class DescriptorServiceImpl implements DescriptorService {
         return available.stream().filter(descriptor ->
                 descriptor.getId().equals(id)
         ).reduce((a, b) -> {
-            LOGGER.error("For analysis [{}], multiple descriptors found for requested id [{}]: [{}] and [{}]",
+            log.error("For analysis [{}], multiple descriptors found for requested id [{}]: [{}] and [{}]",
                     analysisId, id, a.getBundleName(), b.getBundleName());
             throw new RuntimeException("For analysis [" + analysisId + "], multiple descriptors found for requested id [" + id + "]");
         }).map(descriptor -> {
-            LOGGER.info("For analysis [{}], using requested descriptor [{}] found under [{}]", analysisId, id, descriptor.getBundleName());
+            log.info("For analysis [{}], using requested descriptor [{}] found under [{}]", analysisId, id, descriptor.getBundleName());
             return toBundle(descriptor);
         });
     }
@@ -146,20 +144,20 @@ public class DescriptorServiceImpl implements DescriptorService {
             ).collect(Collectors.partitioningBy(entry -> entry.getValue() == null));
             List<Map.Entry<Descriptor, String>> matched = results.get(true);
             if (matched.isEmpty()) {
-                LOGGER.warn("For analysis [{}] of total [{}] descriptors none matched to requested. Fall back to default", analysisId, available.size());
+                log.warn("For analysis [{}] of total [{}] descriptors none matched to requested. Fall back to default", analysisId, available.size());
                 if (dependencyMatching) {
                     List<Map.Entry<Descriptor, String>> notMatched = results.get(false);
                     notMatched.forEach(mismatch -> {
-                        LOGGER.info("Descriptor [{}] not matched: {}", mismatch.getKey().getLabel(), mismatch.getValue());
+                        log.info("Descriptor [{}] not matched: {}", mismatch.getKey().getLabel(), mismatch.getValue());
                     });
                 }
                 return Optional.empty();
             } else {
                 return matched.stream().reduce((a, b) -> {
-                    LOGGER.info("For analysis [{}] multiple descriptors matched. Discarded extra [{}]", analysisId, b.getKey().getBundleName());
+                    log.info("For analysis [{}] multiple descriptors matched. Discarded extra [{}]", analysisId, b.getKey().getBundleName());
                     return a;
                 }).map(match -> {
-                    LOGGER.info("For analysis [{}] using matched descriptor [{}]", analysisId, match.getKey().getBundleName());
+                    log.info("For analysis [{}] using matched descriptor [{}]", analysisId, match.getKey().getBundleName());
                     return match;
                 });
             }
@@ -188,11 +186,11 @@ public class DescriptorServiceImpl implements DescriptorService {
                     throw new RuntimeException("Error reading file [" + name + "]", e);
                 }
             }).reduce((a, b) -> {
-                LOGGER.error("Multiple descriptors found: [{}] and [{}], aborting", a, b);
+                log.error("Multiple descriptors found: [{}] and [{}], aborting", a, b);
                 throw new RuntimeException("Multiple descriptors found: [" + a + "] and [" + b + "]");
             });
         } catch (IOException e) {
-            LOGGER.error("Error traversing directory [{}]:", dir.getPath(), e);
+            log.error("Error traversing directory [{}]:", dir.getPath(), e);
             throw new RuntimeException("Error traversing directory [" + dir.getPath() + "]", e);
         }
     }
@@ -216,7 +214,7 @@ public class DescriptorServiceImpl implements DescriptorService {
                         strategy.apply(name, is)
                 ).filter(Objects::nonNull).findFirst().flatMap(o -> o)
         ).peek(runtime -> {
-            LOGGER.info("Detected runtime descriptor [{}] in [{}]", runtime, name);
+            log.info("Detected runtime descriptor [{}] in [{}]", runtime, name);
         });
     }
 
