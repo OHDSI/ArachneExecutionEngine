@@ -6,10 +6,10 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.ExecutionRuntime
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.REnvLock;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.RPackage;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.RPackageGitHub;
+
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.NotImplementedException;
 
 public class RExecutionRuntime implements ExecutionRuntime {
     @JsonProperty
@@ -73,11 +73,6 @@ public class RExecutionRuntime implements ExecutionRuntime {
     @Override
     public String getVersion() {
         return version;
-    }
-
-    @Override
-    public List<String> createInstallScripts() {
-        throw new NotImplementedException();
     }
 
     public List<RDependency> getDependencies() {

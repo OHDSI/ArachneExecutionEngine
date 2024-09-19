@@ -29,17 +29,8 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.ExecutionEngineStarter;
-
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,14 +44,18 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestPropertySource(locations = "classpath:application-test.properties")
 @SpringBootTest(classes = ExecutionEngineStarter.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, properties = "classpath:application-test.properties")
@@ -150,18 +145,6 @@ public class AnalysisControllerTest {
                 HttpMethod.POST, requestEntity,
                 String.class));
         assertEquals(HttpClientErrorException.BadRequest.class, throwable.getClass());
-    }
-
-    private void AssertStates() {
-
-        try {
-            latch.await(10, TimeUnit.SECONDS);
-            assertTrue(updateStatusIsOk.get());
-            latch.await(10, TimeUnit.SECONDS);
-            assertTrue(resultIsOk.get());
-        } catch (InterruptedException e) {
-            log.error("", e);
-        }
     }
 
     private AnalysisRequestDTO getAnalysis() {

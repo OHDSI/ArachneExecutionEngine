@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.RuntimeType;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRuntime;
-import java.util.List;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -20,8 +19,6 @@ public interface ExecutionRuntime {
     RuntimeType getType();
 
     String getVersion();
-
-    List<String> createInstallScripts();
 
     /**
      * Compares this runtime with another runtime  and returns any mismatches.
