@@ -9,11 +9,13 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRunt
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv.REnvLock;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.util.Collections;
+import java.util.List;
 
 // Used for creating descriptors from REnv lock files
 // Only for developers
@@ -39,7 +41,7 @@ public class DescriptorTool {
             }
         }
         Descriptor descriptor = new Descriptor();
-        descriptor.getExecutionRuntimes().add(executionRuntime);
+        descriptor.setExecutionRuntimes(Collections.singletonList(executionRuntime));
         descriptor.setBundleName(BUNDLE_NAME);
         descriptor.setLabel(DESCRIPTOR_LABEL);
         descriptor.setId(DESCRIPTOR_ID);
@@ -66,16 +68,19 @@ public class DescriptorTool {
         sb.append(System.lineSeparator());
         String cranString = "install_version(\"%s\", version = \"%s\", type = \"source\")";
         String githubString = "install_github(\"%s/%s\", ref = \"%s\")";
-        for (ExecutionRuntime executionRuntime: descriptor.getExecutionRuntimes()) {
-            if (executionRuntime.getType().equals(RuntimeType.R)) {
-                RExecutionRuntime rExecutionRuntime = (RExecutionRuntime) executionRuntime;
-                for (RDependency rDependency: rExecutionRuntime.getDependencies()) {
-                    if (rDependency.getDependencySourceType().equals(RDependencySourceType.CRAN)) {
-                        sb.append(String.format(cranString, rDependency.getName(), rDependency.getVersion()));
-                    } else {
-                        sb.append(String.format(githubString, rDependency.getOwner(), rDependency.getName(), rDependency.getVersion()));
+        List<ExecutionRuntime> runtimes = descriptor.getExecutionRuntimes();
+        if (runtimes != null) {
+            for (ExecutionRuntime executionRuntime : runtimes) {
+                if (executionRuntime.getType().equals(RuntimeType.R)) {
+                    RExecutionRuntime rExecutionRuntime = (RExecutionRuntime) executionRuntime;
+                    for (RDependency rDependency : rExecutionRuntime.getDependencies()) {
+                        if (rDependency.getDependencySourceType().equals(RDependencySourceType.CRAN)) {
+                            sb.append(String.format(cranString, rDependency.getName(), rDependency.getVersion()));
+                        } else {
+                            sb.append(String.format(githubString, rDependency.getOwner(), rDependency.getName(), rDependency.getVersion()));
+                        }
+                        sb.append(System.lineSeparator());
                     }
-                    sb.append(System.lineSeparator());
                 }
             }
         }
@@ -83,7 +88,7 @@ public class DescriptorTool {
     }
 
     public static REnvLock getREnvLock(File file) throws IOException {
-        InputStream is = new FileInputStream(file);
+        InputStream is = Files.newInputStream(file.toPath());
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(is, REnvLock.class);
     }

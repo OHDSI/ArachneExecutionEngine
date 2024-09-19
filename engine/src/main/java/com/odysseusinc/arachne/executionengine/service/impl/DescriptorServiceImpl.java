@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -138,7 +139,7 @@ public class DescriptorServiceImpl implements DescriptorService {
     private Optional<DescriptorBundle> findMatchingDescriptor(File dir, Long analysisId, List<Descriptor> available) {
         return getRuntime(dir).flatMap(runtime -> {
             Map<Boolean, List<Map.Entry<Descriptor, String>>> results = available.stream().flatMap(descriptor ->
-                    descriptor.getExecutionRuntimes().stream().<Map.Entry<Descriptor, String>>map(runtime1 ->
+                    Optional.ofNullable(descriptor.getExecutionRuntimes()).orElseGet(Collections::emptyList).stream().<Map.Entry<Descriptor, String>>map(runtime1 ->
                             new AbstractMap.SimpleEntry<>(descriptor, runtime1.getMismatches(runtime))
                     )
             ).collect(Collectors.partitioningBy(entry -> entry.getValue() == null));
