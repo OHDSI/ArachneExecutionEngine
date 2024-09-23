@@ -1,12 +1,11 @@
 package com.odysseusinc.arachne.executionengine.execution.r;
 
-import static com.github.dockerjava.api.model.ResponseItem.ProgressDetail;
-
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.api.model.PullResponseItem;
 import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
@@ -15,24 +14,34 @@ import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
+import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.DockerEnvironmentDTO;
 import com.odysseusinc.arachne.executionengine.config.properties.DockerRegistryProperties;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
+import com.odysseusinc.arachne.executionengine.util.Streams;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
-import java.io.File;
-import java.net.URI;
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.net.URI;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static com.github.dockerjava.api.model.ResponseItem.ProgressDetail;
+
+@Service
 @Slf4j
 public class DockerService extends RService implements AutoCloseable {
     private static final String WORKDIR = "/etc/analysis";
@@ -54,11 +63,17 @@ public class DockerService extends RService implements AutoCloseable {
     @Value("${docker.image.default}")
     private String defaultImage;
 
+    @Value("${docker.image.filter}")
+    private String filterRegex;
+
+    private final boolean pull;
+
     @Autowired
     @Qualifier("analysisTaskExecutor")
     private ThreadPoolTaskExecutor executor;
 
     public DockerService(DockerRegistryProperties properties) {
+        pull = properties.getUrl() != null;
         DefaultDockerClientConfig.Builder builder = DefaultDockerClientConfig.createDefaultConfigBuilder()
                 .withDockerTlsVerify(certPath != null)
                 .withDockerCertPath(certPath)
@@ -98,8 +113,8 @@ public class DockerService extends RService implements AutoCloseable {
 
         CompletableFuture<String> init = CompletableFuture.supplyAsync(
                 () -> {
-                    log.info("Execution [{}] use Docker image [{}]", id, image);
-                    if (host != null) {
+                    log.info("Execution [{}] use Docker image [{}], pull: {}", id, image, pull);
+                    if (pull) {
                         pullImage(callback, id, image, stdout, client);
                         callback.accept(Stage.INITIALIZE, "Pull complete, creating container\r\n");
                     } else {
@@ -115,8 +130,10 @@ public class DockerService extends RService implements AutoCloseable {
                 },
                 executor
         );
-
-        return new DockerOverseer(id, client, started, runtimeTimeOutSec, stdout, init, updateInterval, sendCallback, image, killTimeoutSec);
+        // Look for exact tag here, ignore configuration!
+        // We will only truly know the image after the execution, but need to return something right away.
+        String imageTagOrId = listEnvironments(image).findFirst().map(DockerEnvironmentDTO::getImageId).orElse(image);
+        return new DockerOverseer(id, client, started, runtimeTimeOutSec, stdout, init, updateInterval, sendCallback, imageTagOrId, killTimeoutSec);
     }
 
     private void pullImage(BiConsumer<String, String> callback, Long id, String image, StringBuffer stdout, DockerClient client) {
@@ -166,6 +183,34 @@ public class DockerService extends RService implements AutoCloseable {
                 .withWorkingDir(WORKDIR)
                 .exec();
         return container.getId();
+    }
+
+    public List<DockerEnvironmentDTO> listEnvironments() {
+        return Optional.ofNullable(filterRegex).map(regex ->
+                Stream.concat(
+                        Streams.from(defaultImage()), listEnvironments(regex)
+                ).collect(Collectors.toList())
+        ).orElseGet(
+                () -> defaultImage().map(Collections::singletonList).orElse(null)
+        );
+    }
+
+    private Optional<DockerEnvironmentDTO> defaultImage() {
+        return Optional.ofNullable(defaultImage).map(img -> new DockerEnvironmentDTO(null, Arrays.asList(defaultImage)));
+    }
+
+    private Stream<DockerEnvironmentDTO> listEnvironments(String filterRegex) {
+        List<Image> images = client.listImagesCmd().exec();
+        return images.stream().flatMap(image -> {
+            List<String> tags = getTags(image, filterRegex);
+            return tags.isEmpty() ? Stream.empty() : Stream.of(new DockerEnvironmentDTO(image.getId(), tags));
+        });
+    }
+
+    private List<String> getTags(Image image, String imageFilterRegex) {
+        return Streams.ofNullable(image.getRepoTags()).flatMap(Arrays::stream).filter(tag ->
+                tag.matches(imageFilterRegex)
+        ).collect(Collectors.toList());
     }
 
     @Override

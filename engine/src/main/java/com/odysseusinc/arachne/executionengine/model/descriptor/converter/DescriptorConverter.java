@@ -3,7 +3,7 @@ package com.odysseusinc.arachne.executionengine.model.descriptor.converter;
 import com.google.common.collect.ImmutableMap;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.RuntimeType;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.ExecutionRuntimeDTO;
-import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.RuntimeEnvironmentDescriptorDTO;
+import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.TarballEnvironmentDTO;
 import com.odysseusinc.arachne.executionengine.model.descriptor.Descriptor;
 import com.odysseusinc.arachne.executionengine.model.descriptor.ExecutionRuntime;
 import com.odysseusinc.arachne.executionengine.model.descriptor.converter.r.RExecutionRuntimeConverter;
@@ -18,8 +18,8 @@ public class DescriptorConverter {
             RuntimeType.R, new RExecutionRuntimeConverter()
     );
 
-    public RuntimeEnvironmentDescriptorDTO toDto(Descriptor model) {
-        RuntimeEnvironmentDescriptorDTO dto = new RuntimeEnvironmentDescriptorDTO();
+    public static TarballEnvironmentDTO toDto(Descriptor model) {
+        TarballEnvironmentDTO dto = new TarballEnvironmentDTO();
         dto.setId(model.getId());
         dto.setBundleName(model.getBundleName());
         dto.setLabel(model.getLabel());

@@ -22,10 +22,6 @@
 
 package com.odysseusinc.arachne.executionengine.config;
 
-import com.odysseusinc.arachne.executionengine.config.properties.DockerRegistryProperties;
-import com.odysseusinc.arachne.executionengine.execution.ExecutionService;
-import com.odysseusinc.arachne.executionengine.execution.r.DockerService;
-import com.odysseusinc.arachne.executionengine.execution.r.TarballRService;
 import com.odysseusinc.datasourcemanager.krblogin.KerberosService;
 import com.odysseusinc.datasourcemanager.krblogin.KerberosServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,8 +46,6 @@ public class AnalisysConfig {
     private String kinitPath;
     @Value("${kerberos.configPath}")
     private String configPath;
-    @Value("${docker.enable:false}")
-    private boolean useDocker;
 
     @Bean(name = "analysisTaskExecutor")
     public ThreadPoolTaskExecutor taskExecutor() {
@@ -75,8 +69,4 @@ public class AnalisysConfig {
         return new KerberosServiceImpl(timeout, kinitPath, configPath);
     }
 
-    @Bean
-    ExecutionService runtimeService(DockerRegistryProperties properties) {
-        return useDocker ? new DockerService(properties) : new TarballRService();
-    }
 }

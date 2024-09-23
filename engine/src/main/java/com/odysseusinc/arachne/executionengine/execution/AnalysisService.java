@@ -22,9 +22,6 @@
 
 package com.odysseusinc.arachne.executionengine.execution;
 
-import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO.NOT_RECOGNIZED;
-import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.io.Files;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
@@ -34,11 +31,29 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResult
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.EngineStatus;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.EngineStatus.Environments;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
+import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.DockerEnvironmentDTO;
+import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.TarballEnvironmentDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
+import com.odysseusinc.arachne.executionengine.execution.r.DockerEnvironmentService;
+import com.odysseusinc.arachne.executionengine.model.descriptor.converter.DescriptorConverter;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
+import com.odysseusinc.arachne.executionengine.service.impl.DescriptorServiceImpl;
 import com.odysseusinc.arachne.executionengine.util.AutoCloseWrapper;
+import lombok.extern.slf4j.Slf4j;
+import net.lingala.zip4j.exception.ZipException;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
+
 import java.io.File;
 import java.time.Instant;
 import java.util.Collections;
@@ -56,17 +71,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.extern.slf4j.Slf4j;
-import net.lingala.zip4j.exception.ZipException;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Validate;
-import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Service;
+
+import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO.NOT_RECOGNIZED;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 @Slf4j
 @Service
@@ -83,6 +90,11 @@ public class AnalysisService {
     private CallbackService callbackService;
     @Autowired
     private DriverLocations drivers;
+    @Autowired
+    private DockerEnvironmentService dockerDescriptorService;
+    @Autowired
+    private DescriptorServiceImpl tarballDescriptorService;
+
 
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
@@ -164,7 +176,11 @@ public class AnalysisService {
                         ).orElseGet(Stream::of)
                 ).collect(Collectors.toMap(Pair::getKey, Pair::getValue))
         ).orElseGet(Collections::emptyMap);
-        return new EngineStatus(Instant.now(), statuses);
+
+        List<TarballEnvironmentDTO> tarballs = tarballDescriptorService.getDescriptors().stream().map(DescriptorConverter::toDto).collect(Collectors.toList());
+        List<DockerEnvironmentDTO> dockers = dockerDescriptorService.getEnvironments();
+
+        return new EngineStatus(Instant.now(), statuses, new Environments(tarballs, dockers));
     }
 
     private static ExecutionOutcome getStatus(Overseer overseer) {

@@ -26,7 +26,6 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRe
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
-import com.odysseusinc.arachne.executionengine.execution.ExecutionService;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.model.descriptor.Descriptor;
 import com.odysseusinc.arachne.executionengine.model.descriptor.DescriptorBundle;
@@ -41,7 +40,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -62,8 +63,9 @@ import java.util.stream.Stream;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
+@Service
 @Slf4j
-public class TarballRService extends RService implements ExecutionService {
+public class TarballRService extends RService {
 
     private static final String RUNTIME_ANALYSIS_ID = "ANALYSIS_ID";
 
@@ -75,6 +77,9 @@ public class TarballRService extends RService implements ExecutionService {
 
     @Autowired
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
+
+    @Value("${runtime.local:false}")
+    private boolean useLocalREnv;
 
     @PostConstruct
     public void init() {
@@ -229,7 +234,7 @@ public class TarballRService extends RService implements ExecutionService {
     }
 
     private RuntimeServiceMode getRuntimeServiceMode() {
-        return StringUtils.isNotBlank(rIsolatedRuntimeProps.getArchive()) ? RuntimeServiceMode.ISOLATED : RuntimeServiceMode.SINGLE;
+        return useLocalREnv ? RuntimeServiceMode.SINGLE : RuntimeServiceMode.ISOLATED;
     }
 
 
