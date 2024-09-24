@@ -24,16 +24,15 @@ package com.odysseusinc.arachne.executionengine.util;
 
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import lombok.extern.slf4j.Slf4j;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+@Slf4j
 public class SQLUtils {
-    private static final Logger logger = LoggerFactory.getLogger(SQLUtils.class);
 
     public static Connection getConnection(DataSourceUnsecuredDTO dataSource) throws SQLException {
 
@@ -50,7 +49,7 @@ public class SQLUtils {
         String user = dataSource.getUsername();
         String password = dataSource.getPassword();
         String url = dataSource.getConnectionString();
-        logger.debug("Using JDBC: " + dataSource.getConnectionStringForLogging());
+        log.debug("Using JDBC: " + dataSource.getConnectionStringForLogging());
 
         Properties info = new Properties();
         if (user != null) {

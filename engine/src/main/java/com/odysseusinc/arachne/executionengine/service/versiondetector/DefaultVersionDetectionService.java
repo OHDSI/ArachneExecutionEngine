@@ -22,9 +22,12 @@
 
 package com.odysseusinc.arachne.executionengine.service.versiondetector;
 
-import static java.lang.String.join;
-
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,17 +36,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
+import static java.lang.String.join;
+
+@Slf4j
 @Service
 public class DefaultVersionDetectionService extends BaseVersionDetectionService implements VersionDetectionService {
-
-    private static final Logger log = LoggerFactory.getLogger(DefaultVersionDetectionService.class);
-
     private final CDMSchemaProvider cdmSchemaProvider;
     private final MetadataProvider metadataProvider;
 

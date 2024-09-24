@@ -1,17 +1,15 @@
 package com.odysseusinc.arachne.executionengine.config;
 
-import java.sql.Driver;
-import java.sql.DriverManager;
-import javax.annotation.PostConstruct;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
+import javax.annotation.PostConstruct;
+import java.sql.Driver;
+import java.sql.DriverManager;
+
+@Slf4j
 @Configuration
 public class DriverManagerConfig {
-
-    private static final Logger log = LoggerFactory.getLogger(DriverManagerConfig.class);
-
     @PostConstruct
     public void logLoadedDrivers() {
         try {

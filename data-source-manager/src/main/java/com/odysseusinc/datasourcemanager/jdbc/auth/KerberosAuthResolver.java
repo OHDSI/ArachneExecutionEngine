@@ -4,16 +4,15 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnse
 import com.odysseusinc.datasourcemanager.krblogin.KerberosService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class KerberosAuthResolver implements DataSourceAuthResolver<KrbConfig> {
-
-	private static final Logger logger = LoggerFactory.getLogger(KerberosAuthResolver.class);
 
 	private final KerberosService kerberosService;
 
@@ -35,7 +34,7 @@ public class KerberosAuthResolver implements DataSourceAuthResolver<KrbConfig> {
 			KrbConfig krbConfig = kerberosService.runKinit(dataSourceData, RuntimeServiceMode.SINGLE, workDir);
 			return Optional.of(krbConfig);
 		} catch (IOException e) {
-			logger.error("Failed to resolve Kerberos authentication for Source: {}", dataSourceData.getName(), e);
+			log.error("Failed to resolve Kerberos authentication for Source: {}", dataSourceData.getName(), e);
 			throw new RuntimeException(e);
 		}
 	}

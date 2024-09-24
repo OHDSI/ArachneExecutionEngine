@@ -23,30 +23,36 @@
 package com.odysseusinc.datasourcemanager.krblogin;
 
 import com.github.jknack.handlebars.Template;
-import com.odysseusinc.datasourcemanager.TemplateUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMechanism;
+import com.odysseusinc.datasourcemanager.TemplateUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+@Slf4j
 public class KerberosServiceImpl implements KerberosService {
-
-    private static final Logger log = LoggerFactory.getLogger(KerberosService.class);
     private static final String LOG_FILE = "kinit_out.txt";
     public static final String KINIT_COMMAND = "kinit";
     private final static String REALMS = "[realms]";

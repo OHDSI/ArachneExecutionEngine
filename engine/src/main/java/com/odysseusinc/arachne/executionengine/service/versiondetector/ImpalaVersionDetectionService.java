@@ -26,11 +26,10 @@ import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.exceptions.ExecutionEngineRuntimeException;
 import com.odysseusinc.arachne.executionengine.util.SQLUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ohdsi.sql.SqlRender;
 import org.ohdsi.sql.SqlTranslate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -42,11 +41,9 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ImpalaVersionDetectionService extends BaseVersionDetectionService implements VersionDetectionService {
-
-    private static final Logger log = LoggerFactory.getLogger(ImpalaVersionDetectionService.class);
-
     private static String[] CTE_PARAMS = new String[]{ "table", "cdmDatabaseSchema", "fields" };
 
     private final CDMSchemaProvider cdmSchemaProvider;

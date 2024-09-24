@@ -22,8 +22,6 @@
 
 package com.odysseusinc.arachne.executionengine.execution.r;
 
-import static org.apache.commons.io.IOUtils.closeQuietly;
-
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
@@ -38,7 +36,14 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRunt
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -48,19 +53,14 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.PostConstruct;
 
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ResourceLoader;
+import static org.apache.commons.io.IOUtils.closeQuietly;
 
 @Slf4j
 public class TarballRService extends RService implements ExecutionService {
@@ -140,21 +140,24 @@ public class TarballRService extends RService implements ExecutionService {
                 pw.println(lineDelimiter);
                 descriptor.getOsLibraries().forEach(pw::println);
             }
-            for (ExecutionRuntime runtime : descriptor.getExecutionRuntimes()) {
-                if (runtime instanceof RExecutionRuntime) {
-                    pw.println(lineDelimiter);
-                    pw.println("R Execution Runtime Libraries:");
-                    pw.println(lineDelimiter);
-                    RExecutionRuntime rRuntime = (RExecutionRuntime) runtime;
-                    for (RDependency rDependency : rRuntime.getDependencies()) {
-                        pw.println(Stream.of(
-                                        rDependency.getName(),
-                                        rDependency.getVersion(),
-                                        rDependency.getOwner(),
-                                        rDependency.getDependencySourceType())
-                                .filter(Objects::nonNull)
-                                .map(Objects::toString)
-                                .collect(Collectors.joining(" ")));
+            List<ExecutionRuntime> runtimes = descriptor.getExecutionRuntimes();
+            if (runtimes != null) {
+                for (ExecutionRuntime runtime : runtimes) {
+                    if (runtime instanceof RExecutionRuntime) {
+                        pw.println(lineDelimiter);
+                        pw.println("R Execution Runtime Libraries:");
+                        pw.println(lineDelimiter);
+                        RExecutionRuntime rRuntime = (RExecutionRuntime) runtime;
+                        for (RDependency rDependency : rRuntime.getDependencies()) {
+                            pw.println(Stream.of(
+                                            rDependency.getName(),
+                                            rDependency.getVersion(),
+                                            rDependency.getOwner(),
+                                            rDependency.getDependencySourceType())
+                                    .filter(Objects::nonNull)
+                                    .map(Objects::toString)
+                                    .collect(Collectors.joining(" ")));
+                        }
                     }
                 }
             }

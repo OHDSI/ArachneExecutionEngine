@@ -23,21 +23,20 @@
 package com.odysseusinc.arachne.executionengine.aspect;
 
 import com.sun.management.UnixOperatingSystemMXBean;
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
+
+@Slf4j
 @Aspect
 @Component
 public class FileDescriptorCountAspect {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileDescriptorCountAspect.class);
 
     @Value("${logging.descriptor.count.enabled:false}")
     private boolean enabled;
@@ -63,13 +62,13 @@ public class FileDescriptorCountAspect {
         try {
             if (operatingSystemMXBean instanceof UnixOperatingSystemMXBean) {
                 UnixOperatingSystemMXBean osMxBean = (UnixOperatingSystemMXBean) operatingSystemMXBean;
-                LOGGER.info("{}: open file descriptor count [{}] from max [{}]", message, osMxBean.getOpenFileDescriptorCount(),
+                log.info("{}: open file descriptor count [{}] from max [{}]", message, osMxBean.getOpenFileDescriptorCount(),
                         osMxBean.getMaxFileDescriptorCount());
             } else {
-                LOGGER.info("Descriptor count is not supported");
+                log.info("Descriptor count is not supported");
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to log descriptor count: ", e);
+            log.error("Failed to log descriptor count: ", e);
         }
     }
 }

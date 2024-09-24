@@ -4,16 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odysseusinc.arachne.executionengine.model.descriptor.ExecutionRuntime;
 import com.odysseusinc.arachne.executionengine.model.descriptor.ParseStrategy;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRuntime;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class REnvParseStrategy implements ParseStrategy {
-    private static final Logger log = LoggerFactory.getLogger(REnvParseStrategy.class);
-
     private static final String RENV_LOCK = "renv.lock";
     private final ObjectMapper mapper = new ObjectMapper();
 

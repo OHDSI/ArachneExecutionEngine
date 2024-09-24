@@ -7,22 +7,21 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnse
 import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import javax.annotation.PostConstruct;
-import javax.sql.DataSource;
+import lombok.extern.slf4j.Slf4j;
 import org.ohdsi.sql.SqlTranslate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
+@Slf4j
 @Service
 public class HikariConnectionPoolService implements ConnectionPoolService {
 
     private static final String TEST_SQL = "select 1;";
-
-    private static final Logger logger = LoggerFactory.getLogger(ConnectionPoolService.class);
 
     private Cache<String, DataSource> dataSourceCache;
 
@@ -49,7 +48,7 @@ public class HikariConnectionPoolService implements ConnectionPoolService {
     public DataSource getDataSource(DataSourceUnsecuredDTO dataSourceDTO) {
 
         try {
-            logger.info("Using JDBC: " + dataSourceDTO.getConnectionStringForLogging());
+            log.info("Using JDBC: " + dataSourceDTO.getConnectionStringForLogging());
             return dataSourceCache.get(dataSourceDTO.getConnectionStringAndUserAndPassword(),
                     () -> buildDataSource(dataSourceDTO));
         } catch (ExecutionException e) {
