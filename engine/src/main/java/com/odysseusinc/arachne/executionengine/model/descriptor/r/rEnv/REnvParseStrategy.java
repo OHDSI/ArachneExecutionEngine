@@ -1,7 +1,6 @@
 package com.odysseusinc.arachne.executionengine.model.descriptor.r.rEnv;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.odysseusinc.arachne.executionengine.model.descriptor.ExecutionRuntime;
 import com.odysseusinc.arachne.executionengine.model.descriptor.ParseStrategy;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRuntime;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,7 @@ public class REnvParseStrategy implements ParseStrategy {
 
     @SuppressWarnings("OptionalAssignedToNull")
     @Override
-    public Optional<ExecutionRuntime> apply(String name, InputStream is) {
+    public Optional<RExecutionRuntime> apply(String name, InputStream is) {
         if (name.equals(RENV_LOCK) || name.endsWith(File.separator + RENV_LOCK)) {
             try {
                 REnvLock lock = mapper.readValue(is, REnvLock.class);

@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 
 @FunctionalInterface
-public interface ParseStrategy extends BiFunction<String, InputStream, Optional<ExecutionRuntime>> {
+public interface ParseStrategy extends BiFunction<String, InputStream, Optional<? extends ExecutionRuntime>> {
     /**
      *
      * @param name file name
@@ -18,5 +18,5 @@ public interface ParseStrategy extends BiFunction<String, InputStream, Optional<
      * This also indicates, that input stream was consumed.
      */
     @Override
-    Optional<ExecutionRuntime> apply(String name, InputStream is);
+    Optional<? extends ExecutionRuntime> apply(String name, InputStream is);
 }
