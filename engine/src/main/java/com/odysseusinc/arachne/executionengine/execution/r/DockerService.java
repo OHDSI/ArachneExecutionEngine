@@ -60,10 +60,10 @@ public class DockerService extends RService implements AutoCloseable {
     @Value("docker.certPath:#{null}")
     private String certPath;
 
-    @Value("${docker.image.default}")
+    @Value("${docker.image.default:#{null}}")
     private String defaultImage;
 
-    @Value("${docker.image.filter}")
+    @Value("${docker.image.filter:#{null}}")
     private String filterRegex;
 
     private final boolean pull;
