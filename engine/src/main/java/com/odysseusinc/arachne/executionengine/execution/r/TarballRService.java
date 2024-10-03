@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.executionengine.execution.r;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
+import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.model.descriptor.Descriptor;
@@ -33,7 +34,6 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.ExecutionRuntime
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.RDependency;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRuntime;
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
-import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -91,7 +91,7 @@ public class TarballRService extends RService {
     }
 
     @Override
-    protected Overseer analyze(AnalysisSyncRequestDTO analysis, File file, BiConsumer<String, String> callback, Integer updateInterval, KrbConfig krbConfig) {
+    protected Overseer analyze(AnalysisSyncRequestDTO analysis, File file, BiConsumer<String, String> callback, Integer updateInterval, AuthEffects authEffects) {
         DescriptorBundle descriptorBundle = descriptorService.getDescriptorBundle(
                 file, analysis.getId(), analysis.getRequestedDescriptorId()
         );
@@ -101,7 +101,7 @@ public class TarballRService extends RService {
 
         try {
             Instant started = Instant.now();
-            Map<String, String> envp = buildRuntimeEnvVariables(dataSource, krbConfig.getIsolatedRuntimeEnvs());
+            Map<String, String> envp = buildRuntimeEnvVariables(dataSource, authEffects);
             File jailFile = new File(rIsolatedRuntimeProps.getJailSh());
             boolean externalJail = jailFile.isFile();
             File runFile = externalJail ? jailFile : extractToTempFile(resourceLoader, "classpath:/jail.sh", "ee", ".sh");
@@ -120,10 +120,6 @@ public class TarballRService extends RService {
             ).whenComplete((outcome, throwable) -> {
                 if (!externalJail) {
                     FileUtils.deleteQuietly(runFile);
-                }
-                FileUtils.deleteQuietly(krbConfig.getComponents().getKeytabPath().toFile());
-                if (RuntimeServiceMode.ISOLATED == getRuntimeServiceMode()) {
-                    FileUtils.deleteQuietly(krbConfig.getConfPath().toFile());
                 }
                 cleanupEnv(file, outcome);
             });

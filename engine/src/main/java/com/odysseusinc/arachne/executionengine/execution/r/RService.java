@@ -1,19 +1,18 @@
 package com.odysseusinc.arachne.executionengine.execution.r;
 
-import com.odysseusinc.arachne.commons.types.DBMSType;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
-import com.odysseusinc.arachne.execution_engine_common.util.BigQueryUtils;
+import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
+import com.odysseusinc.arachne.executionengine.auth.AuthEffects.AddEnvironmentVariables;
+import com.odysseusinc.arachne.executionengine.auth.CredentialsProvider;
 import com.odysseusinc.arachne.executionengine.config.properties.HiveBulkLoadProperties;
 import com.odysseusinc.arachne.executionengine.execution.DriverLocations;
 import com.odysseusinc.arachne.executionengine.execution.FailedOverseer;
-import com.odysseusinc.arachne.executionengine.execution.KerberosSupport;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
-import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,10 +20,12 @@ import org.springframework.beans.factory.annotation.Value;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -55,14 +56,11 @@ public abstract class RService {
     private static final String RUNTIME_ENV_LC_ALL_KEY = "LC_ALL";
     private static final String RUNTIME_ENV_LC_ALL_VALUE = "en_US.UTF-8";
     private static final String RUNTIME_ENV_DRIVER_PATH = "JDBC_DRIVER_PATH";
-    private static final String RUNTIME_BQ_KEYFILE = "BQ_KEYFILE";
     @Value("${runtime.killTimeoutSec:30}")
     protected int killTimeoutSec;
     @Value("${runtime.timeOutSec}")
     protected int runtimeTimeOutSec;
 
-    @Autowired
-    private KerberosSupport kerberosSupport;
     @Value("${bulkload.enableMPP}")
     private boolean enableMPP;
     @Autowired
@@ -71,6 +69,8 @@ public abstract class RService {
     private ConnectionPoolService poolService;
     @Autowired
     private DriverLocations drivers;
+    @Autowired
+    private List<CredentialsProvider> credentialProviders;
 
     private static String sanitizeFilename(String filename) {
         return Objects.requireNonNull(filename).replaceAll("[<>:\"/\\\\|?*\\u0000]", "");
@@ -90,31 +90,40 @@ public abstract class RService {
                 return new FailedOverseer(Instant.now(), "Unable to resolve to [" + HOST_DOCKER_INTERNAL + "]", AnalysisRequestTypeDTO.R, e);
             }
         }
+
+        Path path = analysisDir.toPath();
+        AuthEffects auth = credentialProviders.stream().map(provider ->
+                provider.apply(dataSource, path, path.toAbsolutePath().toString())
+        ).filter(Objects::nonNull).findFirst().orElse(null);
+
+        if (auth instanceof AuthEffects.ModifyUrl) {
+            String newUrl = ((AuthEffects.ModifyUrl) auth).getNewUrl();
+            dataSource.setConnectionString(newUrl);
+        }
+
         log.info("Execution [{}] checking connection to [{}]", id, dataSource.getConnectionString());
         try (Connection conn = poolService.getDataSource(dataSource).getConnection()) {
             String name = conn.getMetaData().getDatabaseProductName();
             log.info("Execution [{}] connection verified, engine: [{}]", id, name);
-        } catch (SQLException e) {
+        } catch (SQLException | UncheckedExecutionException e) {
             log.info("Execution [{}] connection verification failed [{}]", id, e.getMessage());
         }
 
-        File keystoreDir = new File(analysisDir, "keys");
-        KrbConfig krbConfig = kerberosSupport.getConfig(analysis, keystoreDir);
 
-        Overseer overseer = analyze(analysis, analysisDir, callback, updateInterval, krbConfig).whenComplete((outcome, throwable) -> {
-            // Keystore folder must be deleted before zipping results
-            FileUtils.deleteQuietly(keystoreDir);
+        Overseer overseer = analyze(analysis, analysisDir, callback, updateInterval, auth).whenComplete((outcome, throwable) -> {
+            if (auth instanceof AuthEffects.Cleanup) {
+                ((AuthEffects.Cleanup) auth).cleanup();
+            }
         });
 
         log.info("Execution [{}] started in R Runtime Service", analysis.getId());
         return overseer;
     }
 
-    protected abstract Overseer analyze(AnalysisSyncRequestDTO analysis, File analysisDir, BiConsumer<String, String> callback, Integer updateInterval, KrbConfig krbConfig);
+    protected abstract Overseer analyze(AnalysisSyncRequestDTO analysis, File analysisDir, BiConsumer<String, String> callback, Integer updateInterval, AuthEffects auth);
 
-    protected Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, Map<String, String> krbProps) {
-
-        Map<String, String> environment = new HashMap<>(krbProps);
+    protected Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, AuthEffects auth) {
+        Map<String, String> environment = new HashMap<>();
         environment.put(RUNTIME_ENV_DATA_SOURCE_NAME, RService.sanitizeFilename(dataSource.getName()));
         environment.put(RUNTIME_ENV_DBMS_USERNAME, dataSource.getUsername());
         environment.put(RUNTIME_ENV_DBMS_PASSWORD, dataSource.getPassword());
@@ -125,12 +134,14 @@ public abstract class RService {
         environment.put(RUNTIME_ENV_RESULT_SCHEMA, dataSource.getResultSchema());
         environment.put(RUNTIME_ENV_COHORT_TARGET_TABLE, dataSource.getCohortTargetTable());
         environment.put(RUNTIME_ENV_DRIVER_PATH, drivers.getPath(dataSource.getType()));
-        environment.put(RUNTIME_BQ_KEYFILE, getBigQueryKeyFile(dataSource));
         environment.put(RUNTIME_ENV_PATH_KEY, RUNTIME_ENV_PATH_VALUE);
         environment.put(RUNTIME_ENV_HOME_KEY, getUserHome());
         environment.put(RUNTIME_ENV_HOSTNAME_KEY, RUNTIME_ENV_HOSTNAME_VALUE);
         environment.put(RUNTIME_ENV_LANG_KEY, RUNTIME_ENV_LANG_VALUE);
         environment.put(RUNTIME_ENV_LC_ALL_KEY, RUNTIME_ENV_LC_ALL_VALUE);
+        if (auth instanceof AddEnvironmentVariables) {
+            environment.putAll(((AddEnvironmentVariables) auth).getEnvVars());
+        }
 
         if (enableMPP) {
             exposeMPPEnvironmentVariables(environment);
@@ -161,9 +172,4 @@ public abstract class RService {
         return StringUtils.defaultString(userHome, RUNTIME_ENV_HOME_VALUE);
     }
 
-    private String getBigQueryKeyFile(DataSourceUnsecuredDTO dataSource) {
-
-        return dataSource.getType().equals(DBMSType.BIGQUERY) ?
-                BigQueryUtils.getBigQueryKeyPath(dataSource.getConnectionString()) : null;
-    }
 }
