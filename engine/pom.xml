@@ -359,6 +359,7 @@
                 <google.gax.version>2.13.0</google.gax.version>
                 <proto.google.cloud.bigquerystorage.v1.version>2.12.0</proto.google.cloud.bigquerystorage.v1.version>
                 <opencensus.contrib.http.util.version>0.31.0</opencensus.contrib.http.util.version>
+                <io.grpc.grpc-core.version>1.45.0</io.grpc.grpc-core.version>
                 <!-- BigQuery JDBC driver path -->
                 <bigquery.classpath>/bigquery</bigquery.classpath>
             </properties>
@@ -427,6 +428,11 @@
                     <groupId>io.opencensus</groupId>
                     <artifactId>opencensus-contrib-http-util</artifactId>
                     <version>${opencensus.contrib.http.util.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>io.grpc</groupId>
+                    <artifactId>grpc-core</artifactId>
+                    <version>${io.grpc.grpc-core.version}</version>
                 </dependency>
             </dependencies>
             <build>
