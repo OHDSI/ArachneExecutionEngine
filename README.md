@@ -11,12 +11,21 @@ ARACHNE Execution Engine is able to use local or Docker Image/tar ball pre-built
 
 ### Important configuration options
 
-docker.image.default - default docker image to be used for execution. If specified, this enables docker execution support. 
-docker.image.filter - a regex used to scan for docker images to be listed. Specifying enables docker execution support and image scanning.
-runtimeservice.dist.archive - Default image to use for running executions
-runtime.local - true/false, enables using local R runtime.
+`docker.image.default` - default docker image to be used for execution. If specified, this enables docker execution support.
 
-docker.enable - outdated option. This is only kept for backward compatibility with implementations that don't support dybamic mode detection. 
+`docker.image.filter` - a regex used to scan for docker images to be listed. Specifying enables docker execution support and image scanning.
+
+`docker.image.pull` - policy that defines when docker images should be pulled. The possible values are as follows:  
+    `NEVER`   Never pull any images. If image does not exist in local repository, fail analysis.  
+    `MISSING` If image exists in local repository, use it. Do not check for updated image.  
+    `ALWAYS`  Always attempt to pull. If pull failed but image exists in local repository, proceed with that image.   
+    `FORCE`   Always attempt to pull. If pull fails, analysis will fail as well, even if local image exists.  
+
+`runtimeservice.dist.archive` - Default image to use for running executions
+
+`runtime.local` - true/false, enables using local R runtime.
+
+`docker.enable` - outdated option. This is only kept for backward compatibility with implementations that don't support dynamic mode detection. 
 
 ### Sample options for creating a container for running locally
 
