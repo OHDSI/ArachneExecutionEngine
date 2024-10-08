@@ -15,10 +15,10 @@ import com.github.dockerjava.transport.DockerHttpClient;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.DockerEnvironmentDTO;
+import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
 import com.odysseusinc.arachne.executionengine.config.properties.DockerRegistryProperties;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.util.Streams;
-import com.odysseusinc.datasourcemanager.krblogin.KrbConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,9 +95,9 @@ public class DockerService extends RService implements AutoCloseable {
 
     @Override
     protected Overseer analyze(
-            AnalysisSyncRequestDTO analysis, File analysisDir, BiConsumer<String, String> sendCallback, Integer updateInterval, KrbConfig krbConfig
+            AnalysisSyncRequestDTO analysis, File analysisDir, BiConsumer<String, String> sendCallback, Integer updateInterval, AuthEffects auth
     ) {
-        List<String> env = buildRuntimeEnvVariables(analysis.getDataSource(), krbConfig.getIsolatedRuntimeEnvs()).entrySet().stream().map(entry ->
+        List<String> env = buildRuntimeEnvVariables(analysis.getDataSource(), auth).entrySet().stream().map(entry ->
                 entry.getKey() + "=" + entry.getValue()).collect(Collectors.toList()
         );
         Instant started = Instant.now();

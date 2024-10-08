@@ -1,4 +1,4 @@
-FROM eclipse-temurin:8-jdk
+FROM eclipse-temurin:8-jre
 LABEL maintainer="Odysseus Data Services, Inc: support@odysseusinc.com"
 VOLUME /tmp
 VOLUME /libs-r
@@ -10,9 +10,6 @@ RUN ln -fs /usr/share/zoneinfo/Etc/GMT /etc/localtime && dpkg-reconfigure -f non
 RUN update-rc.d cron defaults && systemctl enable rsyslog
 ENV R_INSTALL_SCRIPT=libs.r
 ADD execution-engine-exec.jar /execution-engine.jar
-RUN mkdir /impala
-ADD Cloudera_ImpalaJDBC4_2.5.41.zip /impala/impala-jdbc.zip
-RUN cd /impala && unzip impala-jdbc.zip && rm -f impala-jdbc.zip
 RUN mkdir /runtimes
 COPY descriptor_base.json /runtimes/descriptor_base.json
 RUN ls -la /runtimes/*
