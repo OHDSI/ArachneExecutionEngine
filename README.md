@@ -7,6 +7,8 @@ ARACHNE Execution Engine is able to use local or Docker Image/tar ball pre-built
 - Option 1. Build from the sources
 - Option 2. [Use Docker Image](https://hub.docker.com/r/odysseusinc/execution_engine)
 
+See the instructuction to deploy the application in combination with [ARACHNE DataNode](https://github.com/OHDSI/Arachne/wiki/Installation-using-Docker)
+
 ## Configuration
 
 ### Important configuration options
@@ -35,10 +37,10 @@ The configuration below enables both tarball and docker execution:
     -p 8888:8888                                                     // Bind host port to container port
     --add-host=host.docker.internal:host-gateway                     // Allow access to DB running on host bare
     -e RUNTIMESERVICE_DIST_ARCHIVE=/dist/r_base_focal_amd64.tar.gz   // Name of the default execution environment  
-    -v ~/R-environments:/runtimes                                   // Mount host directory volume 
+    -v ~/R-environments:/runtimes                                    // Mount host directory volume 
     --privileged                                                     // Allow spawning other containers 
     -v /var/run/docker.sock:/var/run/docker.sock                     // Mount socket to connect to host Docker from inside container 
-    -v ~/executions:/etc/executions                                       // Mount host directory /etc/ee to volume /etc/executions in container to hold executions 
+    -v ~/executions:/etc/executions                                  // Mount host directory /etc/ee to volume /etc/executions in container to hold executions 
     -e DOCKER_IMAGE_DEFAULT=odysseusinc/r-hades:latest               // Default image to use for running executions
     -e DOCKER_IMAGE_FILTER="odysseusinc/r-hades(.+)"                 // Filter to scan for docker images.
     -e ANALYSIS_MOUNT=/etc/ee                                        // Provide container location of the host directory for executions to allow mounting it spawn Docker containers
