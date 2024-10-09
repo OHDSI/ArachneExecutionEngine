@@ -3,6 +3,8 @@ package com.odysseusinc.arachne.executionengine.execution.r;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.PullImageResultCallback;
+import com.github.dockerjava.api.exception.DockerException;
+import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.Image;
@@ -27,6 +29,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.net.URI;
 import java.time.Instant;
@@ -40,6 +43,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.github.dockerjava.api.model.ResponseItem.ProgressDetail;
+import static com.odysseusinc.arachne.executionengine.execution.r.DockerPullPolicy.ALWAYS;
+import static com.odysseusinc.arachne.executionengine.execution.r.DockerPullPolicy.FORCE;
+import static com.odysseusinc.arachne.executionengine.execution.r.DockerPullPolicy.NEVER;
 
 @Service
 @Slf4j
@@ -66,14 +72,14 @@ public class DockerService extends RService implements AutoCloseable {
     @Value("${docker.image.filter:#{null}}")
     private String filterRegex;
 
-    private final boolean pull;
+    @Value("${docker.image.pull:#{T(com.odysseusinc.arachne.executionengine.execution.r.DockerPullPolicy).MISSING}}")
+    private DockerPullPolicy pull;
 
     @Autowired
     @Qualifier("analysisTaskExecutor")
     private ThreadPoolTaskExecutor executor;
 
     public DockerService(DockerRegistryProperties properties) {
-        pull = properties.getUrl() != null;
         DefaultDockerClientConfig.Builder builder = DefaultDockerClientConfig.createDefaultConfigBuilder()
                 .withDockerTlsVerify(certPath != null)
                 .withDockerCertPath(certPath)
@@ -90,7 +96,11 @@ public class DockerService extends RService implements AutoCloseable {
                 .maxConnections(50)
                 .build();
         client = DockerClientImpl.getInstance(config, dockerHttpClient);
-        log.info("Initialized Docker interface [{}]", host);
+    }
+
+    @PostConstruct
+    public void init() {
+        log.info("Initialized Docker interface [{}], pull policy: {}", host, pull);
     }
 
     @Override
@@ -113,13 +123,35 @@ public class DockerService extends RService implements AutoCloseable {
 
         CompletableFuture<String> init = CompletableFuture.supplyAsync(
                 () -> {
-                    log.info("Execution [{}] use Docker image [{}], pull: {}", id, image, pull);
-                    if (pull) {
+                    log.info("Execution [{}] use Docker image [{}], pull policy: {}", id, image, pull);
+                    if (pull == FORCE || pull == ALWAYS) {
+                        log.info("Execution [{}] force pull image image {}", id, image);
+                        callback.accept(Stage.INITIALIZE, "Force pull image [" + image + "]\r\n");
+                        try {
+                            pullImage(callback, id, image, stdout, client);
+                            callback.accept(Stage.INITIALIZE, "Pull complete, creating container\r\n");
+                        } catch (DockerException e) {
+                            if (pull == ALWAYS && imageExists(image)) {
+                                log.warn("Execution [{}] pull failed: {}, execution will proceed with image found locally", id, e.getMessage());
+                                callback.accept(Stage.INITIALIZE, "Execution [" + id + "] pull failed: " + e.getMessage() + ", proceed with local image");
+                            } else {
+                                log.error("Execution [{}] pull failed: ", id, e);
+                                callback.accept(Stage.INITIALIZE, ExceptionUtils.getStackTrace(e));
+                                throw e;
+                            }
+                        }
+                    } else if (imageExists(image)) {
+                        log.info("Execution [{}] image found, will proceed without pull", id);
+                        callback.accept(Stage.INITIALIZE, "Image found, proceed to execution\r\n");
+                    } else if (pull == NEVER) {
+                        log.info("Execution [{}] image not found, aborting", id);
+                        callback.accept(Stage.INITIALIZE, "Image image not found, aborting\r\n");
+                        throw new NotFoundException("Image [" + image + "] not found");
+                    } else {
+                        log.info("Execution [{}] image not found, proceed with pull", id);
+                        callback.accept(Stage.INITIALIZE, "Image [" + image + "] not found, proceed to pull\r\n");
                         pullImage(callback, id, image, stdout, client);
                         callback.accept(Stage.INITIALIZE, "Pull complete, creating container\r\n");
-                    } else {
-                        log.info("Execution [{}] pull skipped,  no docker registry configured", id);
-                        callback.accept(Stage.INITIALIZE, "Pull skipped, no docker registry configured\r\n");
                     }
                     log.info("Execution [{}] creating container with image [{}]", id, image);
                     String containerId = createContainer(analysisDir, env, image, script);
@@ -134,6 +166,14 @@ public class DockerService extends RService implements AutoCloseable {
         // We will only truly know the image after the execution, but need to return something right away.
         String imageTagOrId = listEnvironments(image).findFirst().map(DockerEnvironmentDTO::getImageId).orElse(image);
         return new DockerOverseer(id, client, started, runtimeTimeOutSec, stdout, init, updateInterval, sendCallback, imageTagOrId, killTimeoutSec);
+    }
+
+    private boolean imageExists(String image) {
+        try {
+            return client.inspectImageCmd(image).exec() != null;
+        } catch (NotFoundException e) {
+            return false;
+        }
     }
 
     private void pullImage(BiConsumer<String, String> callback, Long id, String image, StringBuffer stdout, DockerClient client) {
