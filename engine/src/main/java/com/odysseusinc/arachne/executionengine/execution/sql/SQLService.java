@@ -22,28 +22,35 @@
 
 package com.odysseusinc.arachne.executionengine.execution.sql;
 
-import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO.SQL;
-
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
+import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
 import com.odysseusinc.arachne.executionengine.execution.AbstractOverseer;
 import com.odysseusinc.arachne.executionengine.execution.ExecutionService;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.ohdsi.sql.SqlSplit;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
+
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
@@ -58,24 +65,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.Getter;
-import org.ohdsi.sql.SqlSplit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Service;
+
+import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO.SQL;
 
 
+@Slf4j
 @Service
 public class SQLService implements ExecutionService {
-    private static final List<DBMSType> SINLGLE_STATEMENT_TYPES = Arrays.asList(DBMSType.ORACLE, DBMSType.BIGQUERY, DBMSType.SPARK);
+    private static final List<DBMSType> SINGLE_STATEMENT_TYPES = Arrays.asList(DBMSType.ORACLE, DBMSType.BIGQUERY, DBMSType.SPARK);
     private static final PathMatcher SQL_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.sql");
-    private final Logger log = LoggerFactory.getLogger(SQLService.class);
     @Autowired
     @Qualifier("analysisTaskExecutor")
     private ThreadPoolTaskExecutor taskExecutor;
@@ -91,76 +91,71 @@ public class SQLService implements ExecutionService {
     }
 
     @Override
-    public Overseer analyze(AnalysisSyncRequestDTO analysis, File dir, BiConsumer<String, String> callback, Integer updateInterval) {
+    public Overseer analyze(AnalysisSyncRequestDTO analysis, File dir, BiConsumer<String, String> callback, Integer updateInterval, AuthEffects auth) {
         Instant started = Instant.now();
+        Long id = analysis.getId();
+        DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
         StringBuffer stdout = new StringBuffer();
-        Supplier<ExecutionOutcome> task = () -> {
-            try {
-                DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
+        CompletableFuture<ExecutionOutcome> future = CompletableFuture.supplyAsync(
+                () -> execute(dir, callback, dataSource, id, stdout), taskExecutor
+        );
+        log.info("Execution [{}] started in SQL Service", id);
+        return new SqlOverseer(id, started, stdout, future);
+    }
 
-                try (Connection conn = poolService.getDataSource(dataSource).getConnection()) {
+    private ExecutionOutcome execute(File dir, BiConsumer<String, String> callback, DataSourceUnsecuredDTO dataSource, Long id, StringBuffer stdout) {
+        try (Connection conn = poolService.getDataSource(dataSource).getConnection()) {
+            String name = conn.getMetaData().getDatabaseProductName();
+            boolean singleStatement = SINGLE_STATEMENT_TYPES.contains(dataSource.getType());
+            log.info("Execution [{}] connected to [{}], single statement: {}", id, name, singleStatement);
 
-                    List<File> files = AnalisysUtils.getDirectoryItemsFiltered(dir, SQL_MATCHER);
-                    for (File sqlFile : files) {
-                        final String sqlFileName = sqlFile.getName();
-                        try {
-                            SqlExecutor sqlExecutor;
-
-                            if (SINLGLE_STATEMENT_TYPES.contains(analysis.getDataSource().getType())) {
-                                sqlExecutor = new SingleStatementSqlExecutor();
-                            } else {
-                                sqlExecutor = new DefaultSqlExecutor();
-                            }
-                            List<Path> resultFileList = sqlExecutor.runSql(conn, sqlFile);
-                            //
-                            stdout.append(sqlFileName).append("\r\n\r\n").append("has been executed correctly").append("\r\n");
-                            if (resultFileList.size() > 0) {
-                                stdout.append("has result file: ").append(resultFileList.stream().map(rf -> rf.getFileName().toString()).collect(Collectors.joining(", ")));
-                            } else {
-                                stdout.append("does not have a result file");
-                            }
-                        } catch (IOException ex) {
-                            String errorMessage = sqlFileName + "\r\n\r\nError reading file: " + ex.getMessage();
-                            log.error(errorMessage);
-                            if (log.isDebugEnabled()) {
-                                log.debug("Stacktrace: ", ex);
-                            }
-                            stdout.append(errorMessage);
-                            callback.accept(Stage.EXECUTE, stdout.toString());
-                            return new ExecutionOutcome(Stage.EXECUTE, errorMessage, stdout.toString());
-                        } catch (SQLException ex) {
-                            String errorMessage = sqlFileName + "\r\n\r\nError executing query: " + ex.getMessage();
-                            log.error(errorMessage);
-                            if (log.isDebugEnabled()) {
-                                log.debug("Stacktrace: ", ex);
-                            }
-                            stdout.append(errorMessage);
-                            callback.accept(Stage.EXECUTE, stdout.toString());
-                            return new ExecutionOutcome(Stage.EXECUTE, errorMessage, stdout.toString());
-                        }
-                    }
-                    return new ExecutionOutcome(Stage.COMPLETED, null, stdout.toString());
+            List<File> files = AnalisysUtils.getDirectoryItemsFiltered(dir, SQL_MATCHER);
+            log.info("Execution [{}] has {} files", id, files.size());
+            SqlExecutor sqlExecutor = singleStatement ? new SingleStatementSqlExecutor() : new DefaultSqlExecutor();
+            for (File sqlFile : files) {
+                final String sqlFileName = sqlFile.getName();
+                log.info("Execution [{}] processing file [{}]", id, sqlFileName);
+                stdout.append("Executing [").append(sqlFileName).append("]\r\n");
+                Function<Integer, String> naming = index -> sqlFile.getAbsolutePath() + ".result_" + index + ".csv";
+                String file = FileUtils.readFileToString(sqlFile, StandardCharsets.UTF_8);
+                try {
+                    List<Path> resultFileList = sqlExecutor.runSql(conn, file, naming);
+                    String names = resultFileList.stream().map(rf -> rf.getFileName().toString()).collect(Collectors.joining(", ", "[", "]"));
+                    stdout.append("has completed correctly, result files: ").append(names);
+                } catch (IOException ex) {
+                    return error(id, callback, ex, stdout, "has failed reading file: " + ex.getMessage());
                 } catch (SQLException ex) {
-                    String errorMessage = "Error getting connection to CDM: " + ex.getMessage();
-                    log.error(errorMessage);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Stacktrace: ", ex);
-                    }
-                    stdout.append(errorMessage).append("\r\n");
-                    return new ExecutionOutcome(Stage.EXECUTE, "SQLException: " + ex.getMessage(), stdout.toString());
+                    return error(id, callback, ex, stdout, "has failed executing query: " + ex.getMessage());
                 }
-            } catch (Throwable t) {
-                return new ExecutionOutcome(Stage.EXECUTE, "Error: " + t.getMessage(), null);
             }
-        };
+            return new ExecutionOutcome(Stage.COMPLETED, null, stdout.toString());
+        } catch (SQLException ex) {
+            String errorMessage = "Error getting connection to CDM: " + ex.getMessage();
+            log.error(errorMessage);
+            if (log.isDebugEnabled()) {
+                log.debug("Stacktrace: ", ex);
+            }
+            stdout.append(errorMessage).append("\r\n");
+            return new ExecutionOutcome(Stage.EXECUTE, "SQLException: " + ex.getMessage(), stdout.toString());
+        } catch (Throwable t) {
+            return new ExecutionOutcome(Stage.EXECUTE, "Error: " + t.getMessage(), null);
+        }
+    }
 
-        CompletableFuture<ExecutionOutcome> future = CompletableFuture.supplyAsync(task, taskExecutor);
-        log.info("Execution [{}] started in SQL Service", analysis.getId());
-        return new SqlOverseer(analysis.getId(), started, stdout, future);
+    private ExecutionOutcome error(Long id, BiConsumer<String, String> callback, Exception e, StringBuffer stdout, String pretext) {
+        String error = e.getMessage();
+        log.error("Execution [{}] FAILED: {}", id, error);
+        if (log.isDebugEnabled()) {
+            log.debug("Stacktrace: ", e);
+        }
+        String fullMsg = pretext + error;
+        stdout.append(fullMsg);
+        callback.accept(Stage.EXECUTE, stdout.toString());
+        return new ExecutionOutcome(Stage.EXECUTE, fullMsg, stdout.toString());
     }
 
     public abstract class SqlExecutor {
-        public abstract List<Path> runSql(Connection conn, File sqlFile) throws SQLException, IOException;
+        public abstract List<Path> runSql(Connection conn, String sql, Function<Integer, String> fnResultName) throws SQLException, IOException;
 
         Path processResultSet(Statement statement, String resultFileName) throws IOException, SQLException {
             Path resultFile = null;
@@ -201,24 +196,20 @@ public class SQLService implements ExecutionService {
 
     public class DefaultSqlExecutor extends SqlExecutor {
 
-        public List<Path> runSql(Connection conn, File sqlFile) throws SQLException, IOException {
-
+        public List<Path> runSql(Connection conn, String sql, Function<Integer, String> fnResultName) throws SQLException, IOException {
             List<Path> resultFileList = new ArrayList<>();
-            try (OutputStream outputStream = new ByteArrayOutputStream()) {
-                Files.copy(sqlFile.toPath(), outputStream);
-                try (Statement statement = conn.createStatement()) {
-                    boolean hasMoreResultSets = statement.execute(outputStream.toString());
-                    int resultIdx = 0;
-                    while (hasMoreResultSets || statement.getUpdateCount() != -1) {
-                        if (hasMoreResultSets) {
-                            Path resultFile = processResultSet(statement, sqlFile.getAbsolutePath() + ".result_" + resultIdx + ".csv");
-                            if (resultFile != null) {
-                                resultFileList.add(resultFile);
-                            }
+            try (Statement statement = conn.createStatement()) {
+                boolean hasMoreResultSets = statement.execute(sql);
+                int resultIdx = 0;
+                while (hasMoreResultSets || statement.getUpdateCount() != -1) {
+                    if (hasMoreResultSets) {
+                        Path resultFile = processResultSet(statement, fnResultName.apply(resultIdx));
+                        if (resultFile != null) {
+                            resultFileList.add(resultFile);
                         }
-                        hasMoreResultSets = statement.getMoreResults();
-                        resultIdx++;
                     }
+                    hasMoreResultSets = statement.getMoreResults();
+                    resultIdx++;
                 }
             }
             return resultFileList;
@@ -227,19 +218,16 @@ public class SQLService implements ExecutionService {
 
     public class SingleStatementSqlExecutor extends SqlExecutor {
 
-        public List<Path> runSql(Connection conn, File sqlFile) throws SQLException, IOException {
-
+        public List<Path> runSql(Connection conn, String sql, Function<Integer, String> fnResultName) throws SQLException, IOException {
             List<Path> resultFileList = new ArrayList<>();
-            try (OutputStream outputStream = new ByteArrayOutputStream()) {
-                Files.copy(sqlFile.toPath(), outputStream);
-                try (Statement statement = conn.createStatement()) {
-                    String[] sqlParts = SqlSplit.splitSql(outputStream.toString());
-                    for (int i = 0; i < sqlParts.length; i++) {
-                        statement.execute(sqlParts[i]);
-                        Path resultFile = processResultSet(statement, sqlFile.getAbsolutePath() + ".result_" + i + ".csv");
-                        if (resultFile != null) {
-                            resultFileList.add(resultFile);
-                        }
+            try (Statement statement = conn.createStatement()) {
+                String[] sqlParts = SqlSplit.splitSql(sql);
+                for (int i = 0; i < sqlParts.length; i++) {
+                    String sqlPart = sqlParts[i];
+                    statement.execute(sqlPart);
+                    Path resultFile = processResultSet(statement, fnResultName.apply(i));
+                    if (resultFile != null) {
+                        resultFileList.add(resultFile);
                     }
                 }
             }

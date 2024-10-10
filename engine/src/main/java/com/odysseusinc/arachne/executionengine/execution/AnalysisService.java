@@ -26,6 +26,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.io.Files;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
@@ -37,6 +38,8 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.DockerEnvironmentDTO;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.TarballEnvironmentDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
+import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
+import com.odysseusinc.arachne.executionengine.auth.CredentialsProvider;
 import com.odysseusinc.arachne.executionengine.execution.r.DockerEnvironmentService;
 import com.odysseusinc.arachne.executionengine.model.descriptor.converter.DescriptorConverter;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
@@ -55,11 +58,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
@@ -98,6 +103,8 @@ public class AnalysisService {
 
     @Value("${submission.update.interval}")
     private int submissionUpdateInterval;
+    @Autowired
+    private List<CredentialsProvider> credentialProviders;
 
     @Autowired
     public AnalysisService(
@@ -126,11 +133,30 @@ public class AnalysisService {
                 .filter(StringUtils::isNotBlank).collect(Collectors.joining(",")));
 
         return Optional.ofNullable(executionServices.get(fileExtension)).map(executionService -> {
-            Overseer overseer = executionService.analyze(analysis, analysisDir, callback, updateInterval).whenComplete((outcome, throwable) -> {
+            try {
+                ContainerSupport.patchUrl(analysis.getDataSource());
+            } catch (ExecutionInitException e) {
+                return new FailedOverseer(Instant.now(), e.getMessage(), AnalysisRequestTypeDTO.R, e.getCause());
+            }
+            DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
+            Path path = analysisDir.toPath();
+            AuthEffects auth = credentialProviders.stream().map(provider ->
+                    provider.apply(dataSource, path, path.toAbsolutePath().toString())
+            ).filter(Objects::nonNull).findFirst().orElse(null);
+
+            if (auth instanceof AuthEffects.ModifyUrl) {
+                String newUrl = ((AuthEffects.ModifyUrl) auth).getNewUrl();
+                dataSource.setConnectionString(newUrl);
+            }
+            return executionService.analyze(analysis, analysisDir, callback, updateInterval, auth).whenComplete((outcome, throwable) -> {
+                if (auth instanceof AuthEffects.Cleanup) {
+                    ((AuthEffects.Cleanup) auth).cleanup();
+                }
                 if (attachCdmMetadata) {
                     attachMetadata(analysis, analysisDir);
                 }
             });
+        }).map(overseer -> {
             overseers.put(analysis.getId(), overseer);
             return overseer;
         });

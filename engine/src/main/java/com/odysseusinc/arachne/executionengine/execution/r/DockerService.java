@@ -105,7 +105,7 @@ public class DockerService extends RService implements AutoCloseable {
 
     @Override
     protected Overseer analyze(
-            AnalysisSyncRequestDTO analysis, File analysisDir, BiConsumer<String, String> sendCallback, Integer updateInterval, AuthEffects auth
+            AnalysisSyncRequestDTO analysis, File analysisDir, AuthEffects auth, Integer updateInterval, BiConsumer<String, String> sendCallback
     ) {
         List<String> env = buildRuntimeEnvVariables(analysis.getDataSource(), auth).entrySet().stream().map(entry ->
                 entry.getKey() + "=" + entry.getValue()).collect(Collectors.toList()
