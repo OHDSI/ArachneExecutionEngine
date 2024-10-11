@@ -29,7 +29,7 @@ public class DockerEnvironmentService {
         try {
             List<DockerEnvironmentDTO> latest = service.listEnvironments();
             // TODO Print diff instead of simplistic size check
-            if (old == null || old.size() != environments.size()) {
+            if (old == null || old.size() != latest.size()) {
                 log.info("Refreshed DOCKER images ({})", latest.size());
                 latest.forEach(desc ->
                         log.info("DOCKER image [{}]: {}", desc.getImageId(), desc.getTags())
@@ -37,7 +37,8 @@ public class DockerEnvironmentService {
             }
             environments = latest;
         } catch (Exception e) {
-            log.error("Failed to scan for available descriptors");
+            log.error("Failed to scan for docker images, regex = [{}], default image = [{}]: {}", service.getFilterRegex(), service.getDefaultImage(), e.getMessage());
+            log.debug(e.getMessage(), e);
         }
     }
 

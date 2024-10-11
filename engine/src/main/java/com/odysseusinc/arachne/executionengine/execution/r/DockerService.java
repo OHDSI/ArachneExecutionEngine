@@ -21,6 +21,7 @@ import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
 import com.odysseusinc.arachne.executionengine.config.properties.DockerRegistryProperties;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.util.Streams;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,9 +67,11 @@ public class DockerService extends RService implements AutoCloseable {
     @Value("docker.certPath:#{null}")
     private String certPath;
 
+    @Getter
     @Value("${docker.image.default:#{null}}")
     private String defaultImage;
 
+    @Getter
     @Value("${docker.image.filter:#{null}}")
     private String filterRegex;
 
