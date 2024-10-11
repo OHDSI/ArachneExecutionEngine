@@ -91,7 +91,7 @@ public class TarballRService extends RService {
     }
 
     @Override
-    protected Overseer analyze(AnalysisSyncRequestDTO analysis, File file, BiConsumer<String, String> callback, Integer updateInterval, AuthEffects authEffects) {
+    protected Overseer analyze(AnalysisSyncRequestDTO analysis, File file, AuthEffects authEffects, Integer updateInterval, BiConsumer<String, String> callback) {
         DescriptorBundle descriptorBundle = descriptorService.getDescriptorBundle(
                 file, analysis.getId(), analysis.getRequestedDescriptorId()
         );

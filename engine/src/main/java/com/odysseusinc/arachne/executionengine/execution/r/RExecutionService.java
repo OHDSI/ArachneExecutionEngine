@@ -1,6 +1,7 @@
 package com.odysseusinc.arachne.executionengine.execution.r;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
+import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
 import com.odysseusinc.arachne.executionengine.execution.ExecutionService;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
@@ -27,9 +28,9 @@ public class RExecutionService implements ExecutionService {
     }
 
     @Override
-    public Overseer analyze(AnalysisSyncRequestDTO analysis, File dir, BiConsumer<String, String> callback, Integer updateInterval) {
+    public Overseer analyze(AnalysisSyncRequestDTO analysis, File dir, BiConsumer<String, String> callback, Integer updateInterval, AuthEffects auth) {
         RService delegate = calcEnv(analysis.getId(), analysis.getDockerImage(), analysis.getRequestedDescriptorId());
-        return delegate.analyze(analysis, dir, callback, updateInterval);
+        return delegate.analyze(analysis, dir, callback, updateInterval, auth);
     }
 
     private RService calcEnv(Long id, String image, String descriptorId) {

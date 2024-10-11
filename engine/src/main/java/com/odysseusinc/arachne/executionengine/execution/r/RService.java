@@ -1,15 +1,12 @@
 package com.odysseusinc.arachne.executionengine.execution.r;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestTypeDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
 import com.odysseusinc.arachne.executionengine.auth.AuthEffects.AddEnvironmentVariables;
-import com.odysseusinc.arachne.executionengine.auth.CredentialsProvider;
 import com.odysseusinc.arachne.executionengine.config.properties.HiveBulkLoadProperties;
 import com.odysseusinc.arachne.executionengine.execution.DriverLocations;
-import com.odysseusinc.arachne.executionengine.execution.FailedOverseer;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
 import lombok.extern.slf4j.Slf4j;
@@ -18,14 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -33,8 +25,6 @@ import java.util.function.BiConsumer;
 @Slf4j
 public abstract class RService {
     protected static final String EXECUTION_COMMAND = "Rscript";
-
-    private static final String HOST_DOCKER_INTERNAL = "host.docker.internal";
 
     private static final String RUNTIME_ENV_DATA_SOURCE_NAME = "DATA_SOURCE_NAME";
     private static final String RUNTIME_ENV_DBMS_USERNAME = "DBMS_USERNAME";
@@ -69,37 +59,14 @@ public abstract class RService {
     private ConnectionPoolService poolService;
     @Autowired
     private DriverLocations drivers;
-    @Autowired
-    private List<CredentialsProvider> credentialProviders;
 
     private static String sanitizeFilename(String filename) {
         return Objects.requireNonNull(filename).replaceAll("[<>:\"/\\\\|?*\\u0000]", "");
     }
 
-    public Overseer analyze(AnalysisSyncRequestDTO analysis, File analysisDir, BiConsumer<String, String> callback, Integer updateInterval) {
+    public Overseer analyze(AnalysisSyncRequestDTO analysis, File analysisDir, BiConsumer<String, String> callback, Integer updateInterval, AuthEffects auth) {
         Long id = analysis.getId();
         DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
-        String jdbcUrl = dataSource.getConnectionString();
-        if (jdbcUrl.contains(HOST_DOCKER_INTERNAL)) {
-            try {
-                String address = InetAddress.getByName(HOST_DOCKER_INTERNAL).getHostAddress();
-                String newUrl = jdbcUrl.replace(HOST_DOCKER_INTERNAL, address);
-                log.info("Resolved {} = [{}]", HOST_DOCKER_INTERNAL, address);
-                dataSource.setConnectionString(newUrl);
-            } catch (UnknownHostException e) {
-                return new FailedOverseer(Instant.now(), "Unable to resolve to [" + HOST_DOCKER_INTERNAL + "]", AnalysisRequestTypeDTO.R, e);
-            }
-        }
-
-        Path path = analysisDir.toPath();
-        AuthEffects auth = credentialProviders.stream().map(provider ->
-                provider.apply(dataSource, path, path.toAbsolutePath().toString())
-        ).filter(Objects::nonNull).findFirst().orElse(null);
-
-        if (auth instanceof AuthEffects.ModifyUrl) {
-            String newUrl = ((AuthEffects.ModifyUrl) auth).getNewUrl();
-            dataSource.setConnectionString(newUrl);
-        }
 
         log.info("Execution [{}] checking connection to [{}]", id, dataSource.getConnectionString());
         try (Connection conn = poolService.getDataSource(dataSource).getConnection()) {
@@ -109,18 +76,13 @@ public abstract class RService {
             log.info("Execution [{}] connection verification failed [{}]", id, e.getMessage());
         }
 
-
-        Overseer overseer = analyze(analysis, analysisDir, callback, updateInterval, auth).whenComplete((outcome, throwable) -> {
-            if (auth instanceof AuthEffects.Cleanup) {
-                ((AuthEffects.Cleanup) auth).cleanup();
-            }
-        });
+        Overseer overseer = analyze(analysis, analysisDir, auth, updateInterval, callback);
 
         log.info("Execution [{}] started in R Runtime Service", analysis.getId());
         return overseer;
     }
 
-    protected abstract Overseer analyze(AnalysisSyncRequestDTO analysis, File analysisDir, BiConsumer<String, String> callback, Integer updateInterval, AuthEffects auth);
+    protected abstract Overseer analyze(AnalysisSyncRequestDTO analysis, File analysisDir, AuthEffects auth, Integer updateInterval, BiConsumer<String, String> callback);
 
     protected Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, AuthEffects auth) {
         Map<String, String> environment = new HashMap<>();
@@ -140,6 +102,9 @@ public abstract class RService {
         environment.put(RUNTIME_ENV_LANG_KEY, RUNTIME_ENV_LANG_VALUE);
         environment.put(RUNTIME_ENV_LC_ALL_KEY, RUNTIME_ENV_LC_ALL_VALUE);
         if (auth instanceof AddEnvironmentVariables) {
+            // TODO Abstraction failure: While RService doesn't contain any hardcode is specific to auth type, jail.sh script does.
+            //  Instead of having hardcoded list of files in jail.sh, it should be provided by the effect and processed uniformly in jail.sh.
+            //  Also, consuming this effect is not required for Docker and should be moved down to TarballRService.
             environment.putAll(((AddEnvironmentVariables) auth).getEnvVars());
         }
 
