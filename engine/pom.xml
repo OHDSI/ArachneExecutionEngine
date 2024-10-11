@@ -25,7 +25,7 @@
 
         <start-class>com.odysseusinc.arachne.executionengine.ExecutionEngineStarter</start-class>
 
-        <springfox.swagger2.version>2.9.2</springfox.swagger2.version>
+        <springfox.swagger2.version>2.10.0</springfox.swagger2.version>
 
         <docker.image.prefix>odysseusinc</docker.image.prefix>
         <commons.lang3.version>3.11</commons.lang3.version>
@@ -53,9 +53,9 @@
 
         <!--DTO-->
         <dependency>
-            <groupId>com.odysseusinc.executionengine</groupId>
-            <artifactId>data-source-manager</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.github.jknack</groupId>
+            <artifactId>handlebars</artifactId>
+            <version>4.2.0</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
@@ -100,7 +100,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.8.0</version>
+            <version>2.14.0</version>
         </dependency>
 
         <dependency>
