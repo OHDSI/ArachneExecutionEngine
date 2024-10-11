@@ -22,7 +22,6 @@
 
 package com.odysseusinc.arachne.executionengine.config;
 
-import com.odysseusinc.datasourcemanager.jdbc.auth.BigQueryAuthResolver;
 import com.odysseusinc.datasourcemanager.krblogin.KerberosService;
 import com.odysseusinc.datasourcemanager.krblogin.KerberosServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,10 +68,5 @@ public class AnalisysConfig {
 
         return new KerberosServiceImpl(timeout, kinitPath, configPath);
     }
-
-    @Bean
-    public BigQueryAuthResolver bigQueryAuthResolver() {
-        return new BigQueryAuthResolver();
-    };
 
 }
