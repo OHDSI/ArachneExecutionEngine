@@ -40,9 +40,6 @@ connectionpool:
 runtime:
   timeOutSec: 259200
 
-swagger:
-  enable: false
-
 csv:
   separator: ','
 
