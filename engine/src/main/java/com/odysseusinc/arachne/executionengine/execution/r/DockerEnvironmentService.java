@@ -29,11 +29,17 @@ public class DockerEnvironmentService {
         try {
             List<DockerEnvironmentDTO> latest = service.listEnvironments();
             // TODO Print diff instead of simplistic size check
-            if (old == null || (latest != null && old.size() != latest.size())) {
-                log.info("Refreshed DOCKER images ({})", latest.size());
-                latest.forEach(desc ->
-                        log.info("DOCKER image [{}]: {}", desc.getImageId(), desc.getTags())
-                );
+            if (latest != null) {
+                if (old == null || old.size() != latest.size()) {
+                    log.info("Refreshed DOCKER images ({})", latest.size());
+                    latest.forEach(desc ->
+                            log.info("DOCKER image [{}]: {}", desc.getImageId(), desc.getTags())
+                    );
+                }
+            } else {
+                if (old != null) {
+                    log.info("Refreshed DOCKER images: {} gone", old.size());
+                }
             }
             environments = latest;
         } catch (Exception e) {
