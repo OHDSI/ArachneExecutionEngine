@@ -12,7 +12,7 @@ import org.ohdsi.sql.SqlTranslate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
