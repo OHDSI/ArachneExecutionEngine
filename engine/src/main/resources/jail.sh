@@ -26,7 +26,7 @@ then
   sudo cp $BQ_KEYFILE $JAIL/$BQ_KEYFILE
 fi
 
-sudo cp -R /impala/. $JAIL/impala/
+#sudo cp -R /impala/. $JAIL/impala/
 CHROOT_DEF=$JAIL/etc/R-with-krb.sh
 sudo touch $CHROOT_DEF
 printf "#!/usr/bin/env bash\n " | sudo tee -a $CHROOT_DEF > /dev/null
