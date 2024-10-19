@@ -17,7 +17,6 @@ import com.github.dockerjava.transport.DockerHttpClient;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.DockerEnvironmentDTO;
-import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
 import com.odysseusinc.arachne.executionengine.config.properties.DockerRegistryProperties;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.util.Streams;
@@ -37,6 +36,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
@@ -108,9 +108,9 @@ public class DockerService extends RService implements AutoCloseable {
 
     @Override
     protected Overseer analyze(
-            AnalysisSyncRequestDTO analysis, File analysisDir, AuthEffects auth, Integer updateInterval, BiConsumer<String, String> sendCallback
+            AnalysisSyncRequestDTO analysis, File analysisDir, Integer updateInterval, Map<String, String> envp, BiConsumer<String, String> sendCallback
     ) {
-        List<String> env = buildRuntimeEnvVariables(analysis.getDataSource(), auth).entrySet().stream().map(entry ->
+        List<String> env = envp.entrySet().stream().map(entry ->
                 entry.getKey() + "=" + entry.getValue()).collect(Collectors.toList()
         );
         Instant started = Instant.now();
