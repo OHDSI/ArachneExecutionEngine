@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 @Slf4j
@@ -76,15 +77,17 @@ public abstract class RService {
             log.info("Execution [{}] connection verification failed [{}]", id, e.getMessage());
         }
 
-        Overseer overseer = analyze(analysis, analysisDir, auth, updateInterval, callback);
+        Map<String, String> env = buildRuntimeEnvVariables(analysis.getDataSource(), auth, analysis.getParameters());
+
+        Overseer overseer = analyze(analysis, analysisDir, updateInterval, env, callback);
 
         log.info("Execution [{}] started in R Runtime Service", analysis.getId());
         return overseer;
     }
 
-    protected abstract Overseer analyze(AnalysisSyncRequestDTO analysis, File analysisDir, AuthEffects auth, Integer updateInterval, BiConsumer<String, String> callback);
+    protected abstract Overseer analyze(AnalysisSyncRequestDTO analysis, File analysisDir, Integer updateInterval, Map<String, String> env, BiConsumer<String, String> callback);
 
-    protected Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, AuthEffects auth) {
+    private Map<String, String> buildRuntimeEnvVariables(DataSourceUnsecuredDTO dataSource, AuthEffects auth, Map<String, String> extraEnv) {
         Map<String, String> environment = new HashMap<>();
         environment.put(RUNTIME_ENV_DATA_SOURCE_NAME, RService.sanitizeFilename(dataSource.getName()));
         environment.put(RUNTIME_ENV_DBMS_USERNAME, dataSource.getUsername());
@@ -101,6 +104,7 @@ public abstract class RService {
         environment.put(RUNTIME_ENV_HOSTNAME_KEY, RUNTIME_ENV_HOSTNAME_VALUE);
         environment.put(RUNTIME_ENV_LANG_KEY, RUNTIME_ENV_LANG_VALUE);
         environment.put(RUNTIME_ENV_LC_ALL_KEY, RUNTIME_ENV_LC_ALL_VALUE);
+        Optional.ofNullable(extraEnv).ifPresent(environment::putAll);
         if (auth instanceof AddEnvironmentVariables) {
             // TODO Abstraction failure: While RService doesn't contain any hardcode is specific to auth type, jail.sh script does.
             //  Instead of having hardcoded list of files in jail.sh, it should be provided by the effect and processed uniformly in jail.sh.

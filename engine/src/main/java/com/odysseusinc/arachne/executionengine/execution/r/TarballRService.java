@@ -23,9 +23,7 @@
 package com.odysseusinc.arachne.executionengine.execution.r;
 
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisSyncRequestDTO;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
-import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
 import com.odysseusinc.arachne.executionengine.config.runtimeservice.RIsolatedRuntimeProperties;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.model.descriptor.Descriptor;
@@ -91,17 +89,15 @@ public class TarballRService extends RService {
     }
 
     @Override
-    protected Overseer analyze(AnalysisSyncRequestDTO analysis, File file, AuthEffects authEffects, Integer updateInterval, BiConsumer<String, String> callback) {
+    protected Overseer analyze(AnalysisSyncRequestDTO analysis, File file, Integer updateInterval, Map<String, String> envp, BiConsumer<String, String> callback) {
         DescriptorBundle descriptorBundle = descriptorService.getDescriptorBundle(
                 file, analysis.getId(), analysis.getRequestedDescriptorId()
         );
         Long id = analysis.getId();
         String executableFileName = analysis.getExecutableFileName();
-        DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
 
         try {
             Instant started = Instant.now();
-            Map<String, String> envp = buildRuntimeEnvVariables(dataSource, authEffects);
             File jailFile = new File(rIsolatedRuntimeProps.getJailSh());
             boolean externalJail = jailFile.isFile();
             File runFile = externalJail ? jailFile : extractToTempFile(resourceLoader, "classpath:/jail.sh", "ee", ".sh");

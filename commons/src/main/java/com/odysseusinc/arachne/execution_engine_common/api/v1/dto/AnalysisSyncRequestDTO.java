@@ -1,9 +1,15 @@
 package com.odysseusinc.arachne.execution_engine_common.api.v1.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
+import java.util.Map;
 
+@Setter
+@Getter
 public class AnalysisSyncRequestDTO {
 
     @NotNull(message = "id can not be null")
@@ -25,69 +31,8 @@ public class AnalysisSyncRequestDTO {
 
     private String dockerImage;
 
-    public Long getId() {
-
-        return id;
-    }
-
-    public void setId(Long id) {
-
-        this.id = id;
-    }
-
-    public String getExecutableFileName() {
-
-        return executableFileName;
-    }
-
-    public void setExecutableFileName(String executableFileName) {
-
-        this.executableFileName = executableFileName;
-    }
-
-    public DataSourceUnsecuredDTO getDataSource() {
-
-        return dataSource;
-    }
-
-    public void setDataSource(DataSourceUnsecuredDTO dataSource) {
-
-        this.dataSource = dataSource;
-    }
-
-    public Date getRequested() {
-
-        return requested;
-    }
-
-    public void setRequested(Date requested) {
-
-        this.requested = requested;
-    }
-
-    public String getResultExclusions() {
-
-        return resultExclusions;
-    }
-
-    public void setResultExclusions(String resultExclusions) {
-
-        this.resultExclusions = resultExclusions;
-    }
-
-    public String getRequestedDescriptorId() {
-        return requestedDescriptorId;
-    }
-
-    public void setRequestedDescriptorId(String requestedDescriptorId) {
-        this.requestedDescriptorId = requestedDescriptorId;
-    }
-
-    public String getDockerImage() {
-        return dockerImage;
-    }
-
-    public void setDockerImage(String dockerImage) {
-        this.dockerImage = dockerImage;
-    }
+    /**
+     * Additional environment variables to be passed to execution.
+     */
+    private Map<String, String> parameters;
 }
