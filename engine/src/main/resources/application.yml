@@ -30,13 +30,6 @@ submission:
   update.interval: 10000
   cleanupResults: true
 
-connectionpool:
-  ttl:
-    minutes: 60
-  capacity:
-    min: 4
-    max: 10
-
 runtime:
   timeOutSec: 259200
 

@@ -8,7 +8,7 @@ import com.odysseusinc.arachne.executionengine.auth.AuthEffects.AddEnvironmentVa
 import com.odysseusinc.arachne.executionengine.config.properties.HiveBulkLoadProperties;
 import com.odysseusinc.arachne.executionengine.execution.DriverLocations;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
-import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
+import com.odysseusinc.arachne.executionengine.util.SQLUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,8 +57,6 @@ public abstract class RService {
     @Autowired
     private HiveBulkLoadProperties hiveBulkLoadProperties;
     @Autowired
-    private ConnectionPoolService poolService;
-    @Autowired
     private DriverLocations drivers;
 
     private static String sanitizeFilename(String filename) {
@@ -70,7 +68,7 @@ public abstract class RService {
         DataSourceUnsecuredDTO dataSource = analysis.getDataSource();
 
         log.info("Execution [{}] checking connection to [{}]", id, dataSource.getConnectionString());
-        try (Connection conn = poolService.getDataSource(dataSource).getConnection()) {
+        try (Connection conn = SQLUtils.getConnectionWithAutoCommit(dataSource)) {
             String name = conn.getMetaData().getDatabaseProductName();
             log.info("Execution [{}] connection verified, engine: [{}]", id, name);
         } catch (SQLException | UncheckedExecutionException e) {
