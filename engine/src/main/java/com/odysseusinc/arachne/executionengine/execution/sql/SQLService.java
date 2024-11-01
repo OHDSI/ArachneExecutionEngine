@@ -32,8 +32,8 @@ import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
 import com.odysseusinc.arachne.executionengine.execution.AbstractOverseer;
 import com.odysseusinc.arachne.executionengine.execution.ExecutionService;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
-import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
 import com.odysseusinc.arachne.executionengine.util.AnalisysUtils;
+import com.odysseusinc.arachne.executionengine.util.SQLUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -79,8 +79,6 @@ public class SQLService implements ExecutionService {
     @Autowired
     @Qualifier("analysisTaskExecutor")
     private ThreadPoolTaskExecutor taskExecutor;
-    @Autowired
-    private ConnectionPoolService poolService;
 
     @Value("${csv.separator}")
     private char csvSeparator;
@@ -104,7 +102,7 @@ public class SQLService implements ExecutionService {
     }
 
     private ExecutionOutcome execute(File dir, BiConsumer<String, String> callback, DataSourceUnsecuredDTO dataSource, Long id, StringBuffer stdout) {
-        try (Connection conn = poolService.getDataSource(dataSource).getConnection()) {
+        try (Connection conn = SQLUtils.getConnectionWithAutoCommit(dataSource)) {
             String name = conn.getMetaData().getDatabaseProductName();
             boolean singleStatement = SINGLE_STATEMENT_TYPES.contains(dataSource.getType());
             log.info("Execution [{}] connected to [{}], single statement: {}", id, name, singleStatement);
