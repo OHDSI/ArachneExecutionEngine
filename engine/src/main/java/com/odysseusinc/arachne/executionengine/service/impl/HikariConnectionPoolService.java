@@ -7,12 +7,12 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnse
 import com.odysseusinc.arachne.executionengine.service.ConnectionPoolService;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.ohdsi.sql.SqlTranslate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;

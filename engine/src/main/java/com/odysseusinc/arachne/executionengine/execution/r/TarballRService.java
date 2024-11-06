@@ -33,6 +33,7 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.r.RDependency;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRuntime;
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -42,7 +43,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
