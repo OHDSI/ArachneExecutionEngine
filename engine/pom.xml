@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.18</version>
+        <version>3.2.4</version>
         <relativePath/>
     </parent>
     
@@ -19,9 +19,9 @@
 
     <properties>
         <revision>2.x-SNAPSHOT</revision>
-        <java.version>1.8</java.version>
+        <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring.boot.version>2.7.18</spring.boot.version>
+        <spring.boot.version>3.2.4</spring.boot.version>
 
         <start-class>com.odysseusinc.arachne.executionengine.ExecutionEngineStarter</start-class>
 
@@ -33,8 +33,7 @@
         <jtds.version>1.3.1</jtds.version>
         <mysql.version>8.0.28</mysql.version>
         <postgresql.version>42.7.4</postgresql.version>
-        <snakeyaml.version>1.33</snakeyaml.version>
-        <docker-java.version>3.3.4</docker-java.version>
+        <docker-java.version>3.4.0</docker-java.version>
 
     </properties>
 
@@ -43,12 +42,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <!-- Intentionally overriding the Spring Boot dependency version -->
-        <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <version>${snakeyaml.version}</version>
         </dependency>
 
         <!--DTO-->
@@ -145,10 +138,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jolokia</groupId>
-            <artifactId>jolokia-core</artifactId>
         </dependency>
 
         <dependency>
@@ -645,8 +634,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>17</source>
+                    <target>17</target>
                 </configuration>
             </plugin>
             <plugin>

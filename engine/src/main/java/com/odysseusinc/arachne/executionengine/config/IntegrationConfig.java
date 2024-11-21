@@ -22,19 +22,24 @@
 
 package com.odysseusinc.arachne.executionengine.config;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import org.apache.http.client.HttpClient;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.TrustAllStrategy;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
+
+import javax.net.ssl.SSLContext;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 
 
 @Configuration
@@ -42,59 +47,27 @@ public class IntegrationConfig {
 
     @Bean(name = "nodeRestTemplate")
     public RestTemplate centralRestTemplate(HttpClient httpClient) {
-
-        HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient);
-        // https://jira.spring.io/browse/SPR-7909
-        // Not to put posted files into memory, which can cause Heap overflow in case of big files
-        requestFactory.setBufferRequestBody(false);
-        return new RestTemplate(requestFactory);
+        return new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
     }
 
     @Configuration
     @ConditionalOnProperty(value = "server.ssl.strictMode", havingValue = "false")
-    public class nonStrictSSLSecurityConfig {
+    public static class nonStrictSSLSecurityConfig {
         @Bean
-        public HttpClient getHttpClient() {
-
-            TrustManager[] trustAllCerts = new TrustManager[]{
-                    new X509TrustManager() {
-                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-
-                            return null;
-                        }
-
-                        public void checkClientTrusted(
-                                java.security.cert.X509Certificate[] certs, String authType) {
-
-                        }
-
-                        public void checkServerTrusted(
-                                java.security.cert.X509Certificate[] certs, String authType) {
-
-                        }
-                    }
-            };
-
-            SSLConnectionSocketFactory csf = null;
-            try {
-                SSLContext sc = SSLContext.getInstance("SSL");
-                sc.init(null, trustAllCerts, new java.security.SecureRandom());
-
-                csf = new SSLConnectionSocketFactory(sc, (s, sslSession) -> true);
-            } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                e.printStackTrace();
-            }
-            return HttpClients.custom().setSSLSocketFactory(csf).build();
+        public HttpClient getHttpClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+            SSLContext context = SSLContextBuilder.create().loadTrustMaterial(TrustAllStrategy.INSTANCE).build();
+            SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(context, NoopHostnameVerifier.INSTANCE);
+            HttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create().setSSLSocketFactory(socketFactory).build();
+            return HttpClients.custom().setConnectionManager(connectionManager).build();
         }
     }
 
     @Configuration
     @ConditionalOnProperty(value = "server.ssl.strictMode", havingValue = "true")
-    public class strictSSLSecurityConfig {
+    public static class strictSSLSecurityConfig {
 
         @Bean
         public HttpClient getHttpClient() {
-
             return HttpClients.createDefault();
         }
     }

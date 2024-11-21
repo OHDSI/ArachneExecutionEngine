@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.executionengine.api.v1;
 
 import com.odysseusinc.arachne.executionengine.util.exception.ErrorInfo;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -33,8 +34,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import javax.servlet.http.HttpServletRequest;
 
 @Slf4j
 @RestControllerAdvice(annotations = RestController.class)

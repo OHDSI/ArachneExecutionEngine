@@ -1,4 +1,4 @@
-FROM eclipse-temurin:8-jre-focal
+FROM eclipse-temurin:17-jre-focal
 LABEL maintainer="Odysseus Data Services, Inc: support@odysseusinc.com"
 VOLUME /tmp
 VOLUME /libs-r
