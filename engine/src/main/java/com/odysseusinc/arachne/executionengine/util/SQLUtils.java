@@ -65,6 +65,8 @@ public class SQLUtils {
         // Set the Databricks JDBC driver to mimic Spark's behavior
         if (dataSource.getType().equals(DBMSType.SPARK)) {
             info.put("driver", "com.databricks.client.jdbc.Driver");
+            // Replace "spark" with "databricks" in the URL
+            url = url.replace("spark", "databricks");
         }
 
         Connection conn = DriverManager.getConnection(url, info);
