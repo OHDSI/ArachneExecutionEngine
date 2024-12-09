@@ -20,6 +20,7 @@ import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.DockerEnvi
 import com.odysseusinc.arachne.executionengine.config.properties.DockerRegistryProperties;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.util.Streams;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -29,7 +30,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.net.URI;
 import java.time.Instant;
