@@ -61,6 +61,12 @@ public class SQLUtils {
         if (dataSource.getType().equals(DBMSType.SNOWFLAKE)) {
             info.put("CLIENT_RESULT_COLUMN_CASE_INSENSITIVE", "true");
         }
+
+        // Set the Databricks JDBC driver to mimic Spark's behavior
+        if (dataSource.getType().equals(DBMSType.SPARK)) {
+            info.put("driver", "com.databricks.client.jdbc.Driver");
+        }
+
         Connection conn = DriverManager.getConnection(url, info);
 
         return conn;
