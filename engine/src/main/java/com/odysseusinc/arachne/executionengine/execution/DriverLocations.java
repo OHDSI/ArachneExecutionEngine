@@ -29,6 +29,8 @@ public class DriverLocations {
     private String snowflake;
     @Value("${drivers.location.spark}")
     private String spark;
+    @Value("${drivers.location.iris}")
+    private String iris;
 
     public String getPath(DBMSType type) {
         switch (type) {
@@ -53,6 +55,9 @@ public class DriverLocations {
                 return snowflake;
             case SPARK:
                 return spark;
+            case IRIS:
+                return iris;
+
             default:
                 return null;
         }
@@ -60,7 +65,7 @@ public class DriverLocations {
 
     public String getPathExclusions() {
         return Stream.of(
-                impala, bigQuery, netezza, hive, mssql, postgres, redshift, oracle, snowflake, spark
+                impala, bigQuery, netezza, hive, mssql, postgres, redshift, oracle, snowflake, spark, iris
         ).filter(StringUtils::isNotBlank).map(path ->
                 path.startsWith("/") ? path.substring(1) : path
         ).map(path ->

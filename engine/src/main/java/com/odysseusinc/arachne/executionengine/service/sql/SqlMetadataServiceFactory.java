@@ -50,6 +50,7 @@ public class SqlMetadataServiceFactory {
                 result = new OracleMetadataService(dataSource);
                 break;
             case REDSHIFT:
+            case IRIS:
                 result = new RedshiftMetadataService(dataSource);
                 break;
             case IMPALA:
