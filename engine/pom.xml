@@ -340,7 +340,7 @@
                 <google.gax.version>2.55.0</google.gax.version>
                 <proto.google.cloud.bigquerystorage.v1.version>3.9.3</proto.google.cloud.bigquerystorage.v1.version>
                 <opencensus.contrib.http.util.version>0.31.1</opencensus.contrib.http.util.version>
-                <io.grpc.grpc-core.version>1.45.0</io.grpc.grpc-core.version>
+                <io.grpc.grpc-core.version>1.67.1</io.grpc.grpc-core.version>
                 <!-- BigQuery JDBC driver path -->
                 <bigquery.classpath>/bigquery</bigquery.classpath>
             </properties>
