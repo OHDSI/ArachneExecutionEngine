@@ -34,6 +34,8 @@
         <mysql.version>8.0.28</mysql.version>
         <postgresql.version>42.7.4</postgresql.version>
         <docker-java.version>3.4.0</docker-java.version>
+        <handlebars.version>4.2.0</handlebars.version>
+        <swagger-annotations.version>1.5.20</swagger-annotations.version>
 
     </properties>
 
@@ -48,7 +50,7 @@
         <dependency>
             <groupId>com.github.jknack</groupId>
             <artifactId>handlebars</artifactId>
-            <version>4.2.0</version>
+            <version>${handlebars.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
@@ -60,7 +62,7 @@
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
-            <version>1.5.20</version>
+            <version>${swagger-annotations.version}</version>
         </dependency>
 
         <!--Logging-->
@@ -327,17 +329,17 @@
             <id>bigquery</id>
             <properties>
                 <bigquery.enabled>true</bigquery.enabled>
-                <google.api.client.version>1.33.4</google.api.client.version>
-                <google.api.services.bigquery.version>v2-rev20220326-1.32.1</google.api.services.bigquery.version>
-                <google.cloud.bigquery.version>1.2.15</google.cloud.bigquery.version>
+                <google.api.client.version>2.7.0</google.api.client.version>
+                <google.api.services.bigquery.version>v2-rev20240919-2.0.0</google.api.services.bigquery.version>
+                <google.cloud.bigquery.version>1.6.2.1003</google.cloud.bigquery.version>
                 <!-- currently it differs from google.api.client.version -->
-                <google.http.client.version>1.41.5</google.http.client.version>
-                <google.oauth.client.version>1.33.1</google.oauth.client.version>
-                <google.cloud.bigquerystorage.version>2.12.0</google.cloud.bigquerystorage.version>
-                <google.auth.library.version>1.6.0</google.auth.library.version>
-                <google.gax.version>2.13.0</google.gax.version>
-                <proto.google.cloud.bigquerystorage.v1.version>2.12.0</proto.google.cloud.bigquerystorage.v1.version>
-                <opencensus.contrib.http.util.version>0.31.0</opencensus.contrib.http.util.version>
+                <google.http.client.version>1.45.0</google.http.client.version>
+                <google.oauth.client.version>1.36.0</google.oauth.client.version>
+                <google.cloud.bigquerystorage.version>3.9.3</google.cloud.bigquerystorage.version>
+                <google.auth.library.version>1.28.0</google.auth.library.version>
+                <google.gax.version>2.55.0</google.gax.version>
+                <proto.google.cloud.bigquerystorage.v1.version>3.9.3</proto.google.cloud.bigquerystorage.v1.version>
+                <opencensus.contrib.http.util.version>0.31.1</opencensus.contrib.http.util.version>
                 <io.grpc.grpc-core.version>1.45.0</io.grpc.grpc-core.version>
                 <!-- BigQuery JDBC driver path -->
                 <bigquery.classpath>/bigquery</bigquery.classpath>
