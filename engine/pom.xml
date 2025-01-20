@@ -31,7 +31,6 @@
         <commons.lang3.version>3.11</commons.lang3.version>
         <httpclient.version>4.5.13</httpclient.version>
         <jtds.version>1.3.1</jtds.version>
-        <mysql.version>8.0.28</mysql.version>
         <postgresql.version>42.7.4</postgresql.version>
         <docker-java.version>3.4.0</docker-java.version>
 
@@ -115,12 +114,6 @@
             <groupId>com.amazon.redshift</groupId>
             <artifactId>redshift-jdbc42</artifactId>
             <version>2.1.0.29</version>
-        </dependency>
-
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>${mysql.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.microsoft.sqlserver/sqljdbc4 -->
