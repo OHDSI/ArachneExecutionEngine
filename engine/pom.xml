@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.7</version>
+        <version>3.3.7</version>
         <relativePath/>
     </parent>
     
@@ -21,7 +21,7 @@
         <revision>2.x-SNAPSHOT</revision>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring.boot.version>3.2.7</spring.boot.version>
+        <spring.boot.version>3.3.7</spring.boot.version>
 
         <start-class>com.odysseusinc.arachne.executionengine.ExecutionEngineStarter</start-class>
 
