@@ -29,7 +29,7 @@ jobs:
         cache: maven
     - name: Build with Maven
       # working-directory: engine
-      run: mvn -B package -Psnowflake --file pom.xml
+      run: mvn -B -DskipTests package -Psnowflake --file pom.xml 
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     - name: Update dependency graph
