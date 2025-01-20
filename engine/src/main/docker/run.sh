@@ -32,4 +32,4 @@ if [[ -n "${KRB5_USER}" ]]; then
     grep -q -F "$CRON_EXPR" /etc/crontab || echo "$CRON_EXPR" >> /etc/crontab
 fi
 
-java -Djava.security.egd=file:/dev/./urandom -jar /execution-engine.jar
+java --add-opens java.base/java.nio=ALL-UNNAMED -Djava.security.egd=file:/dev/./urandom -jar /execution-engine.jar
