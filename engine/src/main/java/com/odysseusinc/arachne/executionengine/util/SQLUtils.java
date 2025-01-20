@@ -60,6 +60,7 @@ public class SQLUtils {
         }
         if (dataSource.getType().equals(DBMSType.SNOWFLAKE)) {
             info.put("CLIENT_RESULT_COLUMN_CASE_INSENSITIVE", "true");
+            info.put("MULTI_STATEMENT_COUNT", "0");
         }
         Connection conn = DriverManager.getConnection(url, info);
 
