@@ -62,6 +62,14 @@ public class SQLUtils {
             info.put("CLIENT_RESULT_COLUMN_CASE_INSENSITIVE", "true");
             info.put("MULTI_STATEMENT_COUNT", "0");
         }
+
+        // Set the Databricks JDBC driver to mimic Spark's behavior
+        if (dataSource.getType().equals(DBMSType.SPARK)) {
+            info.put("driver", "com.databricks.client.jdbc.Driver");
+            // Replace "spark" with "databricks" in the URL
+            url = url.replace("spark", "databricks");
+        }
+
         Connection conn = DriverManager.getConnection(url, info);
 
         return conn;
