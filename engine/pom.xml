@@ -22,19 +22,16 @@
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.boot.version>3.3.7</spring.boot.version>
-
         <start-class>com.odysseusinc.arachne.executionengine.ExecutionEngineStarter</start-class>
-
         <springfox.swagger2.version>2.10.0</springfox.swagger2.version>
-
         <docker.image.prefix>odysseusinc</docker.image.prefix>
         <commons.lang3.version>3.11</commons.lang3.version>
         <httpclient.version>4.5.13</httpclient.version>
         <jtds.version>1.3.1</jtds.version>
-        <mysql.version>8.0.28</mysql.version>
         <handlebars.version>4.2.0</handlebars.version>
         <swagger-annotations.version>1.5.20</swagger-annotations.version>
-
+        <postgresql.version>42.7.5</postgresql.version>
+        <docker-java.version>3.4.1</docker-java.version>
     </properties>
 
     <dependencies>
@@ -115,12 +112,6 @@
             <groupId>com.amazon.redshift</groupId>
             <artifactId>redshift-jdbc42</artifactId>
             <version>2.1.0.29</version>
-        </dependency>
-
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>${mysql.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.microsoft.sqlserver/sqljdbc4 -->
@@ -609,7 +600,7 @@
             <id>snowflake</id>
             <properties>
                 <snowflake.enabled>true</snowflake.enabled>
-                <snowflake.driver.version>3.13.22</snowflake.driver.version>
+                <snowflake.driver.version>3.21.0</snowflake.driver.version>
             </properties>
             <dependencies>
                 <dependency>
