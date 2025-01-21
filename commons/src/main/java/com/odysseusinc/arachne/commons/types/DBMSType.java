@@ -12,6 +12,7 @@ public enum DBMSType {
     NETEZZA("Netezza", "netezza"),
     HIVE("Apache Hive", "hive"),
     SPARK("Spark", "spark"),
+    IRIS("Iris", "iris"),
     SNOWFLAKE("Snowflake", "snowflake"),
     SYNAPSE("Azure Synapse", "synapse");
 
