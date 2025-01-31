@@ -37,7 +37,7 @@ public class SQLUtils {
     public static Connection getConnection(DataSourceUnsecuredDTO dataSource) throws SQLException {
 
         Connection conn = getConnectionWithAutoCommit(dataSource);
-        if (!dataSource.getType().equals(DBMSType.BIGQUERY)) {
+        if (!dataSource.getType().equals(DBMSType.BIGQUERY) && !dataSource.getType().equals(DBMSType.SPARK)) {
             conn.setAutoCommit(Boolean.FALSE);
         }
 
