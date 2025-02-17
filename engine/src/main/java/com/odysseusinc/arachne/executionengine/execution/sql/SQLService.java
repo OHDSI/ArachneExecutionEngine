@@ -136,7 +136,8 @@ public class SQLService implements ExecutionService {
             stdout.append(errorMessage).append("\r\n");
             return new ExecutionOutcome(Stage.EXECUTE, "SQLException: " + ex.getMessage(), stdout.toString());
         } catch (Throwable t) {
-            return new ExecutionOutcome(Stage.EXECUTE, "Error: " + t.getMessage(), null);
+            log.error("Execution [{}] error: {}", id, t.getMessage(), t);
+            return new ExecutionOutcome(Stage.EXECUTE, "Error: " + t.getClass() + ":" + t.getMessage(), null);
         }
     }
 
