@@ -166,6 +166,13 @@
         </dependency>
 
         <dependency>
+            <!-- docker-java pulls really old version of guava, so we enforce a newer version -->
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.3.1-jre</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.github.docker-java</groupId>
             <artifactId>docker-java-transport-httpclient5</artifactId>
             <version>${docker-java.version}</version>
@@ -316,204 +323,13 @@
         </profile>
         <profile>
             <id>bigquery</id>
-            <properties>
-                <bigquery.enabled>true</bigquery.enabled>
-                <google.api.client.version>2.7.0</google.api.client.version>
-                <google.api.services.bigquery.version>v2-rev20240919-2.0.0</google.api.services.bigquery.version>
-                <google.cloud.bigquery.version>1.6.2.1003</google.cloud.bigquery.version>
-                <!-- currently it differs from google.api.client.version -->
-                <google.http.client.version>1.45.0</google.http.client.version>
-                <google.oauth.client.version>1.36.0</google.oauth.client.version>
-                <google.cloud.bigquerystorage.version>3.9.3</google.cloud.bigquerystorage.version>
-                <google.auth.library.version>1.28.0</google.auth.library.version>
-                <google.gax.version>2.55.0</google.gax.version>
-                <proto.google.cloud.bigquerystorage.v1.version>3.9.3</proto.google.cloud.bigquerystorage.v1.version>
-                <opencensus.contrib.http.util.version>0.31.1</opencensus.contrib.http.util.version>
-                <io.grpc.grpc-core.version>1.67.1</io.grpc.grpc-core.version>
-                <!-- BigQuery JDBC driver path -->
-                <bigquery.classpath>/bigquery</bigquery.classpath>
-            </properties>
             <dependencies>
                 <dependency>
-                    <groupId>com.google.api-client</groupId>
-                    <artifactId>google-api-client</artifactId>
-                    <version>${google.api.client.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.apis</groupId>
-                    <artifactId>google-api-services-bigquery</artifactId>
-                    <version>${google.api.services.bigquery.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.cloud</groupId>
-                    <artifactId>google-cloud-bigquery</artifactId>
-                    <version>${google.cloud.bigquery.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.http-client</groupId>
-                    <artifactId>google-http-client</artifactId>
-                    <version>${google.http.client.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.http-client</groupId>
-                    <artifactId>google-http-client-gson</artifactId>
-                    <version>${google.http.client.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.oauth-client</groupId>
-                    <artifactId>google-oauth-client</artifactId>
-                    <version>${google.oauth.client.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.cloud</groupId>
-                    <artifactId>google-cloud-bigquerystorage</artifactId>
-                    <version>${google.cloud.bigquerystorage.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.auth</groupId>
-                    <artifactId>google-auth-library-oauth2-http</artifactId>
-                    <version>${google.auth.library.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.auth</groupId>
-                    <artifactId>google-auth-library-credentials</artifactId>
-                    <version>${google.auth.library.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.api</groupId>
-                    <artifactId>gax</artifactId>
-                    <version>${google.gax.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.api</groupId>
-                    <artifactId>gax-grpc</artifactId>
-                    <version>${google.gax.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.api.grpc</groupId>
-                    <artifactId>proto-google-cloud-bigquerystorage-v1</artifactId>
-                    <version>${proto.google.cloud.bigquerystorage.v1.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>io.opencensus</groupId>
-                    <artifactId>opencensus-contrib-http-util</artifactId>
-                    <version>${opencensus.contrib.http.util.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>io.grpc</groupId>
-                    <artifactId>grpc-core</artifactId>
-                    <version>${io.grpc.grpc-core.version}</version>
+                    <groupId>com.odysseusinc.executionengine.drivers</groupId>
+                    <artifactId>google-bigquery-simba-jdbc42</artifactId>
+                    <version>1.6.2.1003</version>
                 </dependency>
             </dependencies>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-install-plugin</artifactId>
-                        <version>2.5.2</version>
-                        <executions>
-                            <execution>
-                                <id>google-api-client</id>
-                                <phase>initialize</phase>
-                                <goals>
-                                    <goal>install-file</goal>
-                                </goals>
-                                <configuration>
-                                    <groupId>com.google.api-client</groupId>
-                                    <artifactId>google-api-client</artifactId>
-                                    <version>${google.api.client.version}</version>
-                                    <packaging>jar</packaging>
-                                    <file>${bigquery.classpath}/google-api-client-${google.api.client.version}.jar</file>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>google-api-services-bigquery</id>
-                                <phase>initialize</phase>
-                                <goals>
-                                    <goal>install-file</goal>
-                                </goals>
-                                <configuration>
-                                    <groupId>com.google.apis</groupId>
-                                    <artifactId>google-api-services-bigquery</artifactId>
-                                    <version>${google.api.services.bigquery.version}</version>
-                                    <packaging>jar</packaging>
-                                    <file>${bigquery.classpath}/google-api-services-bigquery-${google.api.services.bigquery.version}.jar</file>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>google-cloud-bigquery</id>
-                                <phase>initialize</phase>
-                                <goals>
-                                    <goal>install-file</goal>
-                                </goals>
-                                <configuration>
-                                    <groupId>com.google.cloud</groupId>
-                                    <artifactId>google-cloud-bigquery</artifactId>
-                                    <version>${google.cloud.bigquery.version}</version>
-                                    <packaging>jar</packaging>
-                                    <file>${bigquery.classpath}/GoogleBigQueryJDBC42.jar</file>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>google-http-client</id>
-                                <phase>initialize</phase>
-                                <goals>
-                                    <goal>install-file</goal>
-                                </goals>
-                                <configuration>
-                                    <groupId>com.google.http-client</groupId>
-                                    <artifactId>google-http-client</artifactId>
-                                    <version>${google.http.client.version}</version>
-                                    <packaging>jar</packaging>
-                                    <file>${bigquery.classpath}/google-http-client-${google.http.client.version}.jar</file>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>google-http-client-gson</id>
-                                <phase>initialize</phase>
-                                <goals>
-                                    <goal>install-file</goal>
-                                </goals>
-                                <configuration>
-                                    <groupId>com.google.http-client</groupId>
-                                    <artifactId>google-http-client-gson</artifactId>
-                                    <version>${google.http.client.version}</version>
-                                    <packaging>jar</packaging>
-                                    <file>${bigquery.classpath}/google-http-client-gson-${google.http.client.version}.jar</file>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>google-oauth-client</id>
-                                <phase>initialize</phase>
-                                <goals>
-                                    <goal>install-file</goal>
-                                </goals>
-                                <configuration>
-                                    <groupId>com.google.oauth-client</groupId>
-                                    <artifactId>google-oauth-client</artifactId>
-                                    <version>${google.oauth.client.version}</version>
-                                    <packaging>jar</packaging>
-                                    <file>${bigquery.classpath}/google-oauth-client-${google.oauth.client.version}.jar</file>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>google-cloud-bigquerystorage</id>
-                                <phase>initialize</phase>
-                                <goals>
-                                    <goal>install-file</goal>
-                                </goals>
-                                <configuration>
-                                    <groupId>com.google.cloud</groupId>
-                                    <artifactId>google-cloud-bigquerystorage</artifactId>
-                                    <version>${google.cloud.bigquerystorage.version}</version>
-                                    <packaging>jar</packaging>
-                                    <file>${bigquery.classpath}/google-cloud-bigquerystorage-${google.cloud.bigquerystorage.version}.jar</file>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>netezza</id>
@@ -615,6 +431,36 @@
     <build>
         <finalName>execution-engine</finalName>
         <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <macrodef name="listzipcontents">
+                                    <attribute name="file"/>
+                                    <attribute name="outputproperty"/>
+
+                                    <sequential>
+                                        <zipfileset src="@{file}" id="content"/>
+                                        <pathconvert property="@{outputproperty}" pathsep="${line.separator}">
+                                            <zipfileset refid="content"/>
+                                            <map from="@{file}:" to=""/>
+                                        </pathconvert>
+                                    </sequential>
+                                </macrodef>
+                                <listzipcontents file="${project.build.directory}/execution-engine-exec.jar" outputproperty="files"/>
+                                <echo>Files: ${files}</echo>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
