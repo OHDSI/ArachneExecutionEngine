@@ -90,14 +90,34 @@ public class TarballRService extends RService {
 
     @Override
     protected Overseer analyze(AnalysisSyncRequestDTO analysis, File file, Integer updateInterval, Map<String, String> envp, BiConsumer<String, String> callback) {
-        DescriptorBundle descriptorBundle = descriptorService.getDescriptorBundle(
-                file, analysis.getId(), analysis.getRequestedDescriptorId()
-        );
         Long id = analysis.getId();
         String executableFileName = analysis.getExecutableFileName();
-
+        
         try {
             Instant started = Instant.now();
+
+            if (useLocalREnv) {
+                // When running with local R environment, bypass descriptor bundle lookup
+                log.info("Execution [{}] using local R environment (runtime.local=true)", id);
+
+                // Just run the R script directly without jail or environment setup
+                String[] command = new String[]{EXECUTION_COMMAND, executableFileName};
+
+                ProcessBuilder pb = new ProcessBuilder(command).directory(file).redirectErrorStream(true);
+                pb.environment().putAll(envp);
+
+                log.info("Execution [{}] start local R process: {}", id, String.join(" ", command));
+                Process process = pb.start();
+
+                return new TarballROverseer(
+                        id, process, runtimeTimeOutSec, callback, updateInterval, started, "local", killTimeoutSec
+                );
+            }
+        
+            DescriptorBundle descriptorBundle = descriptorService.getDescriptorBundle(
+                    file, analysis.getId(), analysis.getRequestedDescriptorId()
+            );
+        
             File jailFile = new File(rIsolatedRuntimeProps.getJailSh());
             boolean externalJail = jailFile.isFile();
             File runFile = externalJail ? jailFile : extractToTempFile(resourceLoader, "classpath:/jail.sh", "ee", ".sh");

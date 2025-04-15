@@ -7,6 +7,7 @@ import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -22,6 +23,9 @@ public class RExecutionService implements ExecutionService {
     private DescriptorService descriptorService;
     @Autowired
     private DockerService dockerService;
+    
+    @Value("${runtime.local:false}")
+    private boolean useLocalREnv;
 
     public String getExtension() {
         return "r";
@@ -34,7 +38,10 @@ public class RExecutionService implements ExecutionService {
     }
 
     private RService calcEnv(Long id, String image, String descriptorId) {
-        if (image != null) {
+        if (useLocalREnv) {
+            log.info("Analysis [{}] will be executed in LOCAL R environment due to runtime.local=true", id);
+            return tarballService;
+        } else if (image != null) {
             log.info("Analysis [{}] requested image [{}], force DOCKER runtime", id, image);
             return dockerService;
         } else if (descriptorId != null) {
