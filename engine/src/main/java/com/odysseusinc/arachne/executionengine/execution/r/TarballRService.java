@@ -32,14 +32,11 @@ import com.odysseusinc.arachne.executionengine.model.descriptor.ExecutionRuntime
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.RDependency;
 import com.odysseusinc.arachne.executionengine.model.descriptor.r.RExecutionRuntime;
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
-import com.odysseusinc.datasourcemanager.krblogin.RuntimeServiceMode;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
@@ -75,18 +72,6 @@ public class TarballRService extends RService {
 
     @Autowired
     private RIsolatedRuntimeProperties rIsolatedRuntimeProps;
-
-    @Value("${runtime.local:false}")
-    private boolean useLocalREnv;
-
-    @PostConstruct
-    public void init() {
-        if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
-            log.info("Runtime service running in ISOLATED environment mode");
-        } else {
-            log.info("Runtime service running in SINGLE mode");
-        }
-    }
 
     @Override
     protected Overseer analyze(AnalysisSyncRequestDTO analysis, File file, Integer updateInterval, Map<String, String> envp, BiConsumer<String, String> callback) {
@@ -215,20 +200,8 @@ public class TarballRService extends RService {
             throw new FileNotFoundException("file '"
                     + fileName + "' is not exists in directory '" + workingDir.getAbsolutePath() + "'");
         }
-        String[] command;
-        if (RuntimeServiceMode.ISOLATED.equals(getRuntimeServiceMode())) {
-            command = ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(),
-                    runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, bundlePath);
-        } else {
-            command = new String[]{EXECUTION_COMMAND, fileName};
-        }
-        return command;
+        return ArrayUtils.addAll(rIsolatedRuntimeProps.getRunCmd(), runFile.getAbsolutePath(), workingDir.getAbsolutePath(), fileName, bundlePath);
     }
-
-    private RuntimeServiceMode getRuntimeServiceMode() {
-        return useLocalREnv ? RuntimeServiceMode.SINGLE : RuntimeServiceMode.ISOLATED;
-    }
-
 
     @SuppressWarnings("SameParameterValue")
     private static File extractToTempFile(ResourceLoader loader, String resourceName, String prefix, String suffix) throws IOException {

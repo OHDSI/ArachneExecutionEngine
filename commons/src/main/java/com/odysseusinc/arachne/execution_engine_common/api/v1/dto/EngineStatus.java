@@ -2,6 +2,7 @@ package com.odysseusinc.arachne.execution_engine_common.api.v1.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.DockerEnvironmentDTO;
+import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.LocalEnvironmentDTO;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.TarballEnvironmentDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -36,5 +37,6 @@ public class EngineStatus {
     public static class Environments {
         private List<TarballEnvironmentDTO> tarball;
         private List<DockerEnvironmentDTO> docker;
+        private List<LocalEnvironmentDTO> local;
     }
 }
