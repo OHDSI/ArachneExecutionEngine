@@ -13,4 +13,4 @@ then
   fi
 fi
 
-Rscript /$ANALYSIS_FILE
+Rscript "/$ANALYSIS_FILE"
