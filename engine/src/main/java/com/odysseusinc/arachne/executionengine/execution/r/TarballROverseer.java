@@ -25,6 +25,7 @@ public class TarballROverseer extends AbstractOverseer {
     private final Process process;
     private final BufferedReader reader;
     private final ScheduledFuture<?> logFlush;
+    private volatile boolean aborting = false;
 
     /**
      * Creates a new process overseer.
@@ -62,12 +63,14 @@ public class TarballROverseer extends AbstractOverseer {
 
     @Override
     public CompletableFuture<ExecutionOutcome> abort() {
+        aborting = true;
         if (process.isAlive()) {
             log.info("Overseer [{}] processing abort request", id);
             if (terminate()) {
                 outcome.complete(new ExecutionOutcome(Stage.ABORTED, null, stdout.toString()));
             } else {
                 callback.accept(Stage.ABORT, "Timed out waiting for termination");
+                outcome.complete(new ExecutionOutcome(Stage.ABORT, "Timed out waiting for termination", stdout.toString()));
             }
         } else {
             log.info("Overseer [{}] received abort, but process exited already", id);
@@ -108,10 +111,12 @@ public class TarballROverseer extends AbstractOverseer {
 
     private void complete(int exitValue) {
         executor.shutdown();
-        ExecutionOutcome outcome = (exitValue == 0)
+        ExecutionOutcome executionOutcome = exitValue == 0
                 ? new ExecutionOutcome(Stage.COMPLETED, null, stdout.toString())
-                : new ExecutionOutcome(Stage.EXECUTE, "Exit code " + exitValue, stdout.toString());
-        this.outcome.complete(outcome);
+                : aborting
+                        ? new ExecutionOutcome(Stage.ABORTED, null, stdout.toString())
+                        : new ExecutionOutcome(Stage.EXECUTE, "Exit code " + exitValue, stdout.toString());
+        this.outcome.complete(executionOutcome);
     }
 
     private boolean terminate() {
