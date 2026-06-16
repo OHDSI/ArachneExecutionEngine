@@ -4,7 +4,6 @@ import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Analysi
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
-import com.github.dockerjava.api.command.LogContainerCmd;
 import com.github.dockerjava.api.command.WaitContainerResultCallback;
 import com.github.dockerjava.api.exception.DockerException;
 import com.github.dockerjava.api.exception.NotFoundException;
@@ -27,7 +26,10 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 @Slf4j
 @Getter
 public class DockerOverseer extends AbstractOverseer {
-    private final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1) {{
+    /**
+     * Two threads: one blocks on awaitStatusCode for the whole run, the other runs the periodic log flush.
+     */
+    private final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(2) {{
         setRemoveOnCancelPolicy(true);
     }};
     private final CompletableFuture<String> init;
@@ -37,74 +39,91 @@ public class DockerOverseer extends AbstractOverseer {
      */
     private volatile int pos;
     private final DockerClient client;
+    private volatile boolean aborting = false;
 
     public DockerOverseer(
             long id, DockerClient client, Instant started, int timeoutSec, StringBuffer stdout, CompletableFuture<String> init,
             int updateInterval, BiConsumer<String, String> callback, String image, int killTimeoutSec
     ) {
-        super(id, callback, started, image, killTimeoutSec, stdout, init.handle((containerId, throwable) -> {
-            if (throwable != null) {
-                String out = stdout.append("\r\n").append(ExceptionUtils.getStackTrace(throwable)).toString();
-                return new ExecutionOutcome(Stage.INITIALIZE, throwable.getMessage(), out);
-            } else {
-                LogContainerCmd cmd = client.logContainerCmd(containerId).withStdOut(true).withStdErr(true).withFollowStream(true);
-                cmd.exec(logAdapter(id, stdout));
-                Integer exitCode = client.waitContainerCmd(containerId).exec(new WaitContainerResultCallback()).awaitStatusCode(timeoutSec, TimeUnit.SECONDS);
-                log.info("Execution [{}] Rscript exit code {}", id, exitCode);
-                String out = stdout.toString();
-                return (exitCode == 0)
-                        ? new ExecutionOutcome(Stage.COMPLETED, null, out)
-                        : new ExecutionOutcome(Stage.EXECUTE, "Exit code " + exitCode, out);
-            }
-        }));
+        super(id, callback, started, image, killTimeoutSec, stdout, new CompletableFuture<>());
         pos = stdout.length();
         this.client = client;
-        init.thenAccept(containerId ->
-                executor.scheduleWithFixedDelay(this::writeLogs, updateInterval, updateInterval, TimeUnit.MILLISECONDS)
-        );
         this.init = init;
+
+        // Shut the executor down exactly once, when the run ends (no leak).
+        outcome.whenComplete((r, t) -> executor.shutdown());
+
+        // Only REGISTER the container-startup handler here; it never blocks, so the shared pool thread is freed instantly.
+        init.whenComplete((containerId, throwable) -> {
+            if (throwable != null) {
+                onInitFailed(throwable);
+            } else {
+                onContainerStarted(containerId, timeoutSec, updateInterval);
+            }
+        });
+    }
+
+    private void onInitFailed(Throwable throwable) {
+        if (aborting) {
+            outcome.complete(new ExecutionOutcome(Stage.ABORTED, null, stdout.toString()));
+        } else {
+            String out = stdout.append("\r\n").append(ExceptionUtils.getStackTrace(throwable)).toString();
+            outcome.complete(new ExecutionOutcome(Stage.INITIALIZE, throwable.getMessage(), out));
+        }
+    }
+
+    private void onContainerStarted(String containerId, int timeoutSec, int updateInterval) {
+        // Flush logs to the callback periodically (one pool thread).
+        executor.scheduleWithFixedDelay(this::writeLogs, updateInterval, updateInterval, TimeUnit.MILLISECONDS);
+        // Block on the wait on our OWN pool (another thread), not on the shared analysisTaskExecutor.
+        executor.execute(() -> awaitAndComplete(containerId, timeoutSec));
+    }
+
+    private void awaitAndComplete(String containerId, int timeoutSec) {
+        try {
+            client.logContainerCmd(containerId).withStdOut(true).withStdErr(true).withFollowStream(true).exec(logAdapter(id, stdout));
+            Integer exitCode = client.waitContainerCmd(containerId).exec(new WaitContainerResultCallback()).awaitStatusCode(timeoutSec, TimeUnit.SECONDS);
+            completeFromExit(exitCode);
+        } catch (Exception e) {
+            log.error("Execution [{}] error waiting for container", id, e);
+            writeLogs();
+            outcome.complete(aborting
+                    ? new ExecutionOutcome(Stage.ABORTED, null, stdout.toString())
+                    : new ExecutionOutcome(Stage.EXECUTE, e.getMessage(), stdout.toString()));
+        }
+    }
+
+    private void completeFromExit(int exitCode) {
+        writeLogs();
+        log.info("Execution [{}] Rscript exit code {}", id, exitCode);
+        String out = stdout.toString();
+        outcome.complete(exitCode == 0
+                ? new ExecutionOutcome(Stage.COMPLETED, null, out)
+                : aborting
+                        ? new ExecutionOutcome(Stage.ABORTED, null, out)
+                        : new ExecutionOutcome(Stage.EXECUTE, "Exit code " + exitCode, out));
     }
 
     @Override
     public CompletableFuture<ExecutionOutcome> abort() {
-        if (!init.isDone()) {
-            init.cancel(true);
+        aborting = true;
+        init.thenAccept(this::stopContainer);
+        return CompletableFuture.completedFuture(new ExecutionOutcome(Stage.ABORT, null, stdout.toString()));
+    }
+
+    private void stopContainer(String containerId) {
+        try {
+            client.stopContainerCmd(containerId).withTimeout(0).exec();
+            log.info("Execution [{}] stop command sent to Docker container", id);
+        } catch (NotFoundException e) {
+            log.info("Execution [{}] container not found or already stopped: {}", id, e.getMessage());
+        } catch (DockerException e) {
+            log.error("Execution [{}] error stopping Docker container: {}", id, e.getMessage());
         }
-
-        return init.handle((containerId, throwable) -> {
-            if (containerId == null) {
-                if (throwable != null) {
-                    log.error("Error during initialization: {}", throwable.getMessage(), throwable);
-                    stdout.append("\r\n\"Initialization failed: ").append(throwable.getMessage());
-                    return new ExecutionOutcome(Stage.INITIALIZE, "Initialization failed: " + throwable.getMessage(), stdout.toString());
-                } else {
-                    stdout.append("\r\nContainer initialization was canceled");
-                    return new ExecutionOutcome(Stage.ABORTED, null, stdout.toString());
-                }
-            } else {
-                if (result.isDone()) {
-                    return result.join();
-                } else {
-                    try {
-                        client.stopContainerCmd(containerId).exec();
-                        stdout.append("\r\nDocker container aborted successfully");
-                        return new ExecutionOutcome(Stage.ABORTED, null, stdout.toString());
-                    } catch (NotFoundException e) {
-                        log.info("Container not found or already stopped: " + e.getMessage());
-                        return result.join();
-                    } catch (DockerException e) {
-                        log.error("Error stopping the Docker container: {}", e.getMessage());
-                        stdout.append("\r\n\"Error aborting Docker container:").append(e.getMessage());
-                        return new ExecutionOutcome(Stage.ABORT, "Error aborting Docker container: " + e.getMessage(), stdout.toString());
-                    }
-                }
-            }
-        });
-
     }
 
     private static ResultCallback.Adapter<Frame> logAdapter(long id, StringBuffer stdout) {
-        return new ResultCallback.Adapter<Frame>() {
+        return new ResultCallback.Adapter<>() {
             @Override
             public void onNext(Frame item) {
                 super.onNext(item);
@@ -116,7 +135,7 @@ public class DockerOverseer extends AbstractOverseer {
             @Override
             public void onError(Throwable throwable) {
                 if (!(throwable instanceof NotFoundException)) {
-                    log.error("Execution [{}] error: {}", id, throwable);
+                    log.error("Execution [{}] error: {}", id, throwable.getMessage(), throwable);
                     stdout.append("Execution error: ").append(throwable.getMessage());
                     super.onError(throwable);
                 }
