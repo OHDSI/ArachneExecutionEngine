@@ -36,11 +36,13 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.EngineStatus.E
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.ExecutionOutcome;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.Stage;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.DockerEnvironmentDTO;
+import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.LocalEnvironmentDTO;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.TarballEnvironmentDTO;
 import com.odysseusinc.arachne.executionengine.aspect.FileDescriptorCount;
 import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
 import com.odysseusinc.arachne.executionengine.auth.CredentialsProvider;
 import com.odysseusinc.arachne.executionengine.execution.r.DockerEnvironmentService;
+import com.odysseusinc.arachne.executionengine.execution.r.LocalEnvironmentService;
 import com.odysseusinc.arachne.executionengine.model.descriptor.converter.DescriptorConverter;
 import com.odysseusinc.arachne.executionengine.service.CdmMetadataService;
 import com.odysseusinc.arachne.executionengine.service.impl.DescriptorServiceImpl;
@@ -99,6 +101,8 @@ public class AnalysisService {
     private DockerEnvironmentService dockerDescriptorService;
     @Autowired
     private DescriptorServiceImpl tarballDescriptorService;
+    @Autowired
+    private LocalEnvironmentService localEnvironmentService;
 
 
     @Value("${submission.update.interval}")
@@ -197,16 +201,15 @@ public class AnalysisService {
     public EngineStatus getStatus(List<Long> idsMaybe) {
         Map<Long, ExecutionOutcome> statuses = Optional.ofNullable(idsMaybe).map(ids ->
                 ids.stream().flatMap(id ->
-                        Optional.ofNullable(overseers.get(id)).map(overseer ->
-                                Stream.of(Pair.of(id, getStatus(overseer)))
-                        ).orElseGet(Stream::of)
+                        Stream.ofNullable(overseers.get(id)).map(overseer -> Pair.of(id, getStatus(overseer)))
                 ).collect(Collectors.toMap(Pair::getKey, Pair::getValue))
         ).orElseGet(Collections::emptyMap);
 
         List<TarballEnvironmentDTO> tarballs = tarballDescriptorService.getDescriptors().stream().map(DescriptorConverter::toDto).collect(Collectors.toList());
         List<DockerEnvironmentDTO> dockers = dockerDescriptorService.getEnvironments();
+        List<LocalEnvironmentDTO> locals = localEnvironmentService.getEnvironments();
 
-        return new EngineStatus(Instant.now(), statuses, new Environments(tarballs, dockers));
+        return new EngineStatus(Instant.now(), statuses, new Environments(tarballs, dockers, locals));
     }
 
     private static ExecutionOutcome getStatus(Overseer overseer) {

@@ -5,8 +5,10 @@ import com.odysseusinc.arachne.executionengine.auth.AuthEffects;
 import com.odysseusinc.arachne.executionengine.execution.ExecutionService;
 import com.odysseusinc.arachne.executionengine.execution.Overseer;
 import com.odysseusinc.arachne.executionengine.service.DescriptorService;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -22,6 +24,11 @@ public class RExecutionService implements ExecutionService {
     private DescriptorService descriptorService;
     @Autowired
     private DockerService dockerService;
+    @Autowired(required = false)
+    private LocalRService localService;
+
+    @Value("${runtime.local:false}")
+    private boolean useLocalREnv;
 
     public String getExtension() {
         return "r";
@@ -34,7 +41,10 @@ public class RExecutionService implements ExecutionService {
     }
 
     private RService calcEnv(Long id, String image, String descriptorId) {
-        if (image != null) {
+        if (useLocalREnv) {
+            log.info("Analysis [{}] will be executed in LOCAL R environment (forced by runtime.local=true)", id);
+            return localService;
+        } else if (image != null) {
             log.info("Analysis [{}] requested image [{}], force DOCKER runtime", id, image);
             return dockerService;
         } else if (descriptorId != null) {
@@ -46,6 +56,13 @@ public class RExecutionService implements ExecutionService {
         } else {
             log.info("Analysis [{}] will be executed in default TARBALL environment", id);
             return tarballService;
+        }
+    }
+
+    @PostConstruct
+    public void init() {
+        if (useLocalREnv) {
+            log.info("Runtime service running in LOCAL environment mode");
         }
     }
 
